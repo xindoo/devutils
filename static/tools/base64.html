@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Base64 Encode/Decode</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        textarea { width: 95%; height: 150px; margin-bottom: 10px; }
+        button { padding: 8px 15px; margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Base64 Encode/Decode</h1>
+    <textarea id="input" placeholder="Enter text here..."></textarea>
+    <button onclick="encode()">Encode</button>
+    <button onclick="decode()">Decode</button>
+    <textarea id="output" placeholder="Result..." readonly></textarea>
+
+    <script>
+        function encode() {
+            const input = document.getElementById('input').value;
+            try {
+                document.getElementById('output').value = btoa(unescape(encodeURIComponent(input))); // Handle UTF-8
+            } catch (e) {
+                document.getElementById('output').value = 'Error encoding: ' + e.message;
+            }
+        }
+
+        function decode() {
+            const input = document.getElementById('input').value;
+            try {
+                document.getElementById('output').value = decodeURIComponent(escape(atob(input))); // Handle UTF-8
+            } catch (e) {
+                document.getElementById('output').value = 'Error decoding: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

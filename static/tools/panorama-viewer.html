@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panorama Viewer (2:1)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars on body */
+            font-family: sans-serif;
+        }
+        #panorama-container {
+            width: 100%;
+            height: 100vh; /* Full viewport height */
+            position: relative; /* Needed for absolute positioning of controls */
+        }
+        #panorama {
+            width: 100%;
+            height: 100%;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+        }
+        #controls label, #controls input {
+             color: white;
+        }
+        .pannellum-load-button { /* Style the default load button if needed */
+            display: none; /* Hide default load button if using custom controls */
+        }
+        /* Add a back link */
+        .back-link {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+<div id="panorama-container">
+    <div id="panorama"></div>
+    <div id="controls">
+        <label for="fileInput">Select 2:1 Panorama Image:</label>
+        <input type="file" id="fileInput" accept="image/*">
+    </div>
+    <a href="../index.html" class="back-link">Back to Tools</a>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const panoramaDiv = document.getElementById('panorama');
+    let viewer = null; // To hold the Pannellum instance
+
+    // Initialize Pannellum with a placeholder or default message
+    viewer = pannellum.viewer('panorama', {
+        "type": "equirectangular",
+        // "panorama": "path/to/default/image.jpg", // Optional: Add a default image
+        "autoLoad": false, // Don't autoload initially
+        "showControls": true,
+        "haov": 360, // Set horizontal field of view to 360
+        "vaov": 180, // Set vertical field of view to 180 for full sphere
+        "minPitch": -90, // Allow looking straight down
+        "maxPitch": 90,  // Allow looking straight up
+        "compass": true
+    });
+
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+
+                // Destroy the previous viewer instance if it exists
+                if (viewer) {
+                    viewer.destroy();
+                }
+
+                // Create a new Pannellum viewer instance with the selected image
+                viewer = pannellum.viewer('panorama', {
+                    "type": "equirectangular",
+                    "panorama": imageUrl,
+                    "autoLoad": true, // Load the new image automatically
+                    "showControls": true,
+                    "haov": 360,
+                    "vaov": 180,
+                    "minPitch": -90,
+                    "maxPitch": 90,
+                    "compass": true
+                });
+            }
+
+            reader.readAsDataURL(file); // Read the file as a Data URL
+        }
+    });
+</script>
+
+</body>
+</html>

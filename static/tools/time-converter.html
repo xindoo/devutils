@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间转换</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Inline styles removed -->
+</head>
+<body>
+    <!-- Removed outer container, iframe provides context -->
+    <div class="tool-container">
+        <h1>时间转换</h1>
+
+        <!-- Timestamp to Date String -->
+        <div class="tool-section">
+            <label for="timestampInput" class="tool-label">时间戳 (秒 或 毫秒):</label>
+            <input type="number" id="timestampInput" class="tool-input" placeholder="例如: 1678886400 or 1678886400000">
+            <button onclick="convertTimestamp()" class="tool-button">转换为日期字符串</button>
+            <div id="timestampResult" class="tool-result"></div>
+            <div id="timestampError" class="tool-error"></div>
+        </div>
+
+        <!-- Date String to Timestamp -->
+        <div class="tool-section">
+            <label for="dateStringInput" class="tool-label">日期字符串:</label>
+            <input type="text" id="dateStringInput" class="tool-input" placeholder="例如: 2023-03-15 12:00:00 或 ISO 8601 格式">
+            <button onclick="convertDateString()" class="tool-button">转换为时间戳</button>
+            <div id="dateStringResult" class="tool-result"></div>
+            <div id="dateStringError" class="tool-error"></div>
+        </div>
+
+         <!-- Current Timestamp -->
+         <div class="tool-section">
+            <label class="tool-label">当前时间戳:</label>
+            <button onclick="getCurrentTimestamp()" class="tool-button">获取当前时间戳</button>
+            <div id="currentTimestampResult" class="tool-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function clearErrors() {
+            document.getElementById('timestampError').textContent = '';
+            document.getElementById('dateStringError').textContent = '';
+        }
+
+        function convertTimestamp() {
+            clearErrors();
+            const timestampInput = document.getElementById('timestampInput').value.trim();
+            const resultDiv = document.getElementById('timestampResult');
+            const errorDiv = document.getElementById('timestampError');
+            resultDiv.textContent = ''; // Clear previous result
+
+            if (!timestampInput) {
+                errorDiv.textContent = '请输入时间戳。';
+                return;
+            }
+
+            const timestamp = parseInt(timestampInput, 10);
+            if (isNaN(timestamp)) {
+                errorDiv.textContent = '无效的时间戳格式。';
+                return;
+            }
+
+            // Determine if it's seconds or milliseconds (simple heuristic)
+            const date = new Date(timestamp * (timestampInput.length <= 10 ? 1000 : 1));
+
+            if (isNaN(date.getTime())) {
+                 errorDiv.textContent = '无法解析时间戳。';
+                 return;
+            }
+
+            const localTime = date.toLocaleString();
+            const utcTime = date.toUTCString();
+
+            resultDiv.innerHTML = `
+                <strong>本地时间:</strong> ${localTime}<br>
+                <strong>UTC 时间:</strong> ${utcTime}
+            `;
+        }
+
+        function convertDateString() {
+            clearErrors();
+            const dateStringInput = document.getElementById('dateStringInput').value.trim();
+            const resultDiv = document.getElementById('dateStringResult');
+            const errorDiv = document.getElementById('dateStringError');
+            resultDiv.textContent = ''; // Clear previous result
+
+            if (!dateStringInput) {
+                errorDiv.textContent = '请输入日期字符串。';
+                return;
+            }
+
+            const date = new Date(dateStringInput);
+
+            if (isNaN(date.getTime())) {
+                errorDiv.textContent = '无法解析日期字符串。请尝试标准格式 (例如 YYYY-MM-DD HH:MM:SS 或 ISO 8601)。';
+                return;
+            }
+
+            const timestampSeconds = Math.floor(date.getTime() / 1000);
+            const timestampMilliseconds = date.getTime();
+
+            resultDiv.innerHTML = `
+                <strong>时间戳 (秒):</strong> ${timestampSeconds}<br>
+                <strong>时间戳 (毫秒):</strong> ${timestampMilliseconds}
+            `;
+        }
+
+         function getCurrentTimestamp() {
+            clearErrors();
+            const resultDiv = document.getElementById('currentTimestampResult');
+            const now = new Date();
+            const timestampSeconds = Math.floor(now.getTime() / 1000);
+            const timestampMilliseconds = now.getTime();
+             resultDiv.innerHTML = `
+                <strong>时间戳 (秒):</strong> ${timestampSeconds}<br>
+                <strong>时间戳 (毫秒):</strong> ${timestampMilliseconds}
+            `;
+        }
+
+        // Add event listeners for Enter key
+        document.getElementById('timestampInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                convertTimestamp();
+            }
+        });
+
+        document.getElementById('dateStringInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                convertDateString();
+            }
+        });
+
+    </script>
+    <!-- Keep this script if it's used globally, otherwise remove -->
+    <!-- <script src="../js/app.js"></script> -->
+</body>
+</html>

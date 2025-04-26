@@ -1,0 +1,88 @@
+[
+  {
+    "categoryName": "编解码",
+    "tools": [
+      {
+        "name": "Base64 Encode/Decode",
+        "path": "static/tools/base64.html"
+      },
+      {
+        "name": "Base64转图片",
+        "path": "static/tools/base64-image.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "格式化",
+    "tools": [
+      {
+        "name": "JSON格式化",
+        "path": "static/tools/json-format.html"
+      },
+      {
+        "name": "代码格式化",
+        "path": "static/tools/code-formatter.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "图片工具",
+    "tools": [
+      {
+        "name": "图片压缩",
+        "path": "static/tools/image-compressor.html"
+      },
+      {
+        "name": "全景图预览",
+        "path": "static/tools/panorama-viewer.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "数据生成",
+    "tools": [
+      {
+        "name": "随机数据生成",
+        "path": "static/tools/random-data-generator.html"
+      },
+      {
+        "name": "字符串哈希生成",
+        "path": "static/tools/string-hash-generator.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "视频工具",
+    "tools": [
+      {
+        "name": "全景视频播放",
+        "path": "static/tools/panorama-video-viewer.html"
+      },
+      {
+        "name": "视频播放",
+        "path": "static/tools/video-player.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "转换器",
+    "tools": [
+      {
+        "name": "时间转换",
+        "path": "static/tools/time-converter.html"
+      },
+      {
+        "name": "Cron转换",
+        "path": "static/tools/cron-converter.html"
+      },
+      {
+        "name": "JSON/YAML互转",
+        "path": "static/tools/json-yaml-converter.html"
+      },
+      {
+        "name": "进制转换",
+        "path": "static/tools/base-converter.html"
+      }
+    ]
+  }
+]

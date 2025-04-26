@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图片压缩</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .column { flex: 1; min-width: 300px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="file"], input[type="number"], select { margin-bottom: 15px; width: 95%; padding: 8px; }
+        input[type="range"] { width: 80%; } /* Quality slider */
+        button { padding: 10px 15px; cursor: pointer; margin-top: 10px; }
+        img { max-width: 100%; height: auto; border: 1px solid #ccc; margin-top: 10px; display: block; }
+        .preview-container { margin-top: 15px; }
+        .info { font-size: 0.9em; color: #555; margin-top: 5px; }
+        #download-link { display: none; margin-top: 10px; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
+        #download-link:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+    <h1>图片压缩</h1>
+
+    <label for="image-input">选择图片:</label>
+    <input type="file" id="image-input" accept="image/jpeg, image/png, image/webp">
+
+    <div class="container">
+        <div class="column">
+            <label for="quality">压缩质量 (JPEG/WEBP):</label>
+            <input type="range" id="quality" min="0.1" max="1.0" step="0.05" value="0.8">
+            <span id="quality-value">0.8</span>
+
+            <label for="maxWidth">最大宽度 (可选):</label>
+            <input type="number" id="maxWidth" placeholder="例如: 1920">
+
+            <label for="maxHeight">最大高度 (可选):</label>
+            <input type="number" id="maxHeight" placeholder="例如: 1080">
+
+             <label for="outputFormat">输出格式:</label>
+             <select id="outputFormat">
+                 <option value="image/jpeg">JPEG</option>
+                 <option value="image/png">PNG</option>
+                 <option value="image/webp">WEBP</option>
+             </select>
+
+            <button onclick="compressImage()">压缩图片</button>
+        </div>
+        <div class="column">
+            <div class="preview-container">
+                <label>压缩后预览:</label>
+                <img id="compressed-preview" src="" alt="压缩后图片">
+                <div id="compressed-info" class="info"></div>
+                <a id="download-link" download="compressed_image.jpg">下载压缩图片</a>
+            </div>
+        </div>
+         <div class="column">
+             <div class="preview-container">
+                 <label>原图预览:</label>
+                 <img id="original-preview" src="" alt="原图">
+                 <div id="original-info" class="info"></div>
+             </div>
+         </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('image-input');
+        const qualitySlider = document.getElementById('quality');
+        const qualityValue = document.getElementById('quality-value');
+        const maxWidthInput = document.getElementById('maxWidth');
+        const maxHeightInput = document.getElementById('maxHeight');
+        const outputFormatSelect = document.getElementById('outputFormat');
+        const originalPreview = document.getElementById('original-preview');
+        const originalInfo = document.getElementById('original-info');
+        const compressedPreview = document.getElementById('compressed-preview');
+        const compressedInfo = document.getElementById('compressed-info');
+        const downloadLink = document.getElementById('download-link');
+
+        let originalFile = null;
+        let originalUrl = null;
+
+        qualitySlider.oninput = () => {
+            qualityValue.textContent = qualitySlider.value;
+        };
+
+        imageInput.onchange = (event) => {
+            originalFile = event.target.files[0];
+            if (originalFile) {
+                if (originalUrl) URL.revokeObjectURL(originalUrl); // Revoke previous URL
+                originalUrl = URL.createObjectURL(originalFile);
+                originalPreview.src = originalUrl;
+                originalInfo.textContent = `文件名: ${originalFile.name}, 大小: ${(originalFile.size / 1024).toFixed(2)} KB, 类型: ${originalFile.type}`;
+                compressedPreview.src = ""; // Clear previous compression
+                compressedInfo.textContent = "";
+                downloadLink.style.display = 'none';
+                downloadLink.href = '#';
+            }
+        };
+
+        function compressImage() {
+            if (!originalFile) {
+                alert('请先选择一个图片文件。');
+                return;
+            }
+
+            const quality = parseFloat(qualitySlider.value);
+            const maxWidth = parseInt(maxWidthInput.value) || Infinity;
+            const maxHeight = parseInt(maxHeightInput.value) || Infinity;
+            const outputFormat = outputFormatSelect.value;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    const aspectRatio = width / height;
+
+                    // Calculate new dimensions while maintaining aspect ratio
+                    if (width > maxWidth) {
+                        width = maxWidth;
+                        height = width / aspectRatio;
+                    }
+                    if (height > maxHeight) {
+                        height = maxHeight;
+                        width = height * aspectRatio;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Get compressed image data URL
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const compressedUrl = URL.createObjectURL(blob);
+                            compressedPreview.src = compressedUrl;
+                            compressedInfo.textContent = `压缩后大小: ${(blob.size / 1024).toFixed(2)} KB, 类型: ${blob.type}`;
+
+                            // Set download link
+                            downloadLink.href = compressedUrl;
+                            const extension = outputFormat.split('/')[1];
+                            downloadLink.download = `compressed_${Date.now()}.${extension}`;
+                            downloadLink.style.display = 'inline-block';
+
+                            // Clean up original image object URL if needed (optional)
+                            // URL.revokeObjectURL(originalUrl);
+                        } else {
+                             alert('无法压缩图片。');
+                        }
+                    }, outputFormat, quality); // Pass format and quality
+                };
+                img.onerror = () => {
+                    alert('无法加载图片文件。');
+                };
+                img.src = event.target.result; // Load image from FileReader result
+            };
+            reader.onerror = () => {
+                 alert('读取文件时出错。');
+            };
+            reader.readAsDataURL(originalFile); // Read file as Data URL
+        }
+    </script>
+</body>
+</html>

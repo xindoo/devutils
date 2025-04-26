@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>代码格式化</title>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        .CodeMirror { border: 1px solid #ddd; height: 500px; font-size: 14px; margin-bottom: 10px; }
+        button { padding: 10px 15px; cursor: pointer; margin-right: 5px; margin-bottom: 10px; }
+        .status-message { color: #555; font-size: 0.9em; margin-top: 10px; min-height: 1.2em; }
+        label { margin-right: 10px; }
+    </style>
+    <!-- Prettier Standalone -->
+    <script src="https://unpkg.com/prettier@2.8.8/standalone.js"></script>
+    <!-- Prettier Parsers (add more as needed) -->
+    <script src="https://unpkg.com/prettier@2.8.8/parser-babel.js"></script> <!-- JS, JSX, TS, Flow, JSON -->
+    <script src="https://unpkg.com/prettier@2.8.8/parser-html.js"></script> <!-- HTML, Vue, Angular -->
+    <script src="https://unpkg.com/prettier@2.8.8/parser-postcss.js"></script> <!-- CSS, Less, SCSS -->
+    <script src="https://unpkg.com/prettier@2.8.8/parser-markdown.js"></script> <!-- Markdown -->
+    <script src="https://unpkg.com/prettier@2.8.8/parser-yaml.js"></script> <!-- YAML -->
+    <!-- SQL Formatter -->
+    <script src="https://unpkg.com/sql-formatter@15.3.1/dist/sql-formatter.min.js"></script>
+</head>
+<body>
+    <h1>代码格式化 (使用 Prettier)</h1>
+
+    <textarea id="code-area" placeholder="在此处粘贴代码..."></textarea>
+
+    <div>
+        <label for="parser-select">尝试使用的解析器:</label>
+        <select id="parser-select">
+            <option value="babel" selected>Babel (JS/TS/JSON)</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS/Less/SCSS</option>
+            <option value="markdown">Markdown</option>
+            <option value="yaml">YAML</option>
+            <option value="sql">SQL</option>
+            <option value="java">Java (仅高亮)</option>
+            <option value="python">Python (仅高亮)</option>
+        </select>
+        <button onclick="formatCode()">格式化/切换语言</button>
+    </div>
+    <div id="status" class="status-message"></div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <!-- Add CodeMirror modes as needed (e.g., javascript, css, htmlmixed, markdown) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script> <!-- Dependency for htmlmixed -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/sql/sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script> <!-- Java -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/python/python.min.js"></script>
+
+
+    <script>
+        const textarea = document.getElementById('code-area');
+        const statusDiv = document.getElementById('status');
+        const parserSelect = document.getElementById('parser-select');
+
+        // Initialize CodeMirror
+        const editor = CodeMirror.fromTextArea(textarea, {
+            lineNumbers: true,
+            theme: "material-palenight",
+            mode: "javascript", // Default mode, will change based on parser
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            lineWrapping: true
+        });
+
+        // Map parser names to CodeMirror modes
+        const parserModeMap = {
+            babel: { name: "javascript", json: true }, // Handle JSON within babel mode
+            html: "htmlmixed",
+            css: "css",
+            markdown: "markdown",
+            yaml: "yaml",
+            sql: "sql",
+            java: "text/x-java",
+            python: "python"
+        };
+
+        // Update CodeMirror mode when language/parser changes
+        parserSelect.addEventListener('change', () => {
+            const selectedParser = parserSelect.value;
+            const mode = parserModeMap[selectedParser] || "null"; // Fallback to plain text
+            editor.setOption("mode", mode);
+            let message = `语言已切换至 ${selectedParser}.`;
+            if (selectedParser === 'java' || selectedParser === 'python') {
+                message += ' (仅支持语法高亮)';
+            } else if (selectedParser === 'sql') {
+                 message += ' (使用 sql-formatter)';
+            } else {
+                 message += ' (使用 Prettier)';
+            }
+            statusDiv.textContent = message;
+            // Clear status after a few seconds
+            setTimeout(() => {
+                if (statusDiv.textContent === message) {
+                    statusDiv.textContent = '';
+                }
+            }, 4000);
+        });
+
+        function formatCode() {
+            const code = editor.getValue();
+            const selectedParser = parserSelect.value;
+            statusDiv.textContent = '处理中...'; // General status
+
+            if (!code.trim()) {
+                statusDiv.textContent = '请输入代码。';
+                return;
+            }
+
+            // Handle languages without dedicated formatters first
+            if (selectedParser === 'java' || selectedParser === 'python') {
+                statusDiv.textContent = `语言已切换至 ${selectedParser} (仅支持语法高亮).`;
+                 // Trigger mode change explicitly if needed, though 'change' event already does
+                const mode = parserModeMap[selectedParser];
+                editor.setOption("mode", mode);
+                // No formatting action, just update status
+                setTimeout(() => { if (statusDiv.textContent.includes(selectedParser)) statusDiv.textContent = ''; }, 3000);
+                return;
+            }
+
+            statusDiv.textContent = '正在格式化...';
+
+            try {
+                let formattedCode = code; // Default to original code
+
+                if (selectedParser === 'sql') {
+                    // Use sql-formatter
+                    formattedCode = sqlFormatter.format(code);
+                } else {
+                    // Use Prettier for other supported types
+                    formattedCode = prettier.format(code, {
+                        parser: selectedParser,
+                        plugins: prettierPlugins,
+                        // Add Prettier options if needed
+                    });
+                }
+
+                editor.setValue(formattedCode);
+                statusDiv.textContent = '格式化成功！';
+
+            } catch (error) {
+                console.error("Formatting error:", error);
+                statusDiv.textContent = `格式化失败 (${selectedParser}): ${error.message}`;
+            } finally {
+                 // Clear status after a few seconds
+                setTimeout(() => {
+                    if (statusDiv.textContent.startsWith('格式化成功') || statusDiv.textContent.startsWith('格式化失败')) {
+                        statusDiv.textContent = '';
+                    }
+                }, 4000);
+            }
+        }
+
+        // Trigger initial mode setting and status message
+        parserSelect.dispatchEvent(new Event('change'));
+
+    </script>
+</body>
+</html>

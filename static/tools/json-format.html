@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN"> <!-- Set language to Chinese -->
+<head>
+    <meta charset="UTF-8">
+    <title>JSON 格式化工具</title>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css"> <!-- Example theme -->
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        /* Removed textarea style, will style CodeMirror instance */
+        .CodeMirror { border: 1px solid #ddd; height: 400px; /* Increased height */ font-size: 14px; margin-bottom: 10px; }
+        button { padding: 8px 15px; margin-right: 5px; margin-bottom: 5px; cursor: pointer; }
+        .error-message { color: red; font-weight: bold; margin-top: 10px; font-size: 0.9em; }
+        .button-container { margin-bottom: 10px; } /* Container for buttons */
+    </style>
+</head>
+<body>
+    <h1>JSON 格式化 / 工具</h1> <!-- Changed heading -->
+    <textarea id="json-area" placeholder="在此处粘贴 JSON..."></textarea> <!-- Textarea for CodeMirror -->
+    <div class="button-container"> <!-- Added container class -->
+        <button onclick="formatJson()">格式化</button> <!-- Chinese label -->
+        <button onclick="compressJson()">压缩</button> <!-- Chinese label -->
+        <button onclick="escapeJsonString()">转义</button> <!-- Chinese label -->
+        <button onclick="unescapeJsonString()">去转义</button> <!-- Chinese label -->
+    </div>
+    <div id="error-output" class="error-message"></div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script> <!-- JSON mode uses javascript mode -->
+
+    <script>
+        const errorOutput = document.getElementById('error-output');
+        const textarea = document.getElementById('json-area');
+
+        // Initialize CodeMirror
+        const editor = CodeMirror.fromTextArea(textarea, {
+            lineNumbers: true,
+            mode: { name: "javascript", json: true }, // Use javascript mode configured for JSON
+            theme: "material-palenight", // Match the theme CSS loaded
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            lineWrapping: true
+        });
+
+        function clearError() {
+            errorOutput.textContent = '';
+        }
+
+        function displayError(message) {
+            errorOutput.textContent = message;
+        }
+
+        function formatJson() {
+            clearError();
+            try {
+                const input = editor.getValue().trim(); // Get value from editor
+                if (!input) return; // Do nothing if empty
+                const jsonObj = JSON.parse(input);
+                editor.setValue(JSON.stringify(jsonObj, null, 4)); // Set value in editor
+            } catch (e) {
+                displayError('无效的 JSON (格式化): ' + e.message); // Chinese error
+            }
+        }
+
+        function compressJson() {
+            clearError();
+            try {
+                const input = editor.getValue().trim(); // Get value from editor
+                if (!input) return;
+                const jsonObj = JSON.parse(input);
+                editor.setValue(JSON.stringify(jsonObj)); // Set value in editor
+            } catch (e) {
+                displayError('无效的 JSON (压缩): ' + e.message); // Chinese error
+            }
+        }
+
+        function escapeJsonString() {
+            clearError();
+            try {
+                const input = editor.getValue(); // Get value from editor
+                // Basic escaping for quotes and backslashes within a string context
+                // This doesn't create a full JSON string, just escapes the content
+                editor.setValue(input
+                    .replace(/\\/g, '\\\\') // Escape backslashes first
+                    .replace(/"/g, '\\"'));  // Escape double quotes
+            } catch (e) {
+                 displayError('转义错误: ' + e.message); // Chinese error
+            }
+        }
+
+        function unescapeJsonString() {
+            clearError();
+            try {
+                const input = editor.getValue(); // Get value from editor
+                // Basic unescaping - careful with this, might not be robust for all cases
+                // Assumes the input is *just* the string content, not a full JSON string literal
+                 editor.setValue(input
+                    .replace(/\\"/g, '"')   // Unescape double quotes
+                    .replace(/\\\\/g, '\\')); // Unescape backslashes
+            } catch (e) {
+                 displayError('去转义错误: ' + e.message); // Chinese error
+            }
+        }
+    </script>
+</body>
+</html>

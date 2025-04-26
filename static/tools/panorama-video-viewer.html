@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panorama Video Viewer (2:1)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars on body */
+            font-family: sans-serif;
+        }
+        #panorama-container {
+            width: 100%;
+            height: 100vh; /* Full viewport height */
+            position: relative; /* Needed for absolute positioning of controls */
+        }
+        #panorama {
+            width: 100%;
+            height: 100%;
+            background-color: #f0f0f0; /* Placeholder background */
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #controls label, #controls input, #controls button {
+             color: white;
+        }
+        #controls input[type="text"] {
+            padding: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            border-radius: 3px;
+            width: 300px; /* Adjust width as needed */
+        }
+        #controls button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #controls button:hover {
+            background-color: #0056b3;
+        }
+        .pannellum-load-button {
+            display: none; /* Hide default load button */
+        }
+        .back-link {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        /* Style the video element if needed (Pannellum creates it) */
+        .pnlm-video {
+            /* Custom styles for the video element */
+        }
+    </style>
+</head>
+<body>
+
+<div id="panorama-container">
+    <div id="panorama"><p style="text-align:center; padding-top: 20px; color: #555;">Enter a video URL and click Load.</p></div>
+    <div id="controls">
+        <label for="videoUrlInput">Video URL:</label>
+        <input type="text" id="videoUrlInput" placeholder="Enter .mp4 or .m3u8 URL">
+        <button id="loadVideoButton">Load Video</button>
+    </div>
+    <a href="../index.html" class="back-link">Back to Tools</a>
+</div>
+
+<script>
+    const videoUrlInput = document.getElementById('videoUrlInput');
+    const loadVideoButton = document.getElementById('loadVideoButton');
+    const panoramaDiv = document.getElementById('panorama');
+    let viewer = null; // To hold the Pannellum instance
+
+    function initializeViewer(videoUrl) {
+        // Destroy the previous viewer instance if it exists
+        if (viewer) {
+            viewer.destroy();
+            viewer = null;
+        }
+         // Clear placeholder text
+        panoramaDiv.innerHTML = '';
+
+        const isM3U8 = videoUrl.toLowerCase().endsWith('.m3u8');
+        let videoElement;
+
+        // Create video element for Pannellum
+        videoElement = document.createElement('video');
+        videoElement.style.display = 'none'; // Hide the original video element
+        videoElement.setAttribute('crossorigin', 'anonymous'); // Handle CORS if necessary
+        videoElement.setAttribute('playsinline', ''); // Important for mobile playback
+        videoElement.setAttribute('webkit-playsinline', ''); // iOS specific
+        videoElement.controls = false; // Pannellum adds its own controls
+        videoElement.loop = true; // Optional: loop the video
+        videoElement.preload = 'auto';
+
+        if (isM3U8 && Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(videoUrl);
+            hls.attachMedia(videoElement);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                console.log("HLS manifest parsed, attempting to play.");
+                // videoElement.play().catch(e => console.error("HLS Playback failed:", e));
+            });
+             hls.on(Hls.Events.ERROR, function (event, data) {
+                console.error('HLS.js error:', data);
+            });
+        } else if (videoUrl.toLowerCase().endsWith('.mp4')) {
+            videoElement.src = videoUrl;
+        } else {
+            console.error("Unsupported video format or HLS not supported.");
+            panoramaDiv.innerHTML = '<p style="text-align:center; padding-top: 20px; color: red;">Unsupported video format or HLS.js error.</p>';
+            return; // Don't initialize viewer if format is wrong
+        }
+
+        document.body.appendChild(videoElement); // Add to DOM temporarily for loading
+
+        // Initialize Pannellum viewer
+        viewer = pannellum.viewer('panorama', {
+            "type": "equirectangular",
+            "panorama": videoElement, // Use the video element as the source
+            "autoLoad": true,
+            "autoPlay": true, // Start playing automatically
+            "showControls": true,
+            "haov": 360,
+            "vaov": 180,
+            "minPitch": -90,
+            "maxPitch": 90,
+            "compass": true,
+            "hotSpotDebug": false // Set to true for debugging hotspots
+        });
+
+        // Listen for the 'load' event which signifies Pannellum is ready
+        viewer.on('load', () => {
+            console.log("Pannellum viewer loaded. Attempting to play video.");
+            videoElement.play().catch(e => {
+                console.error("Video playback failed (likely autoplay restriction):", e);
+                // Display a message to the user if autoplay fails
+                // Check if the placeholder is still there or if viewer failed to load texture
+                 if (panoramaDiv.querySelector('p')) {
+                    panoramaDiv.innerHTML = '<p style="text-align:center; padding-top: 20px; color: orange;">Click/Tap to play video (Autoplay was blocked).</p>';
+                 } else {
+                     // If viewer loaded but video didn't play, add overlay message? Or rely on user clicking viewer?
+                     // For simplicity, let's add a general message if play fails after load
+                     const playPrompt = document.createElement('p');
+                     playPrompt.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0,0,0,0.7); color: white; padding: 15px; border-radius: 5px; z-index: 20; text-align: center; cursor: pointer;';
+                     playPrompt.textContent = 'Click/Tap to play video (Autoplay was blocked)';
+                     panoramaDiv.appendChild(playPrompt);
+                     playPrompt.addEventListener('click', () => {
+                        videoElement.play().then(() => playPrompt.remove()).catch(e => console.error("Manual play failed:", e));
+                     }, { once: true });
+                     // Also allow clicking anywhere on the viewer itself
+                     panoramaDiv.addEventListener('click', () => {
+                         videoElement.play().then(() => playPrompt.remove()).catch(e => console.error("Manual play failed:", e));
+                     }, { once: true }); // Use once so it doesn't interfere later
+                 }
+            });
+        });
+
+        // Handle potential errors during viewer initialization (e.g., CORS)
+        viewer.on('error', (err) => {
+            console.error("Pannellum viewer error:", err);
+            panoramaDiv.innerHTML = `<p style="text-align:center; padding-top: 20px; color: red;">Error loading panorama: ${err}</p>`;
+            if (document.body.contains(videoElement)) {
+                document.body.removeChild(videoElement); // Clean up video element if viewer fails
+            }
+        });
+
+    }
+
+    loadVideoButton.addEventListener('click', function() {
+        const url = videoUrlInput.value.trim();
+        if (url) {
+            initializeViewer(url);
+        } else {
+            alert("Please enter a video URL.");
+        }
+    });
+
+    // Optional: Load video if URL is passed as a query parameter e.g., ?url=...
+    // window.addEventListener('DOMContentLoaded', () => {
+    //     const urlParams = new URLSearchParams(window.location.search);
+    //     const videoUrlFromQuery = urlParams.get('url');
+    //     if (videoUrlFromQuery) {
+    //         videoUrlInput.value = videoUrlFromQuery;
+    //         initializeViewer(videoUrlFromQuery);
+    //     }
+    // });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+:root {
+    --sidebar-bg: #ffffff; /* Cleaner white background */
+    --sidebar-border-color: #e1e4e8; /* Subtle border color (GitHub-like) */
+    --sidebar-width: 240px;
+    --active-bg: #0366d6; /* Slightly updated blue */
+    --active-text: #ffffff;
+    --hover-bg: #f6f8fa; /* Lighter hover (GitHub-like) */
+    --text-color: #24292e; /* Darker text (GitHub-like) */
+    --link-padding: 6px 15px; /* Slightly less vertical padding */
+    --border-radius: 6px; /* Slightly more rounded */
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Modern system fonts */
+    overflow: hidden; /* Prevent scrolling on the main page */
+    background-color: #ffffff; /* White background for the container */
+}
+
+.container {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    padding: 15px 0; /* Remove horizontal padding, add via links */
+    border-right: 1px solid var(--sidebar-border-color); /* Add subtle right border */
+    overflow-y: auto; /* Allow scrolling if tool list is long */
+    height: 100%;
+    box-sizing: border-box; /* Include padding in width/height */
+    flex-shrink: 0; /* Prevent sidebar from shrinking */
+}
+
+.sidebar h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1em; /* Slightly smaller */
+    font-weight: 600; /* Bolder */
+    padding: 0 15px; /* Add horizontal padding back */
+    color: var(--text-color);
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 2px; /* Small space between items */
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: var(--link-padding);
+    color: var(--text-color);
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    margin: 1px 8px; /* Adjust margin for spacing */
+    transition: background-color 0.15s ease, color 0.15s ease; /* Faster transition */
+    font-size: 0.9em; /* Slightly smaller font */
+    line-height: 1.5;
+}
+
+.sidebar ul li a:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-color); /* Keep text color on hover */
+}
+
+.sidebar ul li a.active {
+    background-color: var(--active-bg);
+    color: var(--active-text);
+    font-weight: 600; /* Bolder weight for active */
+}
+
+.content {
+    flex-grow: 1; /* Take remaining space */
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* The iframe will handle its own scrolling */
+    padding: 5px; /* Add a small padding around the iframe */
+    box-sizing: border-box;
+    background-color: #f9f9f9; /* Slightly off-white background for content */
+}
+
+#tool-frame {
+    border: 1px solid #ddd; /* Add a subtle border */
+    border-radius: var(--border-radius);
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: #ffffff; /* Ensure iframe background is white */
+}
+
+/* Styles for categorized tool list */
+.sidebar ul li.category-header {
+    font-weight: 600; /* Bolder */
+    margin-top: 15px; /* More space above category */
+    margin-bottom: 5px;
+    padding: var(--link-padding);
+    padding-left: 15px;
+    color: #586069; /* GitHub-like subtle text color */
+    font-size: 0.85em; /* Even smaller */
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative; /* Needed for absolute positioning of ::before */
+    user-select: none; /* Prevent text selection on click */
+}
+
+/* Add triangle indicator */
+.sidebar ul li.category-header::before {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 0 5px 8px; /* Triangle pointing right */
+    border-color: transparent transparent transparent #586069; /* Match text color */
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    transform-origin: 3px center; /* Adjust origin for better rotation appearance */
+}
+
+/* Rotate triangle down when expanded */
+.sidebar ul li.category-header.expanded::before {
+    transform: rotate(90deg);
+}
+
+/* Keep triangle right when collapsed (redundant but clear) */
+.sidebar ul li.category-header.collapsed::before {
+     transform: rotate(0deg);
+}
+
+
+.sidebar ul ul.nested-tool-list {
+    padding-left: 10px; /* Slightly less indent */
+    list-style: none;
+    margin: 0;
+    /* Add a subtle visual cue for nesting */
+    border-left: 2px solid #e1e4e8; /* Subtle left border for nested list */
+    margin-left: 13px; /* Align border with triangle */
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+/* Adjust nested link margin and padding */
+.sidebar ul ul.nested-tool-list li a {
+    margin: 1px 8px 1px 5px; /* Adjust margins for nested items */
+    padding-left: 10px; /* Align text inside the border */
+}
+
+/* --- Common Tool Styles --- */
+
+/* General container for tool UI elements */
+.tool-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between sections */
+    max-width: 750px; /* Slightly wider max-width */
+    margin: 20px auto; /* Center the container */
+    padding: 25px; /* More padding */
+    border: 1px solid #ddd; /* Subtle border */
+    border-radius: var(--border-radius);
+    background-color: #ffffff; /* White background for the tool area */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle shadow */
+}
+
+/* Container for vertical layouts like JSON/YAML */
+.tool-container-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: calc(100vh - 120px); /* Adjust height dynamically */
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+/* Section within a tool (e.g., input group, result area) */
+.tool-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between elements within a section */
+}
+
+/* Section for side-by-side controls */
+.tool-inline-controls {
+    display: flex;
+    gap: 15px; /* Space between controls */
+    align-items: center; /* Align items vertically */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+/* Section for I/O textareas */
+.tool-io-section {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0; /* Prevent flex overflow */
+}
+
+/* Styling for labels */
+.tool-label {
+    font-weight: 600; /* Slightly bolder */
+    margin-bottom: 5px;
+    display: block;
+    color: #444; /* Darker label text */
+}
+
+/* Common input field styling */
+.tool-input,
+.tool-select,
+.tool-textarea {
+    padding: 10px; /* Slightly more padding */
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    box-sizing: border-box;
+    width: 100%; /* Default to full width */
+    transition: border-color 0.2s ease;
+}
+
+.tool-input:focus,
+.tool-select:focus,
+.tool-textarea:focus {
+    border-color: var(--active-bg); /* Highlight focus */
+    outline: none;
+}
+
+/* Specific styling for different input types */
+.tool-input[type="text"],
+.tool-input[type="number"] {
+    /* Specific styles if needed */
+}
+
+.tool-select {
+    min-width: 120px; /* Ensure select has some width */
+    width: auto; /* Allow select to size based on content/min-width */
+    flex-grow: 1; /* Allow select to grow in inline controls */
+    cursor: pointer;
+}
+
+.tool-textarea {
+    flex-grow: 1;
+    font-family: monospace;
+    resize: vertical; /* Allow vertical resize */
+    min-height: 100px; /* Minimum height */
+}
+
+/* Button styling */
+.tool-button {
+    padding: 10px 20px;
+    background-color: var(--active-bg);
+    color: var(--active-text);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    font-size: 1em;
+    align-self: flex-start; /* Align button to start in flex column */
+}
+
+.tool-button:hover {
+    opacity: 0.85; /* Slightly more noticeable hover */
+}
+
+/* Container for centered buttons */
+.tool-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* Result display area */
+.tool-result {
+    margin-top: 5px;
+    padding: 12px; /* More padding */
+    background-color: #f0f0f0; /* Lighter background */
+    border: 1px solid #e0e0e0; /* Subtle border */
+    border-radius: var(--border-radius);
+    word-wrap: break-word;
+    white-space: pre-wrap; /* Preserve whitespace */
+    font-family: monospace; /* Monospace for results often makes sense */
+    min-height: 1.5em;
+    line-height: 1.4; /* Improve readability */
+}
+.tool-result ul {
+    margin: 5px 0;
+    padding-left: 25px;
+}
+.tool-result li {
+    margin-bottom: 3px;
+}
+
+
+/* Error message styling */
+.tool-error {
+    color: #d9534f; /* Bootstrap danger color */
+    font-size: 0.9em;
+    margin-top: 8px;
+    min-height: 1em; /* Ensure space is reserved */
+}
+
+/* Specific overrides if needed */
+.tool-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    color: #333;
+}
+
+/* Adjustments for JSON/YAML converter layout */
+.tool-container-vertical .tool-label {
+    text-align: left; /* Align labels left */
+}
+.tool-container-vertical .tool-error {
+    text-align: center;
+}

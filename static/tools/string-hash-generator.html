@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>字符串哈希/指纹生成器</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        textarea { width: 95%; height: 150px; margin-bottom: 10px; font-family: monospace; }
+        button { padding: 10px 15px; cursor: pointer; margin-bottom: 15px; }
+        .hash-options label { display: inline-block; margin-right: 15px; margin-bottom: 10px; }
+        #results-table { margin-top: 15px; border-collapse: collapse; width: 95%; }
+        #results-table th, #results-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-family: monospace; word-break: break-all; }
+        #results-table th { background-color: #f2f2f2; }
+    </style>
+    <!-- CryptoJS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head>
+<body>
+    <h1>字符串哈希/指纹生成器</h1>
+
+    <label for="input-string">输入字符串:</label>
+    <textarea id="input-string" placeholder="在此处输入要计算哈希值的字符串..."></textarea>
+
+    <div class="hash-options">
+        <label><input type="checkbox" name="hash-algo" value="MD5" checked> MD5</label>
+        <label><input type="checkbox" name="hash-algo" value="SHA1" checked> SHA-1</label>
+        <label><input type="checkbox" name="hash-algo" value="SHA256" checked> SHA-256</label>
+        <label><input type="checkbox" name="hash-algo" value="SHA512"> SHA-512</label>
+        <label><input type="checkbox" name="hash-algo" value="SHA3"> SHA-3 (512-bit)</label>
+        <label><input type="checkbox" name="hash-algo" value="RIPEMD160"> RIPEMD-160</label>
+    </div>
+
+    <button onclick="calculateHashes()">计算哈希值</button>
+
+    <table id="results-table">
+        <thead>
+            <tr>
+                <th>算法</th>
+                <th>哈希值 (Hex)</th>
+            </tr>
+        </thead>
+        <tbody id="results-body">
+            <!-- Results will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        const inputString = document.getElementById('input-string');
+        const resultsBody = document.getElementById('results-body');
+        const algoCheckboxes = document.querySelectorAll('input[name="hash-algo"]');
+
+        function calculateHashes() {
+            const text = inputString.value;
+            resultsBody.innerHTML = ''; // Clear previous results
+
+            if (!text) {
+                // Optionally display a message if input is empty
+                return;
+            }
+
+            algoCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const algo = checkbox.value;
+                    let hash = '';
+                    try {
+                        switch (algo) {
+                            case 'MD5':
+                                hash = CryptoJS.MD5(text).toString(CryptoJS.enc.Hex);
+                                break;
+                            case 'SHA1':
+                                hash = CryptoJS.SHA1(text).toString(CryptoJS.enc.Hex);
+                                break;
+                            case 'SHA256':
+                                hash = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex);
+                                break;
+                            case 'SHA512':
+                                hash = CryptoJS.SHA512(text).toString(CryptoJS.enc.Hex);
+                                break;
+                            case 'SHA3':
+                                // CryptoJS SHA3 defaults to 512 bits
+                                hash = CryptoJS.SHA3(text).toString(CryptoJS.enc.Hex);
+                                break;
+                            case 'RIPEMD160':
+                                hash = CryptoJS.RIPEMD160(text).toString(CryptoJS.enc.Hex);
+                                break;
+                        }
+                        addResultRow(algo, hash);
+                    } catch (e) {
+                        console.error(`Error calculating ${algo}:`, e);
+                        addResultRow(algo, `Error: ${e.message}`);
+                    }
+                }
+            });
+        }
+
+        function addResultRow(algorithm, hashValue) {
+            const row = resultsBody.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            cell1.textContent = algorithm;
+            cell2.textContent = hashValue;
+        }
+
+        // Optional: Calculate hashes automatically on input change after a small delay
+        let debounceTimer;
+        inputString.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(calculateHashes, 300); // Calculate after 300ms of inactivity
+        });
+
+        // Initial calculation if there's pre-filled text (unlikely here, but good practice)
+        // calculateHashes();
+
+    </script>
+</body>
+</html>

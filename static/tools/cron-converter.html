@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cron转换</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Load cron libraries from CDN -->
+    <script src="https://unpkg.com/cronstrue/dist/cronstrue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cron-parser@latest/dist/cron-parser.min.js"></script>
+    <!-- Inline styles removed -->
+</head>
+<body>
+    <!-- Removed outer container -->
+    <div class="tool-container">
+        <h1>Cron转换</h1>
+
+        <div class="tool-section">
+            <label for="cronInput" class="tool-label">Cron 表达式:</label>
+            <input type="text" id="cronInput" class="tool-input" placeholder="例如: */5 * * * * (每5分钟)">
+            <button onclick="parseCron()" class="tool-button">解析 Cron 表达式</button>
+            <div id="cronError" class="tool-error"></div>
+        </div>
+
+        <div class="tool-section"> <!-- Changed from result-section -->
+            <label class="tool-label">描述:</label>
+            <div id="cronDescription" class="tool-result"></div>
+        </div>
+
+        <div class="tool-section"> <!-- Changed from result-section -->
+            <label class="tool-label">接下来 5 次运行时间 (本地时间):</label>
+            <div id="cronNextRuns" class="tool-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function clearResults() {
+            document.getElementById('cronError').textContent = '';
+            document.getElementById('cronDescription').textContent = '';
+            document.getElementById('cronNextRuns').textContent = '';
+        }
+
+        function parseCron() {
+            clearResults();
+            const cronString = document.getElementById('cronInput').value.trim();
+            const errorDiv = document.getElementById('cronError');
+            const descriptionDiv = document.getElementById('cronDescription');
+            const nextRunsDiv = document.getElementById('cronNextRuns');
+
+            if (!cronString) {
+                errorDiv.textContent = '请输入 Cron 表达式。';
+                return;
+            }
+
+            // Check if libraries are loaded
+            if (typeof cronstrue === 'undefined' || typeof cronParser === 'undefined') {
+                 errorDiv.textContent = '错误：无法加载 Cron 解析库。请检查网络连接或 CDN 链接。';
+                 return;
+            }
+
+            try {
+                // Generate description
+                const description = cronstrue.toString(cronString, { use24HourTimeFormat: true });
+                descriptionDiv.textContent = description;
+
+                // Calculate next 5 run times
+                const options = {
+                    iterator: true // Use iterator for performance
+                };
+                const interval = cronParser.parseExpression(cronString, options);
+                let nextRunsContent = '<ul>';
+                let count = 0;
+                while (count < 5) {
+                    try {
+                        const obj = interval.next();
+                        // Format date to local string
+                        const runDate = obj.value.toDate();
+                        nextRunsContent += `<li>${runDate.toLocaleString()}</li>`;
+                        count++;
+                    } catch (e) {
+                        // No more runs or error getting next run
+                        if (count === 0) { // Only show error if no runs found at all
+                           nextRunsContent = '无法计算下一次运行时间。';
+                        }
+                        break; // Exit loop
+                    }
+                }
+                 if (count > 0) {
+                    nextRunsContent += '</ul>';
+                 }
+
+                nextRunsDiv.innerHTML = nextRunsContent;
+
+            } catch (err) {
+                console.error("Cron parsing error:", err);
+                errorDiv.textContent = `解析错误: ${err.message || err}`;
+                descriptionDiv.textContent = ''; // Clear results on error
+                nextRunsDiv.textContent = '';
+            }
+        }
+
+        // Add event listener for Enter key
+        document.getElementById('cronInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                parseCron();
+            }
+        });
+    </script>
+    <!-- Keep this script if it's used globally, otherwise remove -->
+    <!-- <script src="../js/app.js"></script> -->
+</body>
+</html>
