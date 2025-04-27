@@ -82,6 +82,10 @@
       {
         "name": "进制转换",
         "path": "static/tools/base-converter.html"
+      },
+      {
+        "name": "文本差异对比",
+        "path": "static/tools/text-diff.html"
       }
     ]
   }
