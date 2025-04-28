@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Difference Tool</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/text-diff.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Text Difference Tool</h1>
+        <p>Enter text in the boxes below. Differences will be highlighted automatically.</p>
+        <div class="diff-inputs">
+            <div id="text1" class="editable-div" contenteditable="true" spellcheck="false" placeholder="Enter first text"></div>
+            <div id="text2" class="editable-div" contenteditable="true" spellcheck="false" placeholder="Enter second text"></div>
+        </div>
+        <!-- Removed compare button and diffOutput div -->
+    </div>
+
+    <!-- Load diff-match-patch library (assuming it's available or will be added) -->
+    <!-- If not available, the JS will need a simpler diff implementation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+    <script src="../js/text-diff.js"></script>
+</body>
+</html>
