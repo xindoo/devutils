@@ -3,12 +3,20 @@
     "categoryName": "编解码",
     "tools": [
       {
-        "name": "Base64 Encode/Decode",
+        "name": "Base64编解码",
         "path": "static/tools/base64.html"
       },
       {
         "name": "Base64转图片",
         "path": "static/tools/base64-image.html"
+      },
+      {
+        "name": "视频播放",
+        "path": "static/tools/video-player.html"
+      },
+      {
+        "name": "视频压缩与编码转换",
+        "path": "static/tools/video-compressor.html"
       }
     ]
   },
@@ -61,6 +69,10 @@
       {
         "name": "视频播放",
         "path": "static/tools/video-player.html"
+      },
+      {
+        "name": "视频压缩与编码转换",
+        "path": "static/tools/video-compressor.html"
       }
     ]
   },

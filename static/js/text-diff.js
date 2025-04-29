@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let data = diffs[i][1]; // Text of change.
 
             // Escape HTML characters in the data
-             data = data.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/\n/g, '&para;<br>');
+             data = data.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/\n/g, '<br>');
 
 
             switch (op) {
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let debounceTimer;
     function handleInput() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(compareAndHighlight, 250); // Adjust delay as needed (e.g., 250ms)
+        debounceTimer = setTimeout(compareAndHighlight, 500); // Adjust delay as needed (e.g., 250ms)
     }
 
     // Add input event listeners to both divs

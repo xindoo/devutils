@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频压缩与编码转换</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <h1>视频压缩与编码转换</h1>
+        <nav>
+            <a href="../../index.html">返回首页</a>
+        </nav>
+    </header>
+    <main>
+        <section class="tool-section">
+            <h2>选择视频文件</h2>
+            <input type="file" id="video-file-input" accept="video/*">
+        </section>
+        <section class="tool-section">
+            <h2>压缩设置</h2>
+            <label for="quality-range">质量 (1-100):</label>
+            <input type="range" id="quality-range" min="1" max="100" value="80">
+            <span id="quality-value">80</span>
+            <br>
+            <label for="codec-select">选择编码:</label>
+            <select id="codec-select">
+                <option value="libx264">H.264</option>
+                <option value="libx265">H.265</option>
+                <option value="vp9">VP9</option>
+                <!-- Add more codecs as needed -->
+            </select>
+        </section>
+        <section class="tool-section">
+            <button id="compress-button">开始处理</button>
+        </section>
+        <section class="tool-section">
+            <h2>输出</h2>
+            <p id="status-message"></p>
+            <progress id="progress-bar" value="0" max="100"></progress>
+            <br>
+            <a id="download-link" style="display: none;">下载处理后的视频</a>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 DevUtils</p>
+    </footer>
+    <script src="../js/app.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script> <!-- Include FFmpeg.wasm library -->
+    <script src="../js/video-compressor.js"></script>
+</body>
+</html>
