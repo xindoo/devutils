@@ -1,13 +1,13 @@
 :root {
-    --sidebar-bg: #ffffff; /* Cleaner white background */
-    --sidebar-border-color: #e1e4e8; /* Subtle border color (GitHub-like) */
-    --sidebar-width: 240px;
-    --active-bg: #0366d6; /* Slightly updated blue */
+    --sidebar-bg: #f8f9fa; /* Lighter grey background */
+    --sidebar-border-color: #dee2e6; /* Softer border */
+    --sidebar-width: 250px; /* A bit wider */
+    --active-bg: #007bff; /* Bootstrap primary blue */
     --active-text: #ffffff;
-    --hover-bg: #f6f8fa; /* Lighter hover (GitHub-like) */
-    --text-color: #24292e; /* Darker text (GitHub-like) */
-    --link-padding: 6px 15px; /* Slightly less vertical padding */
-    --border-radius: 6px; /* Slightly more rounded */
+    --hover-bg: #e9ecef; /* A subtle grey for hover */
+    --text-color: #495057; /* Softer text color */
+    --link-padding: 8px 20px; /* More padding */
+    --border-radius: 8px; /* More rounded corners */
 }
 
 body, html {
@@ -27,21 +27,23 @@ body, html {
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--sidebar-bg);
-    padding: 15px 0; /* Remove horizontal padding, add via links */
-    border-right: 1px solid var(--sidebar-border-color); /* Add subtle right border */
-    overflow-y: auto; /* Allow scrolling if tool list is long */
+    padding: 20px 0;
+    border-right: 1px solid var(--sidebar-border-color);
+    overflow-y: auto;
     height: 100%;
-    box-sizing: border-box; /* Include padding in width/height */
-    flex-shrink: 0; /* Prevent sidebar from shrinking */
+    box-sizing: border-box;
+    flex-shrink: 0;
+    transition: width 0.3s ease; /* Add transition for potential collapse feature */
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* Add a subtle shadow */
 }
 
 .sidebar h2 {
     margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.1em; /* Slightly smaller */
-    font-weight: 600; /* Bolder */
-    padding: 0 15px; /* Add horizontal padding back */
-    color: var(--text-color);
+    margin-bottom: 20px; /* More space below title */
+    font-size: 1.2em; /* Slightly larger */
+    font-weight: 600;
+    padding: 0 20px; /* Match link padding */
+    color: #343a40; /* Darker title color */
 }
 
 .sidebar ul {
@@ -61,15 +63,16 @@ body, html {
     text-decoration: none;
     cursor: pointer;
     border-radius: var(--border-radius);
-    margin: 1px 8px; /* Adjust margin for spacing */
-    transition: background-color 0.15s ease, color 0.15s ease; /* Faster transition */
-    font-size: 0.9em; /* Slightly smaller font */
+    margin: 2px 10px; /* Adjust margin for spacing */
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 0.95em; /* Slightly larger font */
     line-height: 1.5;
+    font-weight: 500; /* Medium weight */
 }
 
 .sidebar ul li a:hover {
     background-color: var(--hover-bg);
-    color: var(--text-color); /* Keep text color on hover */
+    color: #0056b3; /* Darker blue on hover */
 }
 
 .sidebar ul li a.active {
