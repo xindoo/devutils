@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const text1Div = document.getElementById('text1');
     const text2Div = document.getElementById('text2');
+    const lineNumbers1 = document.getElementById('lineNumbers1');
+    const lineNumbers2 = document.getElementById('lineNumbers2');
 
     // Initialize diff-match-patch
     const dmp = new diff_match_patch();
@@ -14,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get text content from divs, preserving line breaks
         const text1 = getTextWithLineBreaks(text1Div);
         const text2 = getTextWithLineBreaks(text2Div);
+
+        // Update line numbers
+        updateLineNumbers(text1, lineNumbers1);
+        updateLineNumbers(text2, lineNumbers2);
 
         // Compute the difference
         const diffs = dmp.diff_main(text1, text2);
@@ -59,6 +65,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Restore cursor position
         if (cursorInfo) {
             restoreCursorPosition(cursorInfo.div === 1 ? text1Div : text2Div, cursorInfo.textOffset);
+        }
+    }
+
+    // Function to update line numbers
+    function updateLineNumbers(text, lineNumbersDiv) {
+        const lines = text.split('\n');
+        const lineCount = Math.max(1, lines.length);
+        
+        let lineNumbersHtml = '';
+        for (let i = 1; i <= lineCount; i++) {
+            lineNumbersHtml += i + '\n';
+        }
+        
+        if (lineNumbersDiv.textContent !== lineNumbersHtml.trim()) {
+            lineNumbersDiv.textContent = lineNumbersHtml.trim();
         }
     }
 
@@ -257,6 +278,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add input event listeners to both divs
     text1Div.addEventListener('input', handleInput);
     text2Div.addEventListener('input', handleInput);
+
+    // Add scroll synchronization between text areas and line numbers
+    function syncScroll(textDiv, lineNumbersDiv) {
+        lineNumbersDiv.scrollTop = textDiv.scrollTop;
+    }
+
+    text1Div.addEventListener('scroll', () => syncScroll(text1Div, lineNumbers1));
+    text2Div.addEventListener('scroll', () => syncScroll(text2Div, lineNumbers2));
+
+    // Initialize line numbers on load
+    updateLineNumbers('', lineNumbers1);
+    updateLineNumbers('', lineNumbers2);
 
     // Initial comparison on load (if divs have initial content)
     compareAndHighlight();
