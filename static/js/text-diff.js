@@ -4,65 +4,178 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize diff-match-patch
     const dmp = new diff_match_patch();
+    
+    // Define diff constants
+    const DIFF_DELETE = -1;
+    const DIFF_INSERT = 1;
+    const DIFF_EQUAL = 0;
 
     function compareAndHighlight() {
-        // Get plain text content from divs
-        const text1 = text1Div.textContent || "";
-        const text2 = text2Div.textContent || "";
+        // Get text content from divs, preserving line breaks
+        const text1 = getTextWithLineBreaks(text1Div);
+        const text2 = getTextWithLineBreaks(text2Div);
 
         // Compute the difference
         const diffs = dmp.diff_main(text1, text2);
         dmp.diff_cleanupSemantic(diffs); // Make the diff more human-readable
 
+        // Calculate statistics
+        updateStatistics(diffs, text1, text2);
+
         // Generate HTML representation of the diffs
         const html1 = diffToHtml(diffs, 1); // HTML for the first div (show deletions)
         const html2 = diffToHtml(diffs, 2); // HTML for the second div (show insertions)
 
-        // Preserve cursor position (basic attempt - might not be perfect)
+        // Store current cursor position
         const selection = window.getSelection();
-        const anchorNode = selection.anchorNode;
-        const anchorOffset = selection.anchorOffset;
-        const focusNode = selection.focusNode;
-        const focusOffset = selection.focusOffset;
-
-        // Check if cursor was in one of the divs
-        const cursorInDiv1 = text1Div.contains(anchorNode);
-        const cursorInDiv2 = text2Div.contains(anchorNode);
+        let cursorInfo = null;
+        
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const cursorInDiv1 = text1Div.contains(range.startContainer);
+            const cursorInDiv2 = text2Div.contains(range.startContainer);
+            
+            if (cursorInDiv1 || cursorInDiv2) {
+                // Calculate text offset before the cursor
+                const textBeforeCursor = getTextBeforeCursor(cursorInDiv1 ? text1Div : text2Div, range);
+                cursorInfo = {
+                    div: cursorInDiv1 ? 1 : 2,
+                    textOffset: textBeforeCursor.length
+                };
+            }
+        }
 
         // Update the innerHTML with highlighted diffs
-        // Avoid updating if the content hasn't actually changed textually
-        // (prevents unnecessary cursor jumps if only whitespace/formatting changes)
-        if (text1Div.innerHTML !== html1) {
-             text1Div.innerHTML = html1;
+        const currentHtml1 = text1Div.innerHTML;
+        const currentHtml2 = text2Div.innerHTML;
+        
+        if (currentHtml1 !== html1) {
+            text1Div.innerHTML = html1;
         }
-        if (text2Div.innerHTML !== html2) {
-             text2Div.innerHTML = html2;
+        if (currentHtml2 !== html2) {
+            text2Div.innerHTML = html2;
         }
 
+        // Restore cursor position
+        if (cursorInfo) {
+            restoreCursorPosition(cursorInfo.div === 1 ? text1Div : text2Div, cursorInfo.textOffset);
+        }
+    }
 
-        // Restore cursor position (basic attempt)
-        // This is complex and might not work perfectly after innerHTML changes.
-        // A more robust solution would involve mapping the old position to the new DOM structure.
+    // Helper function to get text content while preserving line breaks
+    function getTextWithLineBreaks(element) {
+        let text = '';
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+            null,
+            false
+        );
+        
+        let node;
+        while (node = walker.nextNode()) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                text += node.textContent;
+            } else if (node.nodeName === 'BR') {
+                text += '\n';
+            } else if (node.nodeName === 'DIV' && node !== element) {
+                // Add newline for div elements (except the root element)
+                if (text && !text.endsWith('\n')) {
+                    text += '\n';
+                }
+            }
+        }
+        
+        return text;
+    }
+
+    // Helper function to get text content before cursor position
+    function getTextBeforeCursor(element, range) {
+        const tempRange = document.createRange();
+        tempRange.setStart(element, 0);
+        tempRange.setEnd(range.startContainer, range.startOffset);
+        
+        let text = '';
+        const walker = document.createTreeWalker(
+            tempRange.commonAncestorContainer,
+            NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+            {
+                acceptNode: function(node) {
+                    if (tempRange.intersectsNode(node)) {
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                    return NodeFilter.FILTER_REJECT;
+                }
+            },
+            false
+        );
+        
+        let node;
+        while (node = walker.nextNode()) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (node === range.startContainer) {
+                    text += node.textContent.substring(0, range.startOffset);
+                } else {
+                    text += node.textContent;
+                }
+            } else if (node.nodeName === 'BR') {
+                text += '\n';
+            }
+        }
+        
+        return text;
+    }
+
+    // Helper function to restore cursor position based on text offset
+    function restoreCursorPosition(element, textOffset) {
         try {
-            if (cursorInDiv1 && text1Div.contains(anchorNode)) {
-                 selection.collapse(anchorNode, Math.min(anchorOffset, anchorNode.textContent.length));
-            } else if (cursorInDiv2 && text2Div.contains(anchorNode)) {
-                 selection.collapse(anchorNode, Math.min(anchorOffset, anchorNode.textContent.length));
+            const walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+                null,
+                false
+            );
+            
+            let currentOffset = 0;
+            let node;
+            
+            while (node = walker.nextNode()) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const nodeLength = node.textContent.length;
+                    if (currentOffset + nodeLength >= textOffset) {
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        range.setStart(node, Math.min(textOffset - currentOffset, nodeLength));
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        return;
+                    }
+                    currentOffset += nodeLength;
+                } else if (node.nodeName === 'BR') {
+                    if (currentOffset >= textOffset) {
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        range.setStartAfter(node);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        return;
+                    }
+                    currentOffset += 1; // BR counts as one character (newline)
+                }
             }
-            // Fallback: put cursor at the start if restoration fails or wasn't in divs
-            else if (cursorInDiv1) {
-                 selection.collapse(text1Div.firstChild || text1Div, 0);
-            } else if (cursorInDiv2) {
-                 selection.collapse(text2Div.firstChild || text2Div, 0);
-            }
+            
+            // If we couldn't find the exact position, place cursor at the end
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
         } catch (e) {
             console.error("Error restoring cursor position:", e);
-            // Attempt to place cursor at the start as a fallback
-             if (cursorInDiv1) selection.collapse(text1Div.firstChild || text1Div, 0);
-             else if (cursorInDiv2) selection.collapse(text2Div.firstChild || text2Div, 0);
         }
-
-
     }
 
     // Function to convert diff array to HTML for a specific view (1 or 2)
@@ -73,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let data = diffs[i][1]; // Text of change.
 
             // Escape HTML characters in the data
-             data = data.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/\n/g, '<br>');
+             data = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 
 
             switch (op) {
@@ -97,6 +210,41 @@ document.addEventListener('DOMContentLoaded', () => {
             html = '&#8203;';
         }
         return html;
+    }
+
+    // Function to update statistics display
+    function updateStatistics(diffs, text1, text2) {
+        let addedCount = 0;
+        let removedCount = 0;
+        let totalChars = Math.max(text1.length, text2.length);
+        
+        // Count additions and deletions
+        for (let i = 0; i < diffs.length; i++) {
+            const op = diffs[i][0];
+            const data = diffs[i][1];
+            
+            if (op === DIFF_INSERT) {
+                addedCount += data.length;
+            } else if (op === DIFF_DELETE) {
+                removedCount += data.length;
+            }
+        }
+        
+        // Calculate similarity percentage
+        let similarity = 100;
+        if (totalChars > 0) {
+            const changedChars = addedCount + removedCount;
+            similarity = Math.max(0, Math.round((1 - changedChars / totalChars) * 100));
+        }
+        
+        // Update DOM elements
+        const addedElement = document.getElementById('addedCount');
+        const removedElement = document.getElementById('removedCount');
+        const similarityElement = document.getElementById('similarity');
+        
+        if (addedElement) addedElement.textContent = addedCount;
+        if (removedElement) removedElement.textContent = removedCount;
+        if (similarityElement) similarityElement.textContent = similarity + '%';
     }
 
     // Use debounce to limit how often compareAndHighlight runs during typing
