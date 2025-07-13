@@ -6,67 +6,57 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
-    <style>
-        /* CodeMirror specific styles */
-        .CodeMirror {
-            border: 1px solid #ddd;
-            height: 100%;
-            font-size: 14px;
-            flex-grow: 1;
-        }
-        .tool-io-section {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            min-height: 0;
-        }
-       .editor-container {
-           position: relative;
+   <style>
+       .CodeMirror {
+           border: 1px solid #ddd;
+           font-size: 14px;
            flex-grow: 1;
-           display: flex;
-           flex-direction: column;
        }
-       .copy-icon {
-           position: absolute;
-           top: 5px;
-           right: 15px; /* Adjust for scrollbar */
-           cursor: pointer;
-           width: 24px;
-           height: 24px;
-           fill: #fff; /* White icon for dark theme */
-           z-index: 10;
-       }
-       .copy-icon:hover {
-           fill: #ccc;
-       }
-    </style>
+      .editor-container {
+          position: relative;
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+      }
+      .copy-icon {
+          position: absolute;
+          top: 5px;
+          right: 15px; /* Adjust for scrollbar */
+          cursor: pointer;
+          width: 24px;
+          height: 24px;
+          fill: #fff; /* White icon for dark theme */
+          z-index: 10;
+      }
+      .copy-icon:hover {
+          fill: #ccc;
+      }
+   </style>
 </head>
 <body>
-    <div class="tool-container">
-        <div class="tool-header">
-            <h1>JSON 格式化工具</h1>
-            <p>格式化、压缩、转义或反转义JSON数据。</p>
-        </div>
+   <div class="tool-container tool-container-vertical">
+       <div class="tool-header">
+           <h1>JSON 格式化工具</h1>
+           <p>格式化、压缩、转义和去转义JSON数据，使其更易于阅读或传输。</p>
+       </div>
+       <div class="tool-controls">
+           <button class="tool-button" onclick="formatJson()">格式化</button>
+           <button class="tool-button" onclick="compressJson()">压缩</button>
+           <button class="tool-button" onclick="escapeJsonString()">转义</button>
+           <button class="tool-button" onclick="unescapeJsonString()">去转义</button>
+       </div>
+       <div class="tool-io-section">
+           <label class="tool-label" for="json-area">输入/输出</label>
+           <div class="editor-container">
+              <textarea id="json-area" placeholder="在此处粘贴 JSON..."></textarea>
+              <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
+                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+           </div>
+       </div>
 
-        <div class="tool-io-section">
-            <label class="tool-label" for="json-area">输入/输出</label>
-            <div class="editor-container">
-               <textarea id="json-area" placeholder="在此处粘贴 JSON..."></textarea>
-               <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
-                   <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-               </svg>
-            </div>
-        </div>
-
-        <div class="tool-controls">
-            <button class="tool-button" onclick="formatJson()">格式化</button>
-            <button class="tool-button" onclick="compressJson()">压缩</button>
-            <button class="tool-button" onclick="escapeJsonString()">转义</button>
-            <button class="tool-button" onclick="unescapeJsonString()">去转义</button>
-        </div>
-
-        <div id="error-output" class="tool-error"></div>
-    </div>
+       <div id="error-output" class="tool-error"></div>
+   </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
