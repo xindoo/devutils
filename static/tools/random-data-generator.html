@@ -15,6 +15,21 @@
         .options-group label {
             font-weight: normal;
         }
+       .output-container {
+           position: relative;
+       }
+       .copy-icon {
+           position: absolute;
+           top: 5px;
+           right: 5px;
+           cursor: pointer;
+           width: 24px;
+           height: 24px;
+           fill: #888;
+       }
+       .copy-icon:hover {
+           color: #000;
+       }
     </style>
 </head>
 <body>
@@ -63,12 +78,16 @@
 
         <div class="tool-controls">
             <button onclick="generateData()" class="tool-button">生成</button>
-            <button onclick="copyToClipboard()" class="tool-button">复制</button>
         </div>
 
         <div class="tool-section">
             <label class="tool-label">输出:</label>
-            <textarea id="output" class="tool-textarea" readonly placeholder="生成的随机数据将显示在此处..."></textarea>
+            <div class="output-container">
+               <textarea id="output" class="tool-textarea" readonly placeholder="生成的随机数据将显示在此处..."></textarea>
+               <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
+                   <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+               </svg>
+            </div>
         </div>
     </div>
 
@@ -160,19 +179,18 @@
         }
 
          function copyToClipboard() {
-            if (!outputArea.value) return;
-            outputArea.select();
-            try {
-                document.execCommand('copy');
-            } catch (err) {
-                alert('无法复制到剪贴板。');
-            }
-             if (window.getSelection) {
-                 window.getSelection().removeAllRanges();
-             } else if (document.selection) {
-                 document.selection.empty();
-             }
-        }
+           if (!outputArea.value) return;
+           navigator.clipboard.writeText(outputArea.value).then(() => {
+               const icon = document.querySelector('.copy-icon');
+               const originalPath = icon.innerHTML;
+               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+               setTimeout(() => {
+                   icon.innerHTML = originalPath;
+               }, 2000);
+           }).catch(err => {
+               alert('无法复制到剪贴板: ' + err);
+           });
+       }
 
         document.addEventListener('DOMContentLoaded', showOptions);
     </script>

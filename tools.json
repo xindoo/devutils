@@ -39,7 +39,11 @@
       {
         "name": "全景图预览",
         "path": "static/tools/panorama-viewer.html"
-      }
+      },
+     {
+       "name": "图片格式转换",
+       "path": "static/tools/image-format-converter.html"
+     }
     ]
   },
   {
@@ -54,6 +58,15 @@
         "path": "static/tools/string-hash-generator.html"
       }
     ]
+  },
+  {
+    "categoryName": "文本工具",
+    "tools": [
+      {
+        "name": "文本差异对比",
+        "path": "static/tools/text-diff.html"
+      }
+    ] 
   },
   {
     "categoryName": "视频工具",
@@ -90,10 +103,6 @@
       {
         "name": "进制转换",
         "path": "static/tools/base-converter.html"
-      },
-      {
-        "name": "文本差异对比",
-        "path": "static/tools/text-diff.html"
       }
     ]
   }
