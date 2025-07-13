@@ -4,104 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Player</title>
+    <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            font-family: sans-serif;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 90%;
-            max-width: 960px; /* Max width for the player */
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-radius: 5px;
-            flex-grow: 1; /* Allow container to grow */
-            display: flex;
-            flex-direction: column;
-        }
-        #controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
-        #controls label {
-            font-weight: bold;
-        }
-        #controls input[type="text"] {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-        #controls button {
-            padding: 8px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #controls button:hover {
-            background-color: #0056b3;
-        }
         #video-container {
-            flex-grow: 1; /* Video container takes remaining space */
+            flex-grow: 1;
             position: relative;
-            background-color: #000; /* Black background for video area */
-            min-height: 300px; /* Minimum height */
+            background-color: #000;
+            min-height: 300px;
         }
         #videoPlayer {
-            display: block; /* Remove extra space below video */
+            display: block;
             width: 100%;
-            height: 100%; /* Fill the container */
-            max-height: calc(100vh - 150px); /* Limit max height */
-        }
-         .back-link {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 10;
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #333;
-            padding: 5px 10px;
-            text-decoration: none;
-            border-radius: 3px;
-            font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .back-link:hover {
-            background-color: rgba(255, 255, 255, 1);
-        }
-        #error-message {
-            color: red;
-            margin-top: 10px;
-            text-align: center;
+            height: 100%;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="../index.html" class="back-link">Back to Tools</a>
-        <h1>Video Player</h1>
-        <div id="controls">
-            <label for="videoUrlInput">Video URL:</label>
-            <input type="text" id="videoUrlInput" placeholder="Enter .mp4 or .m3u8 URL">
-            <button id="loadVideoButton">Load Video</button>
+    <div class="tool-container tool-container-vertical">
+        <div class="tool-header">
+            <h1>Video Player</h1>
+            <p>Play .mp4 or .m3u8 video streams from a URL.</p>
         </div>
+
+        <div class="tool-section">
+            <label for="videoUrlInput" class="tool-label">Video URL:</label>
+            <div class="tool-inline-controls">
+                <input type="text" id="videoUrlInput" class="tool-input" placeholder="Enter .mp4 or .m3u8 URL">
+                <button id="loadVideoButton" class="tool-button">Load Video</button>
+            </div>
+        </div>
+
         <div id="video-container">
             <video id="videoPlayer" controls preload="metadata"></video>
         </div>
-        <div id="error-message"></div>
+        <div id="error-message" class="tool-error"></div>
     </div>
 
     <script>
@@ -109,30 +46,28 @@
         const loadVideoButton = document.getElementById('loadVideoButton');
         const videoPlayer = document.getElementById('videoPlayer');
         const errorMessageDiv = document.getElementById('error-message');
-        let hls = null; // To hold the Hls.js instance
+        let hls = null;
 
         function displayError(message) {
             errorMessageDiv.textContent = message;
-            // Clear video source if there's an error
             if (hls) {
                 hls.destroy();
                 hls = null;
             }
             videoPlayer.src = '';
-            videoPlayer.removeAttribute('src'); // Ensure src is fully removed
-            videoPlayer.load(); // Reset the player state
+            videoPlayer.removeAttribute('src');
+            videoPlayer.load();
         }
 
         function loadVideo() {
             const url = videoUrlInput.value.trim();
-            errorMessageDiv.textContent = ''; // Clear previous errors
+            errorMessageDiv.textContent = '';
 
             if (!url) {
                 displayError("Please enter a video URL.");
                 return;
             }
 
-            // Destroy previous HLS instance if exists
             if (hls) {
                 hls.destroy();
                 hls = null;
@@ -146,26 +81,23 @@
                     hls.loadSource(url);
                     hls.attachMedia(videoPlayer);
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        console.log("HLS manifest parsed.");
                         videoPlayer.play().catch(e => {
-                            console.error("HLS Playback failed:", e);
-                            displayError("Could not play video. Autoplay might be blocked or the source is invalid.");
+                            displayError("Could not play video. Autoplay might be blocked.");
                         });
                     });
                     hls.on(Hls.Events.ERROR, function (event, data) {
-                        console.error('HLS.js error:', data);
                         if (data.fatal) {
                             switch(data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
-                                    displayError(`Network error loading HLS stream: ${data.details}`);
+                                    displayError(`Network error: ${data.details}`);
                                     break;
                                 case Hls.ErrorTypes.MEDIA_ERROR:
-                                    displayError(`Media error during HLS playback: ${data.details}`);
-                                    hls.recoverMediaError(); // Attempt recovery
+                                    displayError(`Media error: ${data.details}`);
+                                    hls.recoverMediaError();
                                     break;
                                 default:
                                     displayError(`An HLS error occurred: ${data.details}`);
-                                    hls.destroy(); // Destroy on fatal error
+                                    hls.destroy();
                                     hls = null;
                                     break;
                             }
@@ -174,33 +106,27 @@
                 } else {
                     displayError("HLS.js is not supported in your browser.");
                 }
-            } else if (url.toLowerCase().endsWith('.mp4') || videoPlayer.canPlayType('video/mp4')) { // Basic check for MP4
+            } else {
                  try {
                     videoPlayer.src = url;
-                    videoPlayer.load(); // Important to load the new source
+                    videoPlayer.load();
                     videoPlayer.play().catch(e => {
-                        console.error("MP4 Playback failed:", e);
-                        displayError("Could not play video. Autoplay might be blocked or the source is invalid.");
+                        displayError("Could not play video. Autoplay might be blocked.");
                     });
                  } catch (e) {
-                     console.error("Error setting video source:", e);
                      displayError("Invalid video URL or format.");
                  }
-            } else {
-                displayError("Unsupported video format. Please use .mp4 or .m3u8.");
             }
         }
 
         loadVideoButton.addEventListener('click', loadVideo);
 
-        // Optional: Allow pressing Enter in the input field
         videoUrlInput.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 loadVideo();
             }
         });
 
-        // Handle native video errors
         videoPlayer.addEventListener('error', (e) => {
             let errorText = 'An unknown video error occurred.';
             if (videoPlayer.error) {
@@ -212,22 +138,17 @@
                         errorText = 'A network error caused the video download to fail.';
                         break;
                     case MediaError.MEDIA_ERR_DECODE:
-                        errorText = 'The video playback was aborted due to a corruption problem or because the video used features your browser did not support.';
+                        errorText = 'Video could not be decoded.';
                         break;
                     case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                        errorText = 'The video could not be loaded, either because the server or network failed or because the format is not supported.';
+                        errorText = 'Video format not supported.';
                         break;
-                    default:
-                        errorText = 'An unknown video error occurred.';
                 }
             }
-             // Avoid displaying native errors if HLS is handling it or if we already showed an error
             if (!hls && errorMessageDiv.textContent === '') {
                  displayError(errorText);
             }
-            console.error('Video Element Error:', videoPlayer.error);
         });
-
     </script>
 </body>
 </html>

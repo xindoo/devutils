@@ -3,63 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <title>图片压缩</title>
+    <link rel="stylesheet" href="../css/style.css">
     <style>
-        body { font-family: sans-serif; padding: 15px; }
-        .container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .column { flex: 1; min-width: 300px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="file"], input[type="number"], select { margin-bottom: 15px; width: 95%; padding: 8px; }
-        input[type="range"] { width: 80%; } /* Quality slider */
-        button { padding: 10px 15px; cursor: pointer; margin-top: 10px; }
-        img { max-width: 100%; height: auto; border: 1px solid #ccc; margin-top: 10px; display: block; }
-        .preview-container { margin-top: 15px; }
-        .info { font-size: 0.9em; color: #555; margin-top: 5px; }
-        #download-link { display: none; margin-top: 10px; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
-        #download-link:hover { background-color: #218838; }
+        .preview-container {
+            margin-top: 15px;
+        }
+        .preview-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            display: block;
+            background-color: #f8f9fa;
+        }
+        .info {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 5px;
+        }
+        #download-link {
+            display: none;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>图片压缩</h1>
-
-    <label for="image-input">选择图片:</label>
-    <input type="file" id="image-input" accept="image/jpeg, image/png, image/webp">
-
-    <div class="container">
-        <div class="column">
-            <label for="quality">压缩质量 (JPEG/WEBP):</label>
-            <input type="range" id="quality" min="0.1" max="1.0" step="0.05" value="0.8">
-            <span id="quality-value">0.8</span>
-
-            <label for="maxWidth">最大宽度 (可选):</label>
-            <input type="number" id="maxWidth" placeholder="例如: 1920">
-
-            <label for="maxHeight">最大高度 (可选):</label>
-            <input type="number" id="maxHeight" placeholder="例如: 1080">
-
-             <label for="outputFormat">输出格式:</label>
-             <select id="outputFormat">
-                 <option value="image/jpeg">JPEG</option>
-                 <option value="image/png">PNG</option>
-                 <option value="image/webp">WEBP</option>
-             </select>
-
-            <button onclick="compressImage()">压缩图片</button>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>图片压缩</h1>
+            <p>在线压缩 JPEG, PNG, 和 WEBP 图片。</p>
         </div>
-        <div class="column">
-            <div class="preview-container">
-                <label>压缩后预览:</label>
-                <img id="compressed-preview" src="" alt="压缩后图片">
-                <div id="compressed-info" class="info"></div>
-                <a id="download-link" download="compressed_image.jpg">下载压缩图片</a>
+
+        <div class="tool-section">
+            <label for="image-input" class="tool-label">选择图片:</label>
+            <input type="file" id="image-input" class="tool-input" accept="image/jpeg, image/png, image/webp">
+        </div>
+
+        <div class="tool-inline-controls">
+            <div class="tool-section">
+                <label for="quality" class="tool-label">压缩质量 (JPEG/WEBP): <span id="quality-value">0.8</span></label>
+                <input type="range" id="quality" min="0.1" max="1.0" step="0.05" value="0.8" class="tool-input">
+            </div>
+            <div class="tool-section">
+                <label for="maxWidth" class="tool-label">最大宽度 (可选):</label>
+                <input type="number" id="maxWidth" class="tool-input" placeholder="例如: 1920">
+            </div>
+            <div class="tool-section">
+                <label for="maxHeight" class="tool-label">最大高度 (可选):</label>
+                <input type="number" id="maxHeight" class="tool-input" placeholder="例如: 1080">
+            </div>
+            <div class="tool-section">
+                 <label for="outputFormat" class="tool-label">输出格式:</label>
+                 <select id="outputFormat" class="tool-select">
+                     <option value="image/jpeg">JPEG</option>
+                     <option value="image/png">PNG</option>
+                     <option value="image/webp">WEBP</option>
+                 </select>
             </div>
         </div>
-         <div class="column">
-             <div class="preview-container">
-                 <label>原图预览:</label>
-                 <img id="original-preview" src="" alt="原图">
-                 <div id="original-info" class="info"></div>
-             </div>
-         </div>
+        
+        <div class="tool-controls">
+            <button onclick="compressImage()" class="tool-button">压缩图片</button>
+        </div>
+
+        <div class="tool-section" style="display: flex; flex-direction: row; gap: 20px;">
+            <div class="preview-container" style="flex: 1;">
+                <label class="tool-label">原图预览:</label>
+                <img id="original-preview" src="" alt="原图">
+                <div id="original-info" class="info"></div>
+            </div>
+            <div class="preview-container" style="flex: 1;">
+                <label class="tool-label">压缩后预览:</label>
+                <img id="compressed-preview" src="" alt="压缩后图片">
+                <div id="compressed-info" class="info"></div>
+                <a id="download-link" class="tool-button" download="compressed_image.jpg">下载压缩图片</a>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -85,11 +104,11 @@
         imageInput.onchange = (event) => {
             originalFile = event.target.files[0];
             if (originalFile) {
-                if (originalUrl) URL.revokeObjectURL(originalUrl); // Revoke previous URL
+                if (originalUrl) URL.revokeObjectURL(originalUrl);
                 originalUrl = URL.createObjectURL(originalFile);
                 originalPreview.src = originalUrl;
                 originalInfo.textContent = `文件名: ${originalFile.name}, 大小: ${(originalFile.size / 1024).toFixed(2)} KB, 类型: ${originalFile.type}`;
-                compressedPreview.src = ""; // Clear previous compression
+                compressedPreview.src = "";
                 compressedInfo.textContent = "";
                 downloadLink.style.display = 'none';
                 downloadLink.href = '#';
@@ -115,7 +134,6 @@
                     let height = img.height;
                     const aspectRatio = width / height;
 
-                    // Calculate new dimensions while maintaining aspect ratio
                     if (width > maxWidth) {
                         width = maxWidth;
                         height = width / aspectRatio;
@@ -131,35 +149,30 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Get compressed image data URL
                     canvas.toBlob((blob) => {
                         if (blob) {
                             const compressedUrl = URL.createObjectURL(blob);
                             compressedPreview.src = compressedUrl;
                             compressedInfo.textContent = `压缩后大小: ${(blob.size / 1024).toFixed(2)} KB, 类型: ${blob.type}`;
 
-                            // Set download link
                             downloadLink.href = compressedUrl;
                             const extension = outputFormat.split('/')[1];
                             downloadLink.download = `compressed_${Date.now()}.${extension}`;
                             downloadLink.style.display = 'inline-block';
-
-                            // Clean up original image object URL if needed (optional)
-                            // URL.revokeObjectURL(originalUrl);
                         } else {
                              alert('无法压缩图片。');
                         }
-                    }, outputFormat, quality); // Pass format and quality
+                    }, outputFormat, quality);
                 };
                 img.onerror = () => {
                     alert('无法加载图片文件。');
                 };
-                img.src = event.target.result; // Load image from FileReader result
+                img.src = event.target.result;
             };
             reader.onerror = () => {
                  alert('读取文件时出错。');
             };
-            reader.readAsDataURL(originalFile); // Read file as Data URL
+            reader.readAsDataURL(originalFile);
         }
     </script>
 </body>

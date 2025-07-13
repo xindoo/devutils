@@ -3,46 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <title>字符串哈希/指纹生成器</title>
+    <link rel="stylesheet" href="../css/style.css">
     <style>
-        body { font-family: sans-serif; padding: 15px; }
-        textarea { width: 95%; height: 150px; margin-bottom: 10px; font-family: monospace; }
-        button { padding: 10px 15px; cursor: pointer; margin-bottom: 15px; }
-        .hash-options label { display: inline-block; margin-right: 15px; margin-bottom: 10px; }
-        #results-table { margin-top: 15px; border-collapse: collapse; width: 95%; }
-        #results-table th, #results-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-family: monospace; word-break: break-all; }
-        #results-table th { background-color: #f2f2f2; }
+        .hash-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .hash-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        #results-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        #results-table th, #results-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        #results-table th {
+            background-color: #f8f9fa;
+        }
     </style>
-    <!-- CryptoJS CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 </head>
 <body>
-    <h1>字符串哈希/指纹生成器</h1>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>字符串哈希/指纹生成器</h1>
+            <p>计算字符串的多种哈希值，如 MD5, SHA-1, SHA-256 等。</p>
+        </div>
 
-    <label for="input-string">输入字符串:</label>
-    <textarea id="input-string" placeholder="在此处输入要计算哈希值的字符串..."></textarea>
+        <div class="tool-section">
+            <label class="tool-label" for="input-string">输入字符串:</label>
+            <textarea id="input-string" class="tool-textarea" placeholder="在此处输入要计算哈希值的字符串..."></textarea>
+        </div>
 
-    <div class="hash-options">
-        <label><input type="checkbox" name="hash-algo" value="MD5" checked> MD5</label>
-        <label><input type="checkbox" name="hash-algo" value="SHA1" checked> SHA-1</label>
-        <label><input type="checkbox" name="hash-algo" value="SHA256" checked> SHA-256</label>
-        <label><input type="checkbox" name="hash-algo" value="SHA512"> SHA-512</label>
-        <label><input type="checkbox" name="hash-algo" value="SHA3"> SHA-3 (512-bit)</label>
-        <label><input type="checkbox" name="hash-algo" value="RIPEMD160"> RIPEMD-160</label>
+        <div class="tool-section">
+            <label class="tool-label">哈希算法:</label>
+            <div class="hash-options">
+                <label><input type="checkbox" name="hash-algo" value="MD5" checked> MD5</label>
+                <label><input type="checkbox" name="hash-algo" value="SHA1" checked> SHA-1</label>
+                <label><input type="checkbox" name="hash-algo" value="SHA256" checked> SHA-256</label>
+                <label><input type="checkbox" name="hash-algo" value="SHA512"> SHA-512</label>
+                <label><input type="checkbox" name="hash-algo" value="SHA3"> SHA-3 (512-bit)</label>
+                <label><input type="checkbox" name="hash-algo" value="RIPEMD160"> RIPEMD-160</label>
+            </div>
+        </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" onclick="calculateHashes()">计算哈希值</button>
+        </div>
+
+        <div class="tool-section">
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>算法</th>
+                        <th>哈希值 (Hex)</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <button onclick="calculateHashes()">计算哈希值</button>
-
-    <table id="results-table">
-        <thead>
-            <tr>
-                <th>算法</th>
-                <th>哈希值 (Hex)</th>
-            </tr>
-        </thead>
-        <tbody id="results-body">
-            <!-- Results will be populated here -->
-        </tbody>
-    </table>
 
     <script>
         const inputString = document.getElementById('input-string');
@@ -51,10 +84,9 @@
 
         function calculateHashes() {
             const text = inputString.value;
-            resultsBody.innerHTML = ''; // Clear previous results
+            resultsBody.innerHTML = '';
 
             if (!text) {
-                // Optionally display a message if input is empty
                 return;
             }
 
@@ -77,7 +109,6 @@
                                 hash = CryptoJS.SHA512(text).toString(CryptoJS.enc.Hex);
                                 break;
                             case 'SHA3':
-                                // CryptoJS SHA3 defaults to 512 bits
                                 hash = CryptoJS.SHA3(text).toString(CryptoJS.enc.Hex);
                                 break;
                             case 'RIPEMD160':
@@ -101,16 +132,11 @@
             cell2.textContent = hashValue;
         }
 
-        // Optional: Calculate hashes automatically on input change after a small delay
         let debounceTimer;
         inputString.addEventListener('input', () => {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(calculateHashes, 300); // Calculate after 300ms of inactivity
+            debounceTimer = setTimeout(calculateHashes, 300);
         });
-
-        // Initial calculation if there's pre-filled text (unlikely here, but good practice)
-        // calculateHashes();
-
     </script>
 </body>
 </html>

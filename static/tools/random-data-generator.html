@@ -3,71 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <title>随机数据生成器</title>
+    <link rel="stylesheet" href="../css/style.css">
     <style>
-        body { font-family: sans-serif; padding: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        select, input[type="number"], input[type="text"] { margin-bottom: 15px; padding: 8px; width: 95%; max-width: 300px; }
-        button { padding: 10px 15px; cursor: pointer; margin-right: 5px; }
-        textarea { width: 95%; height: 250px; margin-top: 15px; font-family: monospace; }
-        .options-group { margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 4px; display: none; /* Hidden by default */ }
-        .options-group label { font-weight: normal; }
+        .options-group {
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+        .options-group label {
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
-    <h1>随机数据生成器</h1>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>随机数据生成器</h1>
+            <p>生成各种类型的随机数据，如 UUID、整数、字符串等。</p>
+        </div>
 
-    <label for="dataType">选择数据类型:</label>
-    <select id="dataType" onchange="showOptions()">
-        <option value="uuid">UUID</option>
-        <option value="integer">整数 (Integer)</option>
-        <option value="string">随机字符串 (String)</option>
-        <option value="name">姓名 (Name)</option>
-        <option value="address">地址 (Address)</option>
-        <!-- Add more types here -->
-    </select>
+        <div class="tool-section">
+            <label for="dataType" class="tool-label">选择数据类型:</label>
+            <select id="dataType" class="tool-select" onchange="showOptions()">
+                <option value="uuid">UUID</option>
+                <option value="integer">整数 (Integer)</option>
+                <option value="string">随机字符串 (String)</option>
+                <option value="name">姓名 (Name)</option>
+                <option value="address">地址 (Address)</option>
+            </select>
+        </div>
 
-    <!-- Options for Integer -->
-    <div id="options-integer" class="options-group">
-        <label for="intMin">最小值:</label>
-        <input type="number" id="intMin" value="0">
-        <label for="intMax">最大值:</label>
-        <input type="number" id="intMax" value="100">
+        <div id="options-integer" class="options-group tool-inline-controls">
+            <label for="intMin" class="tool-label">最小值:</label>
+            <input type="number" id="intMin" class="tool-input" value="0">
+            <label for="intMax" class="tool-label">最大值:</label>
+            <input type="number" id="intMax" class="tool-input" value="100">
+        </div>
+
+        <div id="options-string" class="options-group tool-inline-controls">
+            <label for="strLength" class="tool-label">长度:</label>
+            <input type="number" id="strLength" class="tool-input" value="16">
+            <label for="strChars" class="tool-label">包含字符:</label>
+            <input type="text" id="strChars" class="tool-input" value="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789">
+        </div>
+
+        <div id="options-name" class="options-group">
+            <label class="tool-label">语言: 中文 (示例)</label>
+        </div>
+        <div id="options-address" class="options-group">
+            <label class="tool-label">地区: 中国 (示例)</label>
+        </div>
+
+        <div class="tool-section">
+            <label for="count" class="tool-label">生成数量:</label>
+            <input type="number" id="count" class="tool-input" value="1" min="1" max="1000">
+        </div>
+
+        <div class="tool-controls">
+            <button onclick="generateData()" class="tool-button">生成</button>
+            <button onclick="copyToClipboard()" class="tool-button">复制</button>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">输出:</label>
+            <textarea id="output" class="tool-textarea" readonly placeholder="生成的随机数据将显示在此处..."></textarea>
+        </div>
     </div>
-
-    <!-- Options for String -->
-    <div id="options-string" class="options-group">
-        <label for="strLength">长度:</label>
-        <input type="number" id="strLength" value="16">
-        <label for="strChars">包含字符:</label>
-        <input type="text" id="strChars" value="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789">
-    </div>
-
-    <!-- Options for Name/Address (Placeholder - simple examples) -->
-     <div id="options-name" class="options-group">
-         <label>语言:</label> <span>中文 (示例)</span>
-     </div>
-     <div id="options-address" class="options-group">
-         <label>地区:</label> <span>中国 (示例)</span>
-     </div>
-
-
-    <label for="count">生成数量:</label>
-    <input type="number" id="count" value="1" min="1" max="1000">
-
-    <button onclick="generateData()">生成</button>
-    <button onclick="copyToClipboard()">复制</button>
-
-    <textarea id="output" readonly placeholder="生成的随机数据将显示在此处..."></textarea>
 
     <script>
         const dataTypeSelect = document.getElementById('dataType');
         const countInput = document.getElementById('count');
         const outputArea = document.getElementById('output');
 
-        // --- Simple Data Generation Functions ---
-
         function generateUUID() {
-            // Basic UUID v4 generation
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
@@ -89,7 +99,6 @@
             return result;
         }
 
-        // --- Placeholder/Example Data ---
         const firstNames = ["张", "李", "王", "赵", "刘", "陈", "杨", "黄", "吴", "周"];
         const lastNames = ["伟", "芳", "娜", "秀英", "敏", "静", "丽", "强", "磊", "军"];
         const provinces = ["北京", "上海", "广东", "江苏", "浙江", "山东", "四川", "湖北", "福建", "河南"];
@@ -110,16 +119,12 @@
             return prov + city + road + num + "号";
         }
 
-        // --- UI Logic ---
-
         function showOptions() {
-            // Hide all option groups first
             document.querySelectorAll('.options-group').forEach(group => group.style.display = 'none');
-            // Show the relevant group
             const selectedType = dataTypeSelect.value;
             const optionsDiv = document.getElementById(`options-${selectedType}`);
             if (optionsDiv) {
-                optionsDiv.style.display = 'block';
+                optionsDiv.style.display = 'flex';
             }
         }
 
@@ -149,7 +154,6 @@
                     case 'address':
                         results.push(generateAddress());
                         break;
-                    // Add cases for other types here
                 }
             }
             outputArea.value = results.join('\n');
@@ -160,12 +164,9 @@
             outputArea.select();
             try {
                 document.execCommand('copy');
-                // Optional: Add visual feedback (e.g., change button text briefly)
             } catch (err) {
-                console.error('Fallback: Oops, unable to copy', err);
                 alert('无法复制到剪贴板。');
             }
-            // Deselect text
              if (window.getSelection) {
                  window.getSelection().removeAllRanges();
              } else if (document.selection) {
@@ -173,9 +174,7 @@
              }
         }
 
-        // Initialize options visibility on load
         document.addEventListener('DOMContentLoaded', showOptions);
-
     </script>
 </body>
 </html>

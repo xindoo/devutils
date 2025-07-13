@@ -3,18 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Base64 Encode/Decode</title>
-    <style>
-        body { font-family: sans-serif; padding: 15px; }
-        textarea { width: 95%; height: 150px; margin-bottom: 10px; }
-        button { padding: 8px 15px; margin-right: 5px; }
-    </style>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <h1>Base64 Encode/Decode</h1>
-    <textarea id="input" placeholder="Enter text here..."></textarea>
-    <button onclick="encode()">Encode</button>
-    <button onclick="decode()">Decode</button>
-    <textarea id="output" placeholder="Result..." readonly></textarea>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Base64 Encode/Decode</h1>
+            <p>Encode text to Base64 or decode from Base64.</p>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="input">Input</label>
+            <textarea id="input" class="tool-textarea" placeholder="Enter text here..."></textarea>
+        </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" onclick="encode()">Encode</button>
+            <button class="tool-button" onclick="decode()">Decode</button>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="output">Output</label>
+            <textarea id="output" class="tool-textarea" placeholder="Result..." readonly></textarea>
+        </div>
+    </div>
 
     <script>
         function encode() {
