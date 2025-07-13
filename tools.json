@@ -3,15 +3,18 @@
     "categoryName": "编解码",
     "tools": [
       {
-        "name": "Base64编解码",
+        "name_zh": "Base64编解码",
+        "name_en": "Base64 Encode/Decode",
         "path": "static/tools/base64.html"
       },
       {
-        "name": "Base64转图片",
+        "name_zh": "Base64转图片",
+        "name_en": "Base64 to Image",
         "path": "static/tools/base64-image.html"
       },
       {
-        "name": "URL编码/解码",
+        "name_zh": "URL编码/解码",
+        "name_en": "URL Encode/Decode",
         "path": "static/tools/url-encode-decode.html"
       }
     ]
@@ -20,11 +23,13 @@
     "categoryName": "格式化",
     "tools": [
       {
-        "name": "JSON格式化",
+        "name_zh": "JSON格式化",
+        "name_en": "JSON Formatter",
         "path": "static/tools/json-format.html"
       },
       {
-        "name": "代码格式化",
+        "name_zh": "代码格式化",
+        "name_en": "Code Formatter",
         "path": "static/tools/code-formatter.html"
       }
     ]
@@ -33,15 +38,18 @@
     "categoryName": "图片工具",
     "tools": [
       {
-        "name": "图片压缩",
+        "name_zh": "图片压缩",
+        "name_en": "Image Compressor",
         "path": "static/tools/image-compressor.html"
       },
       {
-        "name": "全景图预览",
+        "name_zh": "全景图预览",
+        "name_en": "Panorama Viewer",
         "path": "static/tools/panorama-viewer.html"
       },
      {
-       "name": "图片格式转换",
+       "name_zh": "图片格式转换",
+       "name_en": "Image Format Converter",
        "path": "static/tools/image-format-converter.html"
      }
     ]
@@ -50,11 +58,13 @@
     "categoryName": "数据生成",
     "tools": [
       {
-        "name": "随机数据生成",
+        "name_zh": "随机数据生成",
+        "name_en": "Random Data Generator",
         "path": "static/tools/random-data-generator.html"
       },
       {
-        "name": "字符串哈希生成",
+        "name_zh": "字符串哈希生成",
+        "name_en": "String Hash Generator",
         "path": "static/tools/string-hash-generator.html"
       }
     ]
@@ -63,7 +73,8 @@
     "categoryName": "文本工具",
     "tools": [
       {
-        "name": "文本差异对比",
+        "name_zh": "文本差异对比",
+        "name_en": "Text Diff",
         "path": "static/tools/text-diff.html"
       }
     ] 
@@ -72,15 +83,18 @@
     "categoryName": "视频工具",
     "tools": [
       {
-        "name": "全景视频播放",
+        "name_zh": "全景视频播放",
+        "name_en": "Panorama Video Player",
         "path": "static/tools/panorama-video-viewer.html"
       },
       {
-        "name": "视频播放",
+        "name_zh": "视频播放",
+        "name_en": "Video Player",
         "path": "static/tools/video-player.html"
       },
       {
-        "name": "视频压缩与编码转换",
+        "name_zh": "视频压缩与编码转换",
+        "name_en": "Video Compressor & Converter",
         "path": "static/tools/video-compressor.html"
       }
     ]
@@ -89,19 +103,23 @@
     "categoryName": "转换器",
     "tools": [
       {
-        "name": "时间转换",
+        "name_zh": "时间转换",
+        "name_en": "Time Converter",
         "path": "static/tools/time-converter.html"
       },
       {
-        "name": "Cron转换",
+        "name_zh": "Cron转换",
+        "name_en": "Cron Converter",
         "path": "static/tools/cron-converter.html"
       },
       {
-        "name": "JSON/YAML互转",
+        "name_zh": "JSON/YAML互转",
+        "name_en": "JSON/YAML Converter",
         "path": "static/tools/json-yaml-converter.html"
       },
       {
-        "name": "进制转换",
+        "name_zh": "进制转换",
+        "name_en": "Base Converter",
         "path": "static/tools/base-converter.html"
       }
     ]
