@@ -6,6 +6,23 @@
     <title>JSON/YAML Converter</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@latest/dist/js-yaml.min.js"></script>
+   <style>
+       .output-container {
+           position: relative;
+       }
+       .copy-icon {
+           position: absolute;
+           top: 5px;
+           right: 5px;
+           cursor: pointer;
+           width: 24px;
+           height: 24px;
+           fill: #888;
+       }
+       .copy-icon:hover {
+           fill: #000;
+       }
+   </style>
 </head>
 <body>
     <div class="tool-container tool-container-vertical">
@@ -28,7 +45,12 @@
 
         <div class="tool-io-section">
             <label for="outputData" class="tool-label">Output:</label>
-            <textarea id="outputData" class="tool-textarea" readonly placeholder="Conversion result will appear here..."></textarea>
+           <div class="output-container">
+               <textarea id="outputData" class="tool-textarea" readonly placeholder="Conversion result will appear here..."></textarea>
+               <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
+                   <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+               </svg>
+           </div>
         </div>
     </div>
 
@@ -94,6 +116,20 @@
                  outputArea.value = '';
             }
         }
+
+        function copyToClipboard() {
+           if (!outputArea.value) return;
+           navigator.clipboard.writeText(outputArea.value).then(() => {
+               const icon = document.querySelector('.copy-icon');
+               const originalPath = icon.innerHTML;
+               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+               setTimeout(() => {
+                   icon.innerHTML = originalPath;
+               }, 2000);
+           }).catch(err => {
+               alert('无法复制到剪贴板: ' + err);
+           });
+       }
     </script>
 </body>
 </html>

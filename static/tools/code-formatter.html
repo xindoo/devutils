@@ -9,7 +9,7 @@
     <style>
         .CodeMirror {
             border: 1px solid #ddd;
-            height: auto;
+            height: calc(100vh - 280px);
             font-size: 14px;
             flex-grow: 1;
         }
@@ -19,6 +19,25 @@
             flex-grow: 1;
             min-height: 0;
         }
+       .editor-container {
+           position: relative;
+           flex-grow: 1;
+           display: flex;
+           flex-direction: column;
+       }
+       .copy-icon {
+           position: absolute;
+           top: 5px;
+           right: 15px; /* Adjust for scrollbar */
+           cursor: pointer;
+           width: 24px;
+           height: 24px;
+           fill: #fff; /* White icon for dark theme */
+           z-index: 10;
+       }
+       .copy-icon:hover {
+           fill: #ccc;
+       }
     </style>
     <script src="https://unpkg.com/prettier@2.8.8/standalone.js"></script>
     <script src="https://unpkg.com/prettier@2.8.8/parser-babel.js"></script>
@@ -53,7 +72,12 @@
         <div id="status" class="tool-error"></div>
 
         <div class="tool-io-section">
-            <textarea id="code-area" placeholder="在此处粘贴代码..."></textarea>
+           <div class="editor-container">
+               <textarea id="code-area" placeholder="在此处粘贴代码..."></textarea>
+               <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
+                   <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+               </svg>
+           </div>
         </div>
     </div>
 
@@ -160,6 +184,21 @@
             }
         }
         parserSelect.dispatchEvent(new Event('change'));
+
+        function copyToClipboard() {
+           const content = editor.getValue();
+           if (!content) return;
+           navigator.clipboard.writeText(content).then(() => {
+               const icon = document.querySelector('.copy-icon');
+               const originalPath = icon.innerHTML;
+               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+               setTimeout(() => {
+                   icon.innerHTML = originalPath;
+               }, 2000);
+           }).catch(err => {
+               alert('无法复制到剪贴板: ' + err);
+           });
+       }
     </script>
 </body>
 </html>

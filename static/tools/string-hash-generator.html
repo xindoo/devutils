@@ -32,6 +32,15 @@
         #results-table th {
             background-color: #f8f9fa;
         }
+       .copy-icon {
+           cursor: pointer;
+           width: 20px;
+           height: 20px;
+           fill: #888;
+       }
+       .copy-icon:hover {
+           fill: #000;
+       }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 </head>
@@ -69,6 +78,7 @@
                     <tr>
                         <th>算法</th>
                         <th>哈希值 (Hex)</th>
+                        <th style="width: 50px;"></th>
                     </tr>
                 </thead>
                 <tbody id="results-body">
@@ -125,12 +135,34 @@
         }
 
         function addResultRow(algorithm, hashValue) {
-            const row = resultsBody.insertRow();
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1);
-            cell1.textContent = algorithm;
-            cell2.textContent = hashValue;
-        }
+           const row = resultsBody.insertRow();
+           const cell1 = row.insertCell(0);
+           const cell2 = row.insertCell(1);
+           const cell3 = row.insertCell(2);
+
+           cell1.textContent = algorithm;
+           cell2.textContent = hashValue;
+           cell3.style.textAlign = 'center';
+
+           const copyIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+           copyIcon.setAttribute('class', 'copy-icon');
+           copyIcon.setAttribute('viewBox', '0 0 24 24');
+           copyIcon.setAttribute('title', '复制哈希值');
+           const initialPath = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>';
+           copyIcon.innerHTML = initialPath;
+           
+           copyIcon.onclick = () => {
+               navigator.clipboard.writeText(hashValue).then(() => {
+                   copyIcon.innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>';
+                   setTimeout(() => {
+                       copyIcon.innerHTML = initialPath;
+                   }, 2000);
+               }).catch(err => {
+                   alert('无法复制: ' + err);
+               });
+           };
+           cell3.appendChild(copyIcon);
+       }
 
         let debounceTimer;
         inputString.addEventListener('input', () => {

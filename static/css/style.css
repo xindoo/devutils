@@ -46,6 +46,16 @@ body, html {
     color: #343a40; /* Darker title color */
 }
 
+#search-box {
+    width: calc(100% - 40px);
+    padding: 10px;
+    margin: 0 20px 20px;
+    border: 1px solid var(--sidebar-border-color);
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+    font-size: 0.9em;
+}
+
 .sidebar ul {
     list-style: none;
     padding: 0;

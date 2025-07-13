@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toolList = document.getElementById('tool-list');
     const toolFrame = document.getElementById('tool-frame');
     const sidebarLinks = []; // To manage active state
+    const searchBox = document.getElementById('search-box');
 
     console.log('Fetching tools...'); // Log start
     fetch('/tools.json') // Fetch the tool list from the root
@@ -49,9 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     category.tools.forEach((tool) => {
                         const listItem = document.createElement('li');
                         const link = document.createElement('a');
-                        link.textContent = tool.name;
+                        link.textContent = tool.name_zh;
+                        link.title = tool.name_en;
                         link.href = '#'; // Prevent page reload
                         link.dataset.path = tool.path; // Store path in data attribute
+                        link.dataset.nameEn = tool.name_en;
 
                         link.addEventListener('click', (event) => {
                             event.preventDefault(); // Prevent default anchor behavior
@@ -86,6 +89,36 @@ document.addEventListener('DOMContentLoaded', () => {
             // Optionally display error in the iframe or main content area
             // toolFrame.srcdoc = `<p style="color: red;">Error loading tool configuration: ${error.message}</p>`;
         });
+
+    searchBox.addEventListener('input', () => {
+        const searchTerm = searchBox.value.toLowerCase();
+        const categories = document.querySelectorAll('.category-header');
+
+        categories.forEach(category => {
+            const nestedList = category.nextElementSibling;
+            const tools = nestedList.querySelectorAll('li');
+            let categoryVisible = false;
+
+            tools.forEach(tool => {
+                const toolNameZh = tool.textContent.toLowerCase();
+                const toolNameEn = tool.querySelector('a').dataset.nameEn.toLowerCase();
+                if (toolNameZh.includes(searchTerm) || toolNameEn.includes(searchTerm)) {
+                    tool.style.display = 'block';
+                    categoryVisible = true;
+                } else {
+                    tool.style.display = 'none';
+                }
+            });
+
+            if (categoryVisible) {
+                category.style.display = 'block';
+                nestedList.style.display = 'block';
+            } else {
+                category.style.display = 'none';
+                nestedList.style.display = 'none';
+            }
+        });
+    });
 
     function loadTool(path, clickedLink) {
         // Check if path is valid (basic check)
