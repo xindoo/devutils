@@ -1,12 +1,17 @@
 /* Override global container style for this specific tool */
 .tool-container {
-    max-width: 1200px; /* Wider for side-by-side layout */
-    margin: 20px auto;
-    padding: 30px;
+    max-width: 99vw; /* Use most of the viewport width */
+    width: 99vw;
+    height: 99vh; /* Use most of the viewport height */
+    margin: 10px auto;
+    padding: 20px;
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
     border: 1px solid #e1e4e8;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
 .tool-container h1 {
@@ -32,8 +37,10 @@
 .diff-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 25px;
-    margin-bottom: 25px;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex: 1;
+    min-height: 0; /* Allow flex items to shrink */
 }
 
 .diff-input-group {
@@ -41,10 +48,11 @@
     flex-direction: column;
     background: #ffffff;
     border-radius: 10px;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     border: 1px solid #e1e4e8;
     transition: all 0.3s ease;
+    min-height: 0; /* Allow flex items to shrink */
 }
 
 .diff-input-group:hover {
@@ -54,12 +62,13 @@
 
 .tool-label {
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     color: #24292e;
     font-size: 1.1em;
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .tool-label::before {
@@ -70,23 +79,66 @@
     background: linear-gradient(135deg, #0366d6, #0969da);
 }
 
-.editable-div {
-    width: 100%;
-    height: 350px;
-    padding: 16px;
+/* Editor container with line numbers */
+.editor-container {
+    display: flex;
+    flex: 1;
     border: 2px solid #e1e4e8;
     border-radius: 8px;
+    background: #fafbfc;
+    transition: all 0.3s ease;
+    min-height: 300px;
+    max-height: 60vh;
+    overflow: hidden;
+}
+
+.editor-container:hover {
+    border-color: #c8e1ff;
+    background: #ffffff;
+}
+
+.editor-container:focus-within {
+    border-color: #0366d6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
+}
+
+/* Line numbers styling */
+.line-numbers {
+    background: #f6f8fa;
+    border-right: 1px solid #e1e4e8;
+    color: #8b949e;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 16px 8px;
+    text-align: right;
+    user-select: none;
+    min-width: 50px;
+    white-space: pre;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-shrink: 0;
+    max-height: 60vh;
+}
+
+.editable-div {
+    flex: 1;
+    padding: 16px;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
     font-size: 14px;
     line-height: 1.6;
     overflow-y: auto;
+    overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
     box-sizing: border-box;
-    background: #fafbfc;
-    transition: all 0.3s ease;
-    resize: vertical;
-    min-height: 200px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    min-height: 300px;
+    max-height: 60vh;
 }
 
 .editable-div:focus {
@@ -196,22 +248,38 @@
 /* Responsive design */
 @media (max-width: 768px) {
     .tool-container {
-        margin: 10px;
-        padding: 20px;
+        width: 98vw;
+        max-width: 98vw;
+        margin: 5px auto;
+        padding: 15px;
     }
     
     .diff-inputs {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 15px;
     }
     
     .diff-input-group {
-        padding: 15px;
+        padding: 10px;
     }
     
     .editable-div {
-        height: 250px;
         font-size: 13px;
+        padding: 12px;
+        min-height: 250px;
+        max-height: 50vh;
+    }
+    
+    .line-numbers {
+        font-size: 13px;
+        padding: 12px 6px;
+        min-width: 40px;
+        max-height: 50vh;
+    }
+    
+    .editor-container {
+        min-height: 250px;
+        max-height: 50vh;
     }
     
     .diff-stats {
@@ -232,22 +300,45 @@
 
 @media (max-width: 480px) {
     .tool-container {
-        margin: 5px;
-        padding: 15px;
+        width: 99vw;
+        max-width: 99vw;
+        height: 98vh;
+        margin: 2px auto;
+        padding: 10px;
     }
     
     .editable-div {
-        height: 200px;
         font-size: 12px;
-        padding: 12px;
+        padding: 10px;
+        min-height: 200px;
+        max-height: 45vh;
+    }
+    
+    .line-numbers {
+        font-size: 12px;
+        padding: 10px 4px;
+        min-width: 35px;
+        max-height: 45vh;
+    }
+    
+    .editor-container {
+        min-height: 200px;
+        max-height: 45vh;
     }
     
     .tool-container h1 {
         font-size: 1.4em;
+        margin-bottom: 8px;
     }
     
     .tool-description {
         font-size: 1em;
+        margin-bottom: 15px;
+    }
+    
+    .tool-label {
+        font-size: 1em;
+        margin-bottom: 6px;
     }
 }
 
