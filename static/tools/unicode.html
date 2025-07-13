@@ -7,30 +7,27 @@
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Unicode 编解码</h1>
-        <nav>
-            <a href="../../index.html">返回首页</a>
-        </nav>
-    </header>
-    <main>
-        <section class="tool-section">
-            <h2>输入</h2>
-            <textarea id="input-text" rows="10" placeholder="请输入要编解码的文本"></textarea>
-        </section>
-        <section class="tool-section">
-            <button id="encode-button">编码为 Unicode</button>
-            <button id="decode-button">解码 Unicode</button>
-        </section>
-        <section class="tool-section">
-            <h2>输出</h2>
-            <textarea id="output-text" rows="10" readonly></textarea>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2023 DevUtils</p>
-    </footer>
-    <script src="../js/app.js"></script>
-    <script src="../js/unicode.js"></script> <!-- We will create this file next -->
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Unicode 编解码</h1>
+            <p>将文本编码为 Unicode 格式或从 Unicode 解码。</p>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="input-text">输入</label>
+            <textarea id="input-text" class="tool-textarea" rows="8" placeholder="请输入要编解码的文本"></textarea>
+        </div>
+
+        <div class="tool-controls">
+            <button id="encode-button" class="tool-button">编码为 Unicode</button>
+            <button id="decode-button" class="tool-button">解码 Unicode</button>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="output-text">输出</label>
+            <textarea id="output-text" class="tool-textarea" rows="8" readonly></textarea>
+        </div>
+    </div>
+    <script src="../js/unicode.js"></script>
 </body>
 </html>

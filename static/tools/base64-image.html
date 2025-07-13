@@ -3,20 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <title>Base64 转图片</title>
+    <link rel="stylesheet" href="../css/style.css">
     <style>
-        body { font-family: sans-serif; padding: 15px; }
-        textarea { width: 95%; height: 150px; margin-bottom: 10px; font-family: monospace; }
-        button { padding: 8px 15px; margin-bottom: 10px; cursor: pointer; }
-        #image-output { margin-top: 15px; max-width: 100%; height: auto; border: 1px solid #ccc; padding: 5px; min-height: 50px; display: block; }
-        .error-message { color: red; font-weight: bold; margin-top: 10px; font-size: 0.9em; }
+        #image-output {
+            margin-top: 15px;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+            min-height: 50px;
+            display: block;
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 <body>
-    <h1>Base64 转图片</h1>
-    <textarea id="base64-input" placeholder="在此处粘贴 Base64 编码的图片数据..."></textarea>
-    <button onclick="displayImage()">显示图片</button>
-    <div id="error-output" class="error-message"></div>
-    <img id="image-output" src="" alt="图片预览">
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Base64 转图片</h1>
+            <p>将 Base64 编码的字符串转换为图片并显示。</p>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="base64-input">Base64 数据:</label>
+            <textarea id="base64-input" class="tool-textarea" rows="8" placeholder="在此处粘贴 Base64 编码的图片数据..."></textarea>
+        </div>
+
+        <div class="tool-controls">
+            <button onclick="displayImage()" class="tool-button">显示图片</button>
+        </div>
+
+        <div id="error-output" class="tool-error"></div>
+
+        <div class="tool-section">
+            <label class="tool-label">图片预览:</label>
+            <img id="image-output" src="" alt="图片预览">
+        </div>
+    </div>
 
     <script>
         const base64Input = document.getElementById('base64-input');
@@ -29,7 +52,7 @@
 
         function displayError(message) {
             errorOutput.textContent = message;
-            imageOutput.src = ''; // Clear image on error
+            imageOutput.src = '';
         }
 
         function displayImage() {
@@ -41,40 +64,27 @@
                 return;
             }
 
-            // Basic check if it looks like base64
-            // This is not foolproof validation
             if (!/^[A-Za-z0-9+/=]+$/.test(base64String.replace(/\s/g, ''))) {
                  displayError('输入内容似乎不是有效的 Base64 编码。');
                  return;
             }
 
-            // Attempt to detect common image types or default to png
-            // A more robust solution might involve user input or more complex detection
-            let mimeType = 'image/png'; // Default
-            // Simple checks for common prefixes (might be inaccurate)
+            let mimeType = 'image/png';
             if (base64String.startsWith('/9j/')) mimeType = 'image/jpeg';
             else if (base64String.startsWith('iVBORw0KGgo')) mimeType = 'image/png';
             else if (base64String.startsWith('R0lGODlh')) mimeType = 'image/gif';
-            else if (base64String.startsWith('PHN2Zy')) mimeType = 'image/svg+xml'; // Check for SVG
+            else if (base64String.startsWith('PHN2Zy')) mimeType = 'image/svg+xml';
             else if (base64String.startsWith('data:image')) {
-                 // If the full data URI is pasted, use it directly
                  imageOutput.src = base64String;
-                 return; // Skip adding the prefix again
+                 return;
             }
 
-
             try {
-                // Construct the data URI
                 imageOutput.src = `data:${mimeType};base64,${base64String}`;
-
-                // Optional: Check if the image loaded (might not work reliably for all data URIs)
                 imageOutput.onerror = () => {
                     displayError('无法加载图片，请检查 Base64 数据和格式。');
                 };
-                 imageOutput.onload = () => {
-                     // Image loaded successfully (optional feedback)
-                 };
-
+                 imageOutput.onload = () => {};
             } catch (e) {
                 displayError('转换图片时出错: ' + e.message);
             }

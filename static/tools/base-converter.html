@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>进制转换</title>
     <link rel="stylesheet" href="../css/style.css">
-    <!-- Inline styles removed -->
 </head>
 <body>
-    <!-- Removed outer container -->
     <div class="tool-container">
-        <h1>进制转换</h1>
+        <div class="tool-header">
+            <h1>进制转换</h1>
+            <p>在二进制、八进制、十进制和十六进制之间转换数字。</p>
+        </div>
 
         <div class="tool-section">
             <label for="inputValue" class="tool-label">输入数值:</label>
             <input type="text" id="inputValue" class="tool-input" placeholder="输入要转换的数值...">
         </div>
 
-        <div class="tool-section tool-inline-controls"> <!-- Use tool-inline-controls -->
+        <div class="tool-section tool-inline-controls">
              <label for="inputBase" class="tool-label">输入进制:</label>
-             <select id="inputBase" class="tool-select"> <!-- Use tool-select -->
+             <select id="inputBase" class="tool-select">
                  <option value="10" selected>Decimal (10)</option>
                  <option value="2">Binary (2)</option>
                  <option value="16">Hexadecimal (16)</option>
@@ -27,7 +28,7 @@
              </select>
 
              <label for="outputBase" class="tool-label">输出进制:</label>
-             <select id="outputBase" class="tool-select"> <!-- Use tool-select -->
+             <select id="outputBase" class="tool-select">
                  <option value="10">Decimal (10)</option>
                  <option value="2" selected>Binary (2)</option>
                  <option value="16">Hexadecimal (16)</option>
@@ -35,14 +36,15 @@
              </select>
         </div>
 
-         <div class="tool-section">
-             <button onclick="convertBase()" class="tool-button">转换</button> <!-- Use tool-button -->
-             <div id="convertError" class="tool-error"></div> <!-- Use tool-error -->
+         <div class="tool-controls">
+             <button onclick="convertBase()" class="tool-button">转换</button>
          </div>
+        
+         <div id="convertError" class="tool-error"></div>
 
          <div class="tool-section">
              <label class="tool-label">结果:</label>
-             <div id="convertResult" class="tool-result"></div> <!-- Use tool-result -->
+             <div id="convertResult" class="tool-result"></div>
          </div>
     </div>
 
@@ -53,7 +55,6 @@
         const resultDiv = document.getElementById('convertResult');
         const errorDiv = document.getElementById('convertError');
 
-        // Input validation patterns based on base
         const basePatterns = {
             '2': /^[01]+$/,
             '8': /^[0-7]+$/,
@@ -66,14 +67,14 @@
         }
 
         function validateInput(value, base) {
-            if (!value) return false; // Empty input is invalid
+            if (!value) return false;
             const pattern = basePatterns[base];
             return pattern && pattern.test(value);
         }
 
         function convertBase() {
             clearError();
-            resultDiv.textContent = ''; // Clear previous result
+            resultDiv.textContent = '';
 
             const value = inputValueEl.value.trim();
             const inputBase = parseInt(inputBaseEl.value, 10);
@@ -84,15 +85,12 @@
                 return;
             }
 
-            // Validate input against the selected input base
             if (!validateInput(value, inputBase)) {
                  errorDiv.textContent = `输入值 "${value}" 对于进制 ${inputBase} 无效。`;
                  return;
             }
 
             try {
-                // Step 1: Parse the input string in the input base to a decimal number
-                // Use BigInt for potentially large numbers, especially in binary/hex
                 let decimalValue;
                 if (inputBase === 10) {
                     decimalValue = BigInt(value);
@@ -103,14 +101,11 @@
                 } else if (inputBase === 16) {
                     decimalValue = BigInt('0x' + value);
                 } else {
-                     throw new Error("Unsupported input base"); // Should not happen with select dropdown
+                     throw new Error("Unsupported input base");
                 }
 
-
-                // Step 2: Convert the BigInt decimal number to the output base string
                 const result = decimalValue.toString(outputBase);
-
-                resultDiv.textContent = result.toUpperCase(); // Often hex is uppercase
+                resultDiv.textContent = result.toUpperCase();
 
             } catch (e) {
                 console.error("Base conversion error:", e);
@@ -122,14 +117,11 @@
             }
         }
 
-         // Add event listener for Enter key on input field
         inputValueEl.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 convertBase();
             }
         });
     </script>
-    <!-- Keep this script if it's used globally, otherwise remove -->
-    <!-- <script src="../js/app.js"></script> -->
 </body>
 </html>

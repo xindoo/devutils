@@ -162,14 +162,17 @@ body, html {
 .tool-container {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Space between sections */
-    max-width: 750px; /* Slightly wider max-width */
+    gap: 15px; /* Space between sections */
+    width: 95%;
+    max-width: 1200px; /* Allow wider content */
     margin: 20px auto; /* Center the container */
-    padding: 25px; /* More padding */
-    border: 1px solid #ddd; /* Subtle border */
-    border-radius: var(--border-radius);
+    padding: 20px; /* More padding */
+    border: 1px solid #e1e4e8; /* GitHub-like border */
+    border-radius: 12px; /* Softer radius */
     background-color: #ffffff; /* White background for the tool area */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle shadow */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    box-sizing: border-box;
+    height: calc(100vh - 40px); /* Adjust height to fit viewport with margin */
 }
 
 /* Container for vertical layouts like JSON/YAML */
@@ -177,7 +180,7 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    height: calc(100vh - 120px); /* Adjust height dynamically */
+    height: calc(100% - 40px); /* Adjust height dynamically to fill container */
     padding: 15px;
     box-sizing: border-box;
 }
@@ -263,7 +266,7 @@ body, html {
     cursor: pointer;
     transition: background-color 0.2s ease, opacity 0.2s ease;
     font-size: 1em;
-    align-self: flex-start; /* Align button to start in flex column */
+    /* align-self is removed to allow tool-controls to manage alignment */
 }
 
 .tool-button:hover {
@@ -273,7 +276,7 @@ body, html {
 /* Container for centered buttons */
 .tool-controls {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start; /* Align buttons to the start */
     gap: 15px;
     margin-top: 10px;
     flex-wrap: wrap;
@@ -310,11 +313,29 @@ body, html {
 }
 
 /* Specific overrides if needed */
-.tool-container h1 {
+/* Unified Tool Header */
+.tool-header {
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 1.5em;
-    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.tool-header h1 {
+    margin: 0;
+    font-size: 2em;
+    font-weight: 700;
+    color: #24292e;
+    background: linear-gradient(135deg, #0366d6, #0969da);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.tool-header p {
+    margin: 10px 0 0;
+    color: #586069;
+    font-size: 1.1em;
 }
 
 /* Adjustments for JSON/YAML converter layout */
