@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Encode/Decode</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        textarea { width: 95%; height: 150px; margin-bottom: 10px; }
+        button { padding: 8px 15px; margin-right: 5px; }
+        .example { 
+            background-color: #f5f5f5; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            color: #666; 
+        }
+    </style>
+</head>
+<body>
+    <h1>URL Encode/Decode</h1>
+    
+    <div class="example">
+        <strong>示例:</strong><br>
+        原文: Hello World!<br>
+        编码后: Hello%20World%21
+    </div>
+    
+    <textarea id="input" placeholder="输入要编码或解码的文本..."></textarea>
+    <button onclick="encode()">URL编码</button>
+    <button onclick="decode()">URL解码</button>
+    <button onclick="clearAll()">清空</button>
+    <textarea id="output" placeholder="结果..." readonly></textarea>
+
+    <script>
+        function encode() {
+            const input = document.getElementById('input').value;
+            try {
+                document.getElementById('output').value = encodeURIComponent(input);
+            } catch (e) {
+                document.getElementById('output').value = 'Error encoding: ' + e.message;
+            }
+        }
+
+        function decode() {
+            const input = document.getElementById('input').value;
+            try {
+                document.getElementById('output').value = decodeURIComponent(input);
+            } catch (e) {
+                document.getElementById('output').value = 'Error decoding: ' + e.message;
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
+        }
+
+        // Allow Enter key to trigger encoding
+        document.getElementById('input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                encode();
+            }
+        });
+    </script>
+</body>
+</html>
