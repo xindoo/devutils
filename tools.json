@@ -5,17 +5,26 @@
       {
         "name_zh": "Base64编解码",
         "name_en": "Base64 Encode/Decode",
-        "path": "static/tools/base64.html"
+        "path": "coder/base64",
+        "filePath": "static/tools/base64.html"
       },
       {
         "name_zh": "Base64转图片",
         "name_en": "Base64 to Image",
-        "path": "static/tools/base64-image.html"
+        "path": "coder/base64-image",
+        "filePath": "static/tools/base64-image.html"
       },
       {
         "name_zh": "URL编码/解码",
         "name_en": "URL Encode/Decode",
-        "path": "static/tools/url-encode-decode.html"
+        "path": "coder/url-encode-decode",
+        "filePath": "static/tools/url-encode-decode.html"
+      },
+      {
+        "name_zh": "Unicode转换",
+        "name_en": "Unicode Converter",
+        "path": "coder/unicode",
+        "filePath": "static/tools/unicode.html"
       }
     ]
   },
@@ -25,12 +34,14 @@
       {
         "name_zh": "JSON格式化",
         "name_en": "JSON Formatter",
-        "path": "static/tools/json-format.html"
+        "path": "formatter/json",
+        "filePath": "static/tools/json-format.html"
       },
       {
         "name_zh": "代码格式化",
         "name_en": "Code Formatter",
-        "path": "static/tools/code-formatter.html"
+        "path": "formatter/code",
+        "filePath": "static/tools/code-formatter.html"
       }
     ]
   },
@@ -40,17 +51,20 @@
       {
         "name_zh": "图片压缩",
         "name_en": "Image Compressor",
-        "path": "static/tools/image-compressor.html"
+        "path": "image/compressor",
+        "filePath": "static/tools/image-compressor.html"
       },
       {
         "name_zh": "全景图预览",
         "name_en": "Panorama Viewer",
-        "path": "static/tools/panorama-viewer.html"
+        "path": "image/panorama-viewer",
+        "filePath": "static/tools/panorama-viewer.html"
       },
      {
        "name_zh": "图片格式转换",
        "name_en": "Image Format Converter",
-       "path": "static/tools/image-format-converter.html"
+       "path": "image/format-converter",
+       "filePath": "static/tools/image-format-converter.html"
      }
     ]
   },
@@ -60,12 +74,14 @@
       {
         "name_zh": "随机数据生成",
         "name_en": "Random Data Generator",
-        "path": "static/tools/random-data-generator.html"
+        "path": "generator/random-data",
+        "filePath": "static/tools/random-data-generator.html"
       },
       {
         "name_zh": "字符串哈希生成",
         "name_en": "String Hash Generator",
-        "path": "static/tools/string-hash-generator.html"
+        "path": "generator/string-hash",
+        "filePath": "static/tools/string-hash-generator.html"
       }
     ]
   },
@@ -75,7 +91,8 @@
       {
         "name_zh": "文本差异对比",
         "name_en": "Text Diff",
-        "path": "static/tools/text-diff.html"
+        "path": "text/diff",
+        "filePath": "static/tools/text-diff.html"
       }
     ] 
   },
@@ -85,17 +102,20 @@
       {
         "name_zh": "全景视频播放",
         "name_en": "Panorama Video Player",
-        "path": "static/tools/panorama-video-viewer.html"
+        "path": "video/panorama-viewer",
+        "filePath": "static/tools/panorama-video-viewer.html"
       },
       {
         "name_zh": "视频播放",
         "name_en": "Video Player",
-        "path": "static/tools/video-player.html"
+        "path": "video/player",
+        "filePath": "static/tools/video-player.html"
       },
       {
         "name_zh": "视频压缩与编码转换",
         "name_en": "Video Compressor & Converter",
-        "path": "static/tools/video-compressor.html"
+        "path": "video/compressor",
+        "filePath": "static/tools/video-compressor.html"
       }
     ]
   },
@@ -105,22 +125,26 @@
       {
         "name_zh": "时间转换",
         "name_en": "Time Converter",
-        "path": "static/tools/time-converter.html"
+        "path": "converter/time",
+        "filePath": "static/tools/time-converter.html"
       },
       {
         "name_zh": "Cron转换",
         "name_en": "Cron Converter",
-        "path": "static/tools/cron-converter.html"
+        "path": "converter/cron",
+        "filePath": "static/tools/cron-converter.html"
       },
       {
         "name_zh": "JSON/YAML互转",
         "name_en": "JSON/YAML Converter",
-        "path": "static/tools/json-yaml-converter.html"
+        "path": "converter/json-yaml",
+        "filePath": "static/tools/json-yaml-converter.html"
       },
       {
         "name_zh": "进制转换",
         "name_en": "Base Converter",
-        "path": "static/tools/base-converter.html"
+        "path": "converter/base",
+        "filePath": "static/tools/base-converter.html"
       }
     ]
   }

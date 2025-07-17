@@ -54,12 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         link.title = tool.name_en;
                         link.href = '#'; // Prevent page reload
                         link.dataset.path = tool.path; // Store path in data attribute
+                        link.dataset.filePath = tool.filePath; // Store file path
                         link.dataset.nameEn = tool.name_en;
 
-                        link.addEventListener('click', (event) => {
-                            event.preventDefault(); // Prevent default anchor behavior
-                            loadTool(tool.path, link);
-                        });
+                        link.href = `#${tool.path}`;
 
                         listItem.appendChild(link);
                         nestedList.appendChild(listItem); // Append to nested list
@@ -68,20 +66,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Store the first tool's details to load it by default
                         if (!firstToolLink) {
                             firstToolLink = link;
-                            firstToolPath = tool.path;
+                            firstToolPath = tool.filePath;
                         }
                     });
                 }
             });
 
-            // Load the first tool found by default
-            if (firstToolLink && firstToolPath) {
-                console.log('First tool loaded:', firstToolPath); // Log first tool load
-                loadTool(firstToolPath, firstToolLink);
-            } else {
-                 console.log('No tools found to load by default.'); // Log if no tools found
-                 toolList.innerHTML = '<li>No tools found in categories.</li>';
-            }
+            // Initial load based on hash
+            handleHashChange();
+
+            // Listen for hash changes
+            window.addEventListener('hashchange', handleHashChange);
         })
         .catch(error => {
             console.error('Error fetching or processing tools.json:', error); // Log fetch/processing error
@@ -120,21 +115,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function loadTool(path, clickedLink) {
-        // Check if path is valid (basic check)
-        if (path && typeof path === 'string' && path.trim() !== '') {
-            toolFrame.src = path; // Load the tool's HTML page into the iframe
+    function handleHashChange() {
+        const path = window.location.hash.substring(1);
+        const toolLink = sidebarLinks.find(link => link.dataset.path === path);
 
-            // Update active state for sidebar links
+        if (toolLink) {
+            loadTool(toolLink.dataset.filePath, toolLink);
+        } else {
+            const firstToolLink = sidebarLinks[0];
+            if (firstToolLink) {
+                // Update hash to the default tool, which will trigger load via hashchange
+                window.location.hash = firstToolLink.dataset.path;
+            }
+        }
+    }
+
+    function loadTool(filePath, clickedLink) {
+        if (filePath && typeof filePath === 'string' && filePath.trim() !== '') {
+            toolFrame.src = filePath;
             sidebarLinks.forEach(link => link.classList.remove('active'));
             if (clickedLink) {
                 clickedLink.classList.add('active');
             }
         } else {
-            console.error('Invalid tool path:', path);
-            // Optionally clear the iframe or show an error message
-            // toolFrame.src = '';
-            // toolFrame.srcdoc = '<p style="color: red;">Invalid tool path specified.</p>';
+            console.error('Invalid tool path:', filePath);
         }
     }
 });
