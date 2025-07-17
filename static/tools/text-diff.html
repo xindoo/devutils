@@ -8,44 +8,46 @@
     <link rel="stylesheet" href="../css/text-diff.css">
 </head>
 <body>
-    <div class="tool-container">
+    <div class="tool-container full-height-tool">
         <div class="tool-header">
             <h1>文本Diff对比工具</h1>
             <p>在线比对两个文本的差异，并高亮显示新增与删除的内容。</p>
         </div>
-        <div class="tool-section">
-            <div class="diff-inputs">
-                <div class="diff-input-group">
-                    <label class="tool-label">原始文本 (Text 1)</label>
-                    <div class="editor-container">
-                        <div class="line-numbers" id="lineNumbers1"></div>
-                        <div id="text1" class="editable-div" contenteditable="true" spellcheck="false" placeholder="请输入第一段文本..."></div>
+        <div class="tool-content">
+            <div class="tool-section diff-section">
+                <div class="diff-inputs">
+                    <div class="diff-input-group">
+                        <label class="tool-label">原始文本 (Text 1)</label>
+                        <div class="editor-container">
+                            <div class="line-numbers" id="lineNumbers1"></div>
+                            <div id="text1" class="editable-div" contenteditable="true" spellcheck="false" placeholder="请输入第一段文本..."></div>
+                        </div>
                     </div>
-                </div>
-                <div class="diff-input-group">
-                    <label class="tool-label">对比文本 (Text 2)</label>
-                    <div class="editor-container">
-                        <div class="line-numbers" id="lineNumbers2"></div>
-                        <div id="text2" class="editable-div" contenteditable="true" spellcheck="false" placeholder="请输入第二段文本..."></div>
+                    <div class="diff-input-group">
+                        <label class="tool-label">对比文本 (Text 2)</label>
+                        <div class="editor-container">
+                            <div class="line-numbers" id="lineNumbers2"></div>
+                            <div id="text2" class="editable-div" contenteditable="true" spellcheck="false" placeholder="请输入第二段文本..."></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="tool-section">
-            <div class="diff-stats" id="diffStats">
-                <span class="stat-item">
-                    <span class="stat-label">添加:</span>
-                    <span class="stat-value added" id="addedCount">0</span>
-                </span>
-                <span class="stat-item">
-                    <span class="stat-label">删除:</span>
-                    <span class="stat-value removed" id="removedCount">0</span>
-                </span>
-                <span class="stat-item">
-                    <span class="stat-label">相似度:</span>
-                    <span class="stat-value similarity" id="similarity">100%</span>
-                </span>
+            
+            <div class="tool-section stats-section">
+                <div class="diff-stats" id="diffStats">
+                    <span class="stat-item">
+                        <span class="stat-label">添加:</span>
+                        <span class="stat-value added" id="addedCount">0</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="stat-label">删除:</span>
+                        <span class="stat-value removed" id="removedCount">0</span>
+                    </span>
+                    <span class="stat-item">
+                        <span class="stat-label">相似度:</span>
+                        <span class="stat-value similarity" id="similarity">100%</span>
+                    </span>
+                </div>
             </div>
         </div>
     </div>

@@ -174,7 +174,7 @@ body, html {
     flex-direction: column;
     gap: 15px; /* Space between sections */
     width: 95%;
-    max-width: 1200px; /* Allow wider content */
+
     margin: 20px auto; /* Center the container */
     padding: 20px; /* More padding */
     border: 1px solid #e1e4e8; /* GitHub-like border */
