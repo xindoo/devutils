@@ -2,6 +2,10 @@
 
 DevUtils is a web-based suite of developer tools designed to streamline common tasks. All tools run locally in your browser, ensuring your data remains private and secure.
 
+## Live Demo
+
+You can try it out here: [https://devutils.xindoo.xyz](https://devutils.xindoo.xyz)
+
 ## Features
 
 This project includes a variety of tools across different categories:
@@ -55,6 +59,10 @@ This project includes a variety of tools across different categories:
 # DevUtils - 开发者工具集
 
 DevUtils 是一个基于 Web 的开发者工具集，旨在简化常见的开发任务。所有工具都在您的浏览器中本地运行，确保您的数据私密和安全。
+
+## 在线体验
+
+您可以在这里体验：[https://devutils.xindoo.xyz](https://devutils.xindoo.xyz)
 
 ## 功能列表
 
