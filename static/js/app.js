@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const toolList = document.getElementById('tool-list');
     const toolFrame = document.getElementById('tool-frame');
+    const toolCards = document.getElementById('tool-cards');
+    const mainContent = document.getElementById('main-content');
     const sidebarLinks = []; // To manage active state
     const searchBox = document.getElementById('search-box');
 
@@ -21,53 +23,74 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            let firstToolLink = null;
-            let firstToolPath = null;
-
             categories.forEach(category => {
-                // Create category header
+                // Create category header for sidebar
                 const categoryHeader = document.createElement('li');
-                categoryHeader.classList.add('category-header', 'expanded'); // Add classes for styling and initial state
+                categoryHeader.classList.add('category-header', 'expanded');
                 categoryHeader.textContent = category.categoryName;
                 toolList.appendChild(categoryHeader);
 
                 // Create nested list for tools in this category
                 const nestedList = document.createElement('ul');
-                nestedList.classList.add('nested-tool-list'); // Add class for styling
+                nestedList.classList.add('nested-tool-list');
                 toolList.appendChild(nestedList);
 
                 // Add click listener to toggle nested list
                 categoryHeader.addEventListener('click', () => {
                     nestedList.style.display = nestedList.style.display === 'none' ? 'block' : 'none';
                     categoryHeader.classList.toggle('expanded');
-                    categoryHeader.classList.toggle('collapsed'); // Toggle collapse class
+                    categoryHeader.classList.toggle('collapsed');
                 });
 
-                // Initially hide the list if needed (or manage via CSS)
-                // nestedList.style.display = 'none'; // Start collapsed if desired
+                // Create category section for cards
+                const categorySection = document.createElement('div');
+                categorySection.classList.add('tool-category-section');
+                
+                const categoryTitle = document.createElement('h3');
+                categoryTitle.classList.add('tool-category-title');
+                categoryTitle.textContent = category.categoryName;
+                categorySection.appendChild(categoryTitle);
+
+                const categoryCardGrid = document.createElement('div');
+                categoryCardGrid.classList.add('tool-cards-grid');
+                categorySection.appendChild(categoryCardGrid);
+
+                toolCards.appendChild(categorySection);
+
 
                 if (Array.isArray(category.tools)) {
                     category.tools.forEach((tool) => {
+                        // Populate sidebar
                         const listItem = document.createElement('li');
                         const link = document.createElement('a');
                         link.textContent = tool.name_zh;
                         link.title = tool.name_en;
-                        link.href = '#'; // Prevent page reload
-                        link.dataset.path = tool.path; // Store path in data attribute
-                        link.dataset.filePath = tool.filePath; // Store file path
-                        link.dataset.nameEn = tool.name_en;
-
                         link.href = `#${tool.path}`;
-
+                        link.dataset.path = tool.path;
+                        link.dataset.filePath = tool.filePath;
+                        link.dataset.nameEn = tool.name_en;
                         listItem.appendChild(link);
-                        nestedList.appendChild(listItem); // Append to nested list
-                        sidebarLinks.push(link); // Add link to our array
+                        nestedList.appendChild(listItem);
+                        sidebarLinks.push(link);
 
-                        // Store the first tool's details to load it by default
-                        if (!firstToolLink) {
-                            firstToolLink = link;
-                            firstToolPath = tool.filePath;
-                        }
+                        // Populate tool cards
+                        const card = document.createElement('div');
+                        card.classList.add('tool-card');
+                        card.dataset.path = tool.path;
+                        card.dataset.filePath = tool.filePath;
+                        card.dataset.nameZh = tool.name_zh;
+                        card.dataset.nameEn = tool.name_en;
+
+                        card.innerHTML = `
+                            <h4>${tool.name_zh}</h4>
+                            <p>${tool.name_en}</p>
+                        `;
+
+                        card.addEventListener('click', () => {
+                            window.location.hash = tool.path;
+                        });
+
+                        categoryCardGrid.appendChild(card);
                     });
                 }
             });
@@ -79,16 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('hashchange', handleHashChange);
         })
         .catch(error => {
-            console.error('Error fetching or processing tools.json:', error); // Log fetch/processing error
+            console.error('Error fetching or processing tools.json:', error);
             toolList.innerHTML = '<li>Error loading tools. Check console for details.</li>';
-            // Optionally display error in the iframe or main content area
-            // toolFrame.srcdoc = `<p style="color: red;">Error loading tool configuration: ${error.message}</p>`;
         });
 
     searchBox.addEventListener('input', () => {
         const searchTerm = searchBox.value.toLowerCase();
-        const categories = document.querySelectorAll('.category-header');
 
+        // Search sidebar
+        const categories = document.querySelectorAll('.category-header');
         categories.forEach(category => {
             const nestedList = category.nextElementSibling;
             const tools = nestedList.querySelectorAll('li');
@@ -113,6 +135,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 nestedList.style.display = 'none';
             }
         });
+
+        // Search tool cards
+        const categorySections = document.querySelectorAll('.tool-category-section');
+        categorySections.forEach(section => {
+            const cards = section.querySelectorAll('.tool-card');
+            let categoryVisible = false;
+            cards.forEach(card => {
+                const toolNameZh = card.dataset.nameZh.toLowerCase();
+                const toolNameEn = card.dataset.nameEn.toLowerCase();
+                if (toolNameZh.includes(searchTerm) || toolNameEn.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    categoryVisible = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (categoryVisible) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        });
     });
 
     function handleHashChange() {
@@ -121,12 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (toolLink) {
             loadTool(toolLink.dataset.filePath, toolLink);
+            toolCards.style.display = 'none';
+            toolFrame.style.display = 'block';
         } else {
-            const firstToolLink = sidebarLinks[0];
-            if (firstToolLink) {
-                // Update hash to the default tool, which will trigger load via hashchange
-                window.location.hash = firstToolLink.dataset.path;
-            }
+            // Show tool cards grid by default
+            toolCards.style.display = 'block';
+            toolFrame.style.display = 'none';
+            sidebarLinks.forEach(link => link.classList.remove('active'));
         }
     }
 

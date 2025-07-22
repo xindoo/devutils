@@ -94,7 +94,7 @@ body, html {
 .content {
     flex-grow: 1; /* Take remaining space */
     height: 100vh; /* Full viewport height */
-    overflow: hidden; /* The iframe will handle its own scrolling */
+    overflow-y: auto;
     padding: 5px; /* Add a small padding around the iframe */
     box-sizing: border-box;
     background-color: #f9f9f9; /* Slightly off-white background for content */
@@ -354,4 +354,52 @@ body, html {
 }
 .tool-container-vertical .tool-error {
     text-align: center;
+}
+
+/* Tool Cards Grid */
+.tool-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.tool-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tool-card h4 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.tool-card p {
+    margin: 0;
+    font-size: 14px;
+    color: #777;
+}
+/* Tool Category Section */
+.tool-category-section {
+    margin-bottom: 30px;
+}
+
+.tool-category-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--active-bg);
 }
