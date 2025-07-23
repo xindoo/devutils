@@ -45,6 +45,31 @@ body, html {
     padding: 0 20px; /* Match link padding */
     color: #343a40; /* Darker title color */
 }
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #343a40;
+}
+
+.sidebar-header a {
+    color: #343a40;
+    display: inline-flex;
+    align-items: center;
+}
+
+.sidebar-header a:hover {
+    color: #007bff;
+}
+
 
 #search-box {
     width: calc(100% - 40px);
