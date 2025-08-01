@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to CSV Converter</title>
+    <link rel="stylesheet" href="../css/style.css">
+   <style>
+       .output-container {
+           position: relative;
+       }
+       .copy-icon {
+           position: absolute;
+           top: 5px;
+           right: 5px;
+           cursor: pointer;
+           width: 24px;
+           height: 24px;
+           fill: #888;
+       }
+       .copy-icon:hover {
+           fill: #000;
+       }
+   </style>
+</head>
+<body>
+    <div class="tool-container tool-container-vertical">
+        <div class="tool-header">
+            <h1>JSON to CSV Converter</h1>
+            <p>Convert data from JSON format to CSV format.</p>
+        </div>
+
+        <div id="errorDisplay" class="tool-error"></div>
+
+        <div class="tool-io-section">
+            <label for="inputData" class="tool-label">Input (JSON):</label>
+            <textarea id="inputData" class="tool-textarea" placeholder="Paste JSON here..."></textarea>
+        </div>
+
+        <div class="tool-controls">
+            <button onclick="convertToCsv()" class="tool-button">Convert to CSV</button>
+        </div>
+
+        <div class="tool-io-section">
+            <label for="outputData" class="tool-label">Output (CSV):</label>
+           <div class="output-container">
+               <textarea id="outputData" class="tool-textarea" readonly placeholder="Conversion result will appear here..."></textarea>
+               <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
+                   <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+               </svg>
+           </div>
+        </div>
+    </div>
+
+    <script src="../js/json-csv-converter.js"></script>
+</body>
+</html>
