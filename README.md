@@ -1,60 +1,4 @@
-# DevUtils - A Handy Collection of Developer Tools
-
-DevUtils is a web-based suite of developer tools designed to streamline common tasks. All tools run locally in your browser, ensuring your data remains private and secure.
-
-## Live Demo
-
-You can try it out here: [https://devutils.xindoo.xyz](https://devutils.xindoo.xyz)
-
-## Features
-
-This project includes a variety of tools across different categories:
-
-### Encoding/Decoding
-- **Base64 Encode/Decode**: Encode strings to Base64 and decode them back.
-- **Base64 to Image**: Convert Base64 strings into images.
-- **URL Encode/Decode**: Encode and decode URL components.
-- **Unicode Converter**: Convert text to and from Unicode escape sequences.
-
-### Formatting
-- **JSON Formatter**: Prettify and validate JSON data.
-- **Code Formatter**: Format code for various languages.
-
-### Image Tools
-- **Image Compressor**: Reduce the file size of images.
-- **Panorama Viewer**: View 360-degree panoramic images.
-- **Image Format Converter**: Convert images between different formats (e.g., PNG, JPG, WEBP).
-
-### Data Generation
-- **Random Data Generator**: Generate random data like UUIDs, passwords, and more.
-- **String Hash Generator**: Calculate hashes (MD5, SHA1, etc.) for strings.
-
-### Text Tools
-- **Text Diff**: Compare two blocks of text and highlight the differences.
-
-### Video Tools
-- **Panorama Video Player**: Play 360-degree panoramic videos.
-- **Video Player**: A simple video player.
-- **Video Compressor & Converter**: Compress and convert video formats.
-
-### Converters
-- **Time Converter**: Convert timestamps between different formats.
-- **Cron Converter**: Translate Cron expressions into human-readable descriptions.
-- **JSON/YAML Converter**: Convert data between JSON and YAML formats.
-- **Base Converter**: Convert numbers between different numeral systems (e.g., binary, hexadecimal, decimal).
-
-## How to Use
-
-1.  Clone this repository.
-2.  Open the `index.html` file in your browser.
-3.  Alternatively, you can use a simple web server. For example, if you have Node.js, you can use `serve`:
-    ```bash
-    npm install -g serve
-    serve .
-    ```
-4.  Select the desired tool from the sidebar and start using it.
-
----
+[English](README.en.md)
 
 # DevUtils - 开发者工具集
 
@@ -99,7 +43,11 @@ DevUtils 是一个基于 Web 的开发者工具集，旨在简化常见的开发
 - **时间转换**: 在不同格式之间转换时间戳。
 - **Cron转换**: 将 Cron 表达式翻译成人类可读的描述。
 - **JSON/YAML互转**: 在 JSON 和 YAML 格式之间转换数据。
+- **JSON转CSV**: 在 JSON 和 CSV 格式之间转换数据。
 - **进制转换**: 在不同的数字系统（例如二进制、十六进制、十进制）之间转换数字。
+
+### 网络工具
+- **WebSocket测试**: 测试 WebSocket 连接。
 
 ## 如何使用
 
