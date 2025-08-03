@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Tester</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        #log {
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: scroll;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+        }
+        .log-message {
+            margin-bottom: 5px;
+        }
+        .log-message.sent {
+            color: blue;
+        }
+        .log-message.received {
+            color: green;
+        }
+        .log-message.error {
+            color: red;
+        }
+        .log-message.status {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>WebSocket Tester</h1>
+            <p>Test your WebSocket endpoints.</p>
+        </div>
+
+        <div id="errorDisplay" class="tool-error"></div>
+
+        <div class="tool-io-section">
+            <label for="wsUrl" class="tool-label">WebSocket URL:</label>
+            <input type="text" id="wsUrl" class="tool-input" placeholder="e.g., wss://echo.websocket.org">
+        </div>
+
+        <div class="tool-controls">
+            <button id="connectBtn" class="tool-button">Connect</button>
+            <button id="disconnectBtn" class="tool-button" disabled>Disconnect</button>
+        </div>
+
+        <div class="tool-io-section">
+            <label for="message" class="tool-label">Message:</label>
+            <textarea id="message" class="tool-textarea" placeholder="Enter message to send..."></textarea>
+            <button id="sendBtn" class="tool-button" disabled>Send</button>
+        </div>
+
+        <div class="tool-io-section">
+            <label for="log" class="tool-label">Log:</label>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script src="../js/websocket-tester.js"></script>
+</body>
+</html>
