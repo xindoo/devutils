@@ -153,5 +153,16 @@
         "filePath": "static/tools/base-converter.html"
       }
     ]
+  },
+  {
+    "categoryName": "网络工具",
+    "tools": [
+      {
+        "name_zh": "WebSocket测试",
+        "name_en": "WebSocket Tester",
+        "path": "network/websocket-tester",
+        "filePath": "static/tools/websocket-tester.html"
+      }
+    ]
   }
 ]
