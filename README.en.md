@@ -33,6 +33,9 @@ This project includes a variety of tools across different categories:
 
 ### Text Tools
 - **Text Diff**: Compare two blocks of text and highlight the differences.
+- **Regex Tester**: Test and debug regular expressions.
+- **Markdown Previewer**: Preview Markdown content in real-time.
+- **Text Counter**: Count characters, words, and lines in a text.
 
 ### Video Tools
 - **Panorama Video Player**: Play 360-degree panoramic videos.

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Counter</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>字符/单词/行数统计</h1>
+            <p>实时统计文本的字符数、单词数和行数。</p>
+        </div>
+        <div class="tool-content">
+            <div class="tool-section">
+                <textarea id="text-input" class="tool-textarea" placeholder="在此输入文本..." style="min-height: 150px;"></textarea>
+            </div>
+            <div class="tool-section">
+                <p id="stats-bar">
+                    字符: <span id="char-count">0</span> |
+                    单词: <span id="word-count">0</span> |
+                    行数: <span id="line-count">0</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <script src="../js/text-counter.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Previewer</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .markdown-container {
+            display: flex;
+            gap: 20px;
+            height: 100%;
+        }
+        .markdown-editor, .markdown-preview {
+            width: 50%;
+            height: 100%;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .markdown-editor {
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container full-height-tool">
+        <div class="tool-header">
+            <h1>Markdown 实时预览</h1>
+            <p>在左侧输入 Markdown，在右侧查看实时渲染效果。</p>
+        </div>
+        <div class="tool-content markdown-container">
+            <textarea id="markdown-input" class="tool-textarea markdown-editor" placeholder="在此输入 Markdown..."></textarea>
+            <div id="markdown-output" class="markdown-preview"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../js/markdown-previewer.js"></script>
+</body>
+</html>

@@ -93,8 +93,26 @@
         "name_en": "Text Diff",
         "path": "text/diff",
         "filePath": "static/tools/text-diff.html"
+      },
+      {
+        "name_zh": "正则表达式测试",
+        "name_en": "Regex Tester",
+        "path": "text/regex-tester",
+        "filePath": "static/tools/regex-tester.html"
+      },
+      {
+        "name_zh": "Markdown预览",
+        "name_en": "Markdown Previewer",
+        "path": "text/markdown-previewer",
+        "filePath": "static/tools/markdown-previewer.html"
+      },
+      {
+        "name_zh": "文本统计",
+        "name_en": "Text Counter",
+        "path": "text/counter",
+        "filePath": "static/tools/text-counter.html"
       }
-    ] 
+    ]
   },
   {
     "categoryName": "视频工具",

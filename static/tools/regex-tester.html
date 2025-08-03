@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Tester</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .editor-container {
+            position: relative;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            font-family: monospace;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+        #test-string-input, #highlight-output {
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            width: 100%;
+            height: 250px;
+            font: inherit;
+            line-height: inherit;
+            letter-spacing: inherit;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: transparent;
+            overflow-y: auto;
+        }
+        #test-string-input {
+            position: relative;
+            z-index: 2;
+            color: transparent;
+            caret-color: black; /* Make the cursor visible */
+            resize: none;
+            border: none;
+        }
+        #highlight-output {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            pointer-events: none; /* Make it unclickable */
+        }
+        .highlight {
+            background-color: rgba(255, 255, 0, 0.5); /* Yellow highlight */
+            border-radius: 3px;
+        }
+        .tool-error-inline {
+            color: #d9534f;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>正则表达式测试器</h1>
+            <p>在线测试和调试你的正则表达式，匹配结果将实时高亮显示。</p>
+        </div>
+        <div class="tool-content">
+            <div class="tool-section">
+                <label class="tool-label" for="regex-input">正则表达式</label>
+                <input type="text" id="regex-input" class="tool-input" placeholder="输入你的正则表达式">
+                <div id="regex-error" class="tool-error-inline"></div>
+            </div>
+            <div class="tool-section">
+                <label class="tool-label" for="test-string-input">测试字符串</label>
+                <div class="editor-container">
+                    <textarea id="test-string-input" spellcheck="false" placeholder="在此输入用于测试的字符串..."></textarea>
+                    <div id="highlight-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/regex-tester.js"></script>
+</body>
+</html>
