@@ -51,6 +51,7 @@ DevUtils 是一个基于 Web 的开发者工具集，旨在简化常见的开发
 
 ### 网络工具
 - **WebSocket测试**: 测试 WebSocket 连接。
+- **Socket.IO测试**: 测试 Socket.IO 连接。
 
 ## 如何使用
 

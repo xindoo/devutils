@@ -180,6 +180,12 @@
         "name_en": "WebSocket Tester",
         "path": "network/websocket-tester",
         "filePath": "static/tools/websocket-tester.html"
+      },
+      {
+        "name_zh": "Socket.IO测试",
+        "name_en": "Socket.IO Tester",
+        "path": "network/socketio-tester",
+        "filePath": "static/tools/socketio-tester.html"
       }
     ]
   }

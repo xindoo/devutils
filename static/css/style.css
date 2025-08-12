@@ -308,6 +308,13 @@ body, html {
     opacity: 0.85; /* Slightly more noticeable hover */
 }
 
+.tool-button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 /* Container for centered buttons */
 .tool-controls {
     display: flex;
@@ -427,4 +434,183 @@ body, html {
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--active-bg);
+}
+
+/* --- Socket.IO Tester Styles --- */
+
+.sio-config-grid,
+.sio-interaction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.sio-transports .tool-checkbox-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    padding-top: 5px; /* Align with input field's top padding */
+}
+
+.tool-help {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.tool-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.tool-input-group .tool-input {
+    flex-grow: 1;
+}
+.tool-label-inline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.sio-subscriptions-list {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sio-subscription-tag {
+    display: flex;
+    align-items: center;
+    background-color: #e9ecef;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+}
+
+.sio-subscription-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px;
+    font-size: 16px;
+    color: #6c757d;
+    padding: 0;
+    line-height: 1;
+}
+.sio-subscription-tag button:hover {
+    color: #343a40;
+}
+
+
+.tool-label-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.tool-button-sm {
+    padding: 5px 12px;
+    font-size: 13px;
+    background-color: #6c757d; /* A neutral color */
+    border-radius: var(--border-radius);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.tool-button-sm:hover {
+    background-color: #5a6268;
+}
+
+
+.sio-log {
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 14px;
+    border-radius: var(--border-radius);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+}
+
+.sio-log .log-message {
+    margin-bottom: 5px;
+}
+
+.sio-log .log-message.sent {
+    color: #007bff;
+}
+
+.sio-log .log-message.received {
+    color: #28a745;
+}
+
+.sio-log .log-message.error {
+    color: #dc3545;
+}
+
+.sio-log .log-message.status {
+    color: #fd7e14;
+}
+
+/* New layout styles for Socket.IO tester */
+.sio-layout-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 20px;
+    height: 100%; /* Make wrapper fill the container height */
+}
+
+.sio-config-panel {
+    flex: 1; /* Take up 1 part of the space */
+    min-width: 320px; /* Minimum width before wrapping */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sio-interaction-panel {
+    flex: 1.5; /* Take up 1.5 parts of the space, making it wider */
+    min-width: 320px; /* Minimum width before wrapping */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: calc(100% - 120px);
+}
+.sio-interaction-panel hr {
+    display: none; /* Hide the hr on large screens */
+}
+
+
+.sio-log-section {
+    flex-grow: 1; /* Allow this section to grow */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Prevent flex overflow */
+}
+
+.sio-log {
+    flex-grow: 1; /* Make the log div grow to fill available space */
+    min-height: 150px; /* Ensure a minimum height */
+    height: auto; /* Override fixed height */
+}
+
+/* On smaller screens, stack the columns */
+@media (max-width: 768px) {
+    .sio-layout-wrapper {
+        flex-direction: column;
+    }
+    .sio-interaction-panel {
+       height: auto;
+    }
+    .sio-interaction-panel hr {
+       display: block; /* Show the hr on small screens */
+    }
 }
