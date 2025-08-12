@@ -51,6 +51,7 @@ This project includes a variety of tools across different categories:
 
 ### Network Tools
 - **WebSocket Tester**: Test WebSocket connections.
+- **Socket.IO Tester**: Test Socket.IO connections.
 
 ## How to Use
 
