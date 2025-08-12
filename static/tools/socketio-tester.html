@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Tester</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* height is now controlled by flex */
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Socket.IO Tester</h1>
+            <p>Test your Socket.IO endpoints (v4). Configure URL, path, namespace, transports, query and auth; subscribe/emit events and inspect logs.</p>
+        </div>
+
+        <div id="errorDisplay" class="tool-error"></div>
+
+        <div class="sio-layout-wrapper">
+            <div class="sio-config-panel">
+                <div class="sio-config-grid">
+                    <div class="tool-io-section">
+                        <label for="sioUrl" class="tool-label">Server URL:</label>
+                        <input type="text" id="sioUrl" class="tool-input" placeholder="e.g., http://localhost:3000" value="http://localhost:3000">
+                    </div>
+                    <div class="tool-io-section">
+                        <label for="sioPath" class="tool-label">Path:</label>
+                        <input type="text" id="sioPath" class="tool-input" placeholder="/socket.io" value="/socket.io">
+                    </div>
+                    <div class="tool-io-section">
+                        <label for="sioNamespace" class="tool-label">Namespace:</label>
+                        <input type="text" id="sioNamespace" class="tool-input" placeholder="/" value="/">
+                    </div>
+                    <div class="tool-io-section sio-transports">
+                         <label class="tool-label">Transports:</label>
+                         <div class="tool-checkbox-group">
+                            <label><input type="checkbox" id="transportWebsocket" checked> websocket</label>
+                            <label><input type="checkbox" id="transportPolling"> polling</label>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="sio-config-grid">
+                    <div class="tool-io-section">
+                        <label for="sioQuery" class="tool-label">Query (JSON object):</label>
+                        <textarea id="sioQuery" class="tool-textarea" rows="3" placeholder='e.g., {"token":"abc"}'></textarea>
+                        <p class="tool-help">Note: Query is appended to the connection as URL parameters.</p>
+                    </div>
+                    <div class="tool-io-section">
+                        <label for="sioAuth" class="tool-label">Auth (JSON object):</label>
+                        <textarea id="sioAuth" class="tool-textarea" rows="3" placeholder='e.g., {"token":"abc"}'></textarea>
+                        <p class="tool-help">Note: Auth is sent in the Socket.IO handshake payload.</p>
+                    </div>
+                </div>
+        
+                <div class="tool-controls">
+                    <button id="connectBtn" class="tool-button">Connect</button>
+                    <button id="disconnectBtn" class="tool-button" disabled>Disconnect</button>
+                </div>
+            </div>
+            <div class="sio-interaction-panel">
+                <hr>
+        
+                <div class="sio-interaction-grid">
+                    <div class="tool-io-section">
+                        <label for="subscribeEvent" class="tool-label">Subscribe Event:</label>
+                        <div class="tool-input-group">
+                            <input type="text" id="subscribeEvent" class="tool-input" placeholder="event name">
+                            <button id="addSubscriptionBtn" class="tool-button">Add</button>
+                        </div>
+                        <div id="subscriptionsList" class="sio-subscriptions-list"></div>
+                    </div>
+        
+                    <div class="tool-io-section">
+                        <label for="emitEvent" class="tool-label">Emit Event:</label>
+                         <div class="tool-input-group">
+                            <input type="text" id="emitEvent" class="tool-input" placeholder="event name">
+                             <label class="tool-label-inline"><input type="checkbox" id="payloadIsJSON" checked> Parse payload as JSON</label>
+                        </div>
+                        <textarea id="emitPayload" class="tool-textarea" placeholder='Payload, e.g., {"hello":"world"} or "text"...'></textarea>
+                        <button id="emitBtn" class="tool-button" disabled>Send</button>
+                    </div>
+                </div>
+        
+                <div class="tool-io-section sio-log-section">
+                    <div class="tool-label-container">
+                         <label for="log" class="tool-label">Log:</label>
+                         <button id="clearLogBtn" class="tool-button-sm">Clear Log</button>
+                    </div>
+                    <div id="log" class="sio-log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/static/js/socketio-tester.js"></script>
+</body>
+</html>
