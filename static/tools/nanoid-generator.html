@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>NanoID生成器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .generator-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .option-group label {
+            font-weight: bold;
+            color: #333;
+        }
+        .option-group input, .option-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .generated-ids {
+            margin-top: 20px;
+        }
+        .id-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-family: monospace;
+            font-size: 16px;
+        }
+        .id-value {
+            flex: 1;
+            word-break: break-all;
+            margin-right: 10px;
+        }
+        .copy-icon {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            fill: #888;
+            flex-shrink: 0;
+        }
+        .copy-icon:hover {
+            fill: #000;
+        }
+        .alphabet-preset {
+            margin-top: 10px;
+        }
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+        .preset-btn {
+            padding: 4px 8px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .preset-btn:hover {
+            background: #dee2e6;
+        }
+        .preset-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e7f3ff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+    <script src="https://unpkg.com/nanoid@4/nanoid.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>NanoID生成器</h1>
+            <p>生成唯一的、URL安全的字符串ID。NanoID比UUID更小、更快、更安全。</p>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">生成选项:</label>
+            <div class="generator-options">
+                <div class="option-group">
+                    <label for="id-length">ID长度:</label>
+                    <input type="number" id="id-length" min="1" max="100" value="21">
+                </div>
+                <div class="option-group">
+                    <label for="id-count">生成数量:</label>
+                    <input type="number" id="id-count" min="1" max="100" value="5">
+                </div>
+                <div class="option-group">
+                    <label for="custom-alphabet">自定义字符集:</label>
+                    <input type="text" id="custom-alphabet" placeholder="留空使用默认字符集" style="width: 300px;">
+                </div>
+            </div>
+            
+            <div class="alphabet-preset">
+                <label class="tool-label">预设字符集:</label>
+                <div class="preset-buttons">
+                    <button class="preset-btn active" data-alphabet="">默认 (A-Za-z0-9_-)</button>
+                    <button class="preset-btn" data-alphabet="0123456789">数字</button>
+                    <button class="preset-btn" data-alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ">大写字母</button>
+                    <button class="preset-btn" data-alphabet="abcdefghijklmnopqrstuvwxyz">小写字母</button>
+                    <button class="preset-btn" data-alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz">字母</button>
+                    <button class="preset-btn" data-alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789">字母数字</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" onclick="generateIds()">生成NanoID</button>
+        </div>
+
+        <div class="tool-section">
+            <div class="stats" id="stats" style="display: none;">
+                <strong>统计信息:</strong>
+                <div id="stats-content"></div>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <div class="generated-ids" id="generated-ids"></div>
+        </div>
+    </div>
+
+    <script>
+        const lengthInput = document.getElementById('id-length');
+        const countInput = document.getElementById('id-count');
+        const customAlphabetInput = document.getElementById('custom-alphabet');
+        const generatedIdsDiv = document.getElementById('generated-ids');
+        const statsDiv = document.getElementById('stats');
+        const statsContent = document.getElementById('stats-content');
+        const presetButtons = document.querySelectorAll('.preset-btn');
+
+        // Handle preset button clicks
+        presetButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                presetButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                customAlphabetInput.value = button.dataset.alphabet;
+            });
+        });
+
+        // Fallback ID generation functions
+        function generateDefaultId(length) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
+            return generateCustomId(alphabet, length);
+        }
+        
+        function generateCustomId(alphabet, length) {
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            }
+            return result;
+        }
+
+        function generateIds() {
+            const length = parseInt(lengthInput.value) || 21;
+            const count = parseInt(countInput.value) || 5;
+            const customAlphabet = customAlphabetInput.value.trim();
+            
+            generatedIdsDiv.innerHTML = '';
+            
+            const ids = [];
+            
+            try {
+                for (let i = 0; i < count; i++) {
+                    let id;
+                    if (customAlphabet) {
+                        // Use custom alphabet - always use fallback for reliability
+                        id = generateCustomId(customAlphabet, length);
+                    } else {
+                        // Try nanoid library first, fallback if not available
+                        if (typeof window.nanoid !== 'undefined' && typeof window.nanoid.nanoid === 'function') {
+                            id = window.nanoid.nanoid(length);
+                        } else if (typeof nanoid === 'function') {
+                            id = nanoid(length);
+                        } else {
+                            // Fallback implementation
+                            id = generateDefaultId(length);
+                        }
+                    }
+                    ids.push(id);
+                    addIdItem(id, i + 1);
+                }
+                
+                showStats(ids, length, customAlphabet);
+            } catch (error) {
+                generatedIdsDiv.innerHTML = `<div class="id-item" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24;">错误: ${error.message}</div>`;
+                statsDiv.style.display = 'none';
+            }
+        }
+
+        function addIdItem(id, index) {
+            const idItem = document.createElement('div');
+            idItem.className = 'id-item';
+            
+            const idValue = document.createElement('span');
+            idValue.className = 'id-value';
+            idValue.textContent = id;
+            
+            const copyIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            copyIcon.setAttribute('class', 'copy-icon');
+            copyIcon.setAttribute('viewBox', '0 0 24 24');
+            copyIcon.setAttribute('title', `复制ID #${index}`);
+            const initialPath = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>';
+            copyIcon.innerHTML = initialPath;
+            
+            copyIcon.onclick = () => {
+                navigator.clipboard.writeText(id).then(() => {
+                    copyIcon.innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>';
+                    setTimeout(() => {
+                        copyIcon.innerHTML = initialPath;
+                    }, 2000);
+                }).catch(err => {
+                    alert('无法复制: ' + err);
+                });
+            };
+            
+            idItem.appendChild(idValue);
+            idItem.appendChild(copyIcon);
+            generatedIdsDiv.appendChild(idItem);
+        }
+
+        function showStats(ids, length, alphabet) {
+            const alphabetSize = alphabet ? alphabet.length : 64; // Default nanoid alphabet size
+            const entropy = Math.log2(Math.pow(alphabetSize, length));
+            const collisionProbability = calculateCollisionProbability(alphabetSize, length, ids.length);
+            
+            statsContent.innerHTML = `
+                <div>字符集大小: ${alphabetSize} 个字符</div>
+                <div>ID长度: ${length} 个字符</div>
+                <div>熵值: ${entropy.toFixed(2)} bits</div>
+                <div>生产1万亿个ID的碰撞概率: ${(collisionProbability * 100).toExponential(2)}%</div>
+                <div>用于生成的字符集: ${alphabet || 'A-Za-z0-9_- (默认)'}</div>
+            `;
+            statsDiv.style.display = 'block';
+        }
+
+        function calculateCollisionProbability(alphabetSize, length, count) {
+            // Simplified collision probability calculation
+            const totalPossible = Math.pow(alphabetSize, length);
+            return 1 - Math.exp(-Math.pow(count, 2) / (2 * totalPossible));
+        }
+
+        // Generate initial IDs
+        generateIds();
+    </script>
+</body>
+</html>

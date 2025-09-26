@@ -30,6 +30,7 @@ This project includes a variety of tools across different categories:
 ### Data Generation
 - **Random Data Generator**: Generate random data like UUIDs, passwords, and more.
 - **String Hash Generator**: Calculate hashes (MD5, SHA1, etc.) for strings.
+- **NanoID Generator**: Generate unique, URL-safe string IDs that are smaller, faster, and more secure than UUIDs.
 
 ### Text Tools
 - **Text Diff**: Compare two blocks of text and highlight the differences.

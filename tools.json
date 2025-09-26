@@ -82,6 +82,12 @@
         "name_en": "String Hash Generator",
         "path": "generator/string-hash",
         "filePath": "static/tools/string-hash-generator.html"
+      },
+      {
+        "name_zh": "NanoID生成",
+        "name_en": "NanoID Generator",
+        "path": "generator/nanoid",
+        "filePath": "static/tools/nanoid-generator.html"
       }
     ]
   },
