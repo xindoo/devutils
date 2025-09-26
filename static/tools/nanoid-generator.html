@@ -248,13 +248,14 @@
         function showStats(ids, length, alphabet) {
             const alphabetSize = alphabet ? alphabet.length : 64; // Default nanoid alphabet size
             const entropy = Math.log2(Math.pow(alphabetSize, length));
-            const collisionProbability = calculateCollisionProbability(alphabetSize, length, ids.length);
+            // Calculate collision probability for 1 trillion IDs (10^12)
+            const trillionCollisionProbability = calculateCollisionProbability(alphabetSize, length, 1e12);
             
             statsContent.innerHTML = `
                 <div>字符集大小: ${alphabetSize} 个字符</div>
                 <div>ID长度: ${length} 个字符</div>
                 <div>熵值: ${entropy.toFixed(2)} bits</div>
-                <div>生产1万亿个ID的碰撞概率: ${(collisionProbability * 100).toExponential(2)}%</div>
+                <div>生成1万亿个ID的碰撞概率: ${(trillionCollisionProbability * 100).toExponential(2)}%</div>
                 <div>用于生成的字符集: ${alphabet || 'A-Za-z0-9_- (默认)'}</div>
             `;
             statsDiv.style.display = 'block';
