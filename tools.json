@@ -15,6 +15,12 @@
         "filePath": "static/tools/base64-image.html"
       },
       {
+        "name_zh": "文件转Base64",
+        "name_en": "File to Base64",
+        "path": "coder/file-to-base64",
+        "filePath": "static/tools/file-to-base64.html"
+      },
+      {
         "name_zh": "URL编码/解码",
         "name_en": "URL Encode/Decode",
         "path": "coder/url-encode-decode",
