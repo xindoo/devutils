@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件转Base64</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>文件转Base64</h1>
+            <p>上传文件并将其转换为Base64编码格式</p>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="file-input">选择文件</label>
+            <input type="file" id="file-input" class="tool-input" accept="*/*">
+        </div>
+
+        <div class="tool-section" id="file-info-section" style="display: none;">
+            <h3>文件信息</h3>
+            <div id="file-info" class="tool-result">
+                <!-- File info will be displayed here -->
+            </div>
+        </div>
+
+        <div class="tool-section" id="options-section" style="display: none;">
+            <label class="tool-label-container">
+                <span>选项</span>
+            </label>
+            <div class="tool-inline-controls">
+                <label class="tool-label-inline">
+                    <input type="checkbox" id="show-prefix" checked>
+                    <span>显示数据URI前缀 (data:mime/type;base64,)</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="tool-section" id="output-section" style="display: none;">
+            <label class="tool-label" for="base64-output">Base64 输出</label>
+            <textarea id="base64-output" class="tool-textarea" placeholder="Base64编码将显示在这里..." readonly></textarea>
+        </div>
+
+        <div class="tool-controls" id="action-buttons" style="display: none;">
+            <button class="tool-button" id="copy-button">复制</button>
+            <button class="tool-button" onclick="clearAll()">清除</button>
+        </div>
+
+        <div class="tool-error" id="error-message"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const fileInfoSection = document.getElementById('file-info-section');
+        const fileInfo = document.getElementById('file-info');
+        const optionsSection = document.getElementById('options-section');
+        const outputSection = document.getElementById('output-section');
+        const base64Output = document.getElementById('base64-output');
+        const actionButtons = document.getElementById('action-buttons');
+        const showPrefixCheckbox = document.getElementById('show-prefix');
+        const errorMessage = document.getElementById('error-message');
+        const copyButton = document.getElementById('copy-button');
+
+        fileInput.addEventListener('change', handleFileSelect);
+        copyButton.addEventListener('click', copyToClipboard);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            // Clear previous errors
+            errorMessage.textContent = '';
+            
+            // Display file information
+            displayFileInfo(file);
+            
+            // Convert file to base64
+            convertFileToBase64(file);
+        }
+
+        function displayFileInfo(file) {
+            const fileSizeKB = (file.size / 1024).toFixed(2);
+            fileInfo.innerHTML = `
+                <strong>文件名:</strong> ${file.name}<br>
+                <strong>文件大小:</strong> ${fileSizeKB} KB<br>
+                <strong>文件类型:</strong> ${file.type || '未知'}
+            `;
+            fileInfoSection.style.display = 'block';
+            optionsSection.style.display = 'block';
+        }
+
+        function convertFileToBase64(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                let base64String = e.target.result;
+                
+                // Update output based on prefix checkbox
+                updateBase64Output(base64String);
+                
+                // Show output and action buttons
+                outputSection.style.display = 'block';
+                actionButtons.style.display = 'flex';
+            };
+            
+            reader.onerror = function(e) {
+                errorMessage.textContent = '文件读取错误: ' + e.target.error;
+                hideOutputSections();
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function updateBase64Output(base64String) {
+            const showPrefix = showPrefixCheckbox.checked;
+            
+            if (!showPrefix) {
+                // Remove the data URI prefix to get pure base64
+                const commaIndex = base64String.indexOf(',');
+                if (commaIndex !== -1) {
+                    base64String = base64String.substring(commaIndex + 1);
+                }
+            }
+            
+            base64Output.value = base64String;
+        }
+
+        showPrefixCheckbox.addEventListener('change', function() {
+            if (base64Output.value) {
+                // Re-process the current file with new prefix setting
+                const file = fileInput.files[0];
+                if (file) {
+                    convertFileToBase64(file);
+                }
+            }
+        });
+
+        function copyToClipboard() {
+            if (!base64Output.value) {
+                errorMessage.textContent = '没有内容可复制';
+                return;
+            }
+
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(base64Output.value)
+                    .then(() => {
+                        showCopySuccess();
+                    })
+                    .catch(err => {
+                        // If modern API fails, try fallback method
+                        fallbackCopyToClipboard();
+                    });
+            } else {
+                // Use fallback method for older browsers
+                fallbackCopyToClipboard();
+            }
+        }
+
+        function fallbackCopyToClipboard() {
+            // Select the text
+            base64Output.select();
+            base64Output.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                // Try to copy using execCommand
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    errorMessage.textContent = '复制失败，请手动选择并复制文本';
+                }
+            } catch (err) {
+                errorMessage.textContent = '复制失败，请手动选择并复制文本';
+            }
+            
+            // Deselect the text
+            base64Output.setSelectionRange(0, 0);
+            base64Output.blur();
+        }
+
+        function showCopySuccess() {
+            // Show temporary success message
+            const originalText = copyButton.textContent;
+            copyButton.textContent = '已复制!';
+            copyButton.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+                copyButton.style.backgroundColor = '';
+            }, 2000);
+        }
+
+        function clearAll() {
+            // Reset all elements
+            fileInput.value = '';
+            base64Output.value = '';
+            errorMessage.textContent = '';
+            
+            // Hide sections
+            fileInfoSection.style.display = 'none';
+            optionsSection.style.display = 'none';
+            outputSection.style.display = 'none';
+            actionButtons.style.display = 'none';
+            
+            // Reset file info
+            fileInfo.innerHTML = '';
+        }
+
+        function hideOutputSections() {
+            outputSection.style.display = 'none';
+            actionButtons.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
