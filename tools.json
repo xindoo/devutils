@@ -127,8 +127,14 @@
     ]
   },
   {
-    "categoryName": "视频工具",
+    "categoryName": "音视频工具",
     "tools": [
+      {
+        "name_zh": "音频波形可视化",
+        "name_en": "Audio Waveform Visualization",
+        "path": "audio/visualization",
+        "filePath": "static/tools/audio-visualization.html"
+      },
       {
         "name_zh": "全景视频播放",
         "name_en": "Panorama Video Player",

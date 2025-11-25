@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频波形可视化</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- 引入 Wavesurfer.js 库 -->
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
+    <style>
+        #waveform {
+            width: 100%;
+            height: 200px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #loading {
+            text-align: center;
+            color: #6c757d;
+            margin-top: 10px;
+            font-size: 0.9em;
+            min-height: 20px;
+        }
+
+        .waveform-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .play-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        .tool-input-with-button {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .tool-input-with-button .tool-input {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container tool-container-vertical">
+        <div class="tool-header">
+            <h1>音频波形可视化</h1>
+            <p>支持 URL 参数: ?url=音频地址</p>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="tool-section">
+            <label class="tool-label" for="audioUrl">音频文件 URL:</label>
+            <div class="tool-input-with-button">
+                <input type="text" id="audioUrl" class="tool-input" placeholder="输入音频文件 URL (例如 .mp3, .wav, .ogg)" value="https://actions.google.com/sounds/v1/science_fiction/laser_gun_shot_1.ogg">
+                <button class="tool-button" onclick="loadAudio()">加载音频</button>
+            </div>
+        </div>
+
+        <!-- 波形容器 -->
+        <div class="waveform-container">
+            <div id="waveform"></div>
+            <div id="loading"></div>
+        </div>
+
+        <!-- 播放按钮 -->
+        <div class="tool-controls">
+            <button id="playBtn" class="tool-button play-button" onclick="togglePlay()" disabled>播放 / 暂停</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. 初始化 Wavesurfer 实例
+        let wavesurfer = WaveSurfer.create({
+            container: '#waveform',
+            waveColor: '#6c757d',      // 柔和的灰色波形
+            progressColor: '#007bff',  // 项目主色调蓝色
+            cursorColor: '#343a40',    // 深灰色光标
+            barWidth: 2,               
+            barGap: 3,                 
+            barRadius: 3,              
+            height: 200,               
+            normalize: true,           
+            url: ''                    
+        });
+
+        const playBtn = document.getElementById('playBtn');
+        const statusText = document.getElementById('loading');
+        const inputField = document.getElementById('audioUrl');
+
+        // 2. 核心加载函数
+        function loadAudio(customUrl) {
+            // 优先使用传入的 customUrl，否则使用输入框的值
+            const url = customUrl || inputField.value.trim();
+            
+            if (!url) {
+                alert("请输入音频 URL");
+                return;
+            }
+
+            // 确保输入框显示当前加载的 URL
+            inputField.value = url;
+
+            statusText.innerText = "正在加载并解析波形...";
+            playBtn.disabled = true;
+
+            // 调用 wavesurfer 加载
+            wavesurfer.load(url);
+        }
+
+        // 3. 事件监听
+        wavesurfer.on('ready', function () {
+            statusText.innerText = "加载完成";
+            playBtn.disabled = false;
+            playBtn.innerText = "播放";
+        });
+
+        wavesurfer.on('error', function (e) {
+            console.error(e);
+            statusText.innerText = "错误：无法加载 (请检查 URL 是否正确，或是否存在跨域限制)";
+            statusText.style.color = "#dc3545";
+            playBtn.disabled = true;
+        });
+
+        wavesurfer.on('finish', function () {
+            playBtn.innerText = "播放";
+        });
+
+        function togglePlay() {
+            wavesurfer.playPause();
+            playBtn.innerText = wavesurfer.isPlaying() ? "暂停" : "播放";
+        }
+
+        // 4. 支持回车键加载
+        inputField.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                loadAudio();
+            }
+        });
+
+        // 5. 自动从 URL 参数获取音频地址
+        window.onload = function() {
+            // 获取 URL 参数
+            const params = new URLSearchParams(window.location.search);
+            const urlParam = params.get('url');
+
+            if (urlParam) {
+                // 如果 url 参数存在，直接加载
+                console.log("检测到 URL 参数:", urlParam);
+                loadAudio(urlParam);
+            }
+        };
+    </script>
+</body>
+</html>
