@@ -60,10 +60,7 @@
         <!-- 输入区域 -->
         <div class="tool-section">
             <label class="tool-label" for="audioUrl">音频文件 URL:</label>
-            <div class="tool-input-with-button">
-                <input type="text" id="audioUrl" class="tool-input" placeholder="输入音频文件 URL (例如 .mp3, .wav, .ogg)" value="https://actions.google.com/sounds/v1/science_fiction/laser_gun_shot_1.ogg">
-                <button class="tool-button" onclick="loadAudio()">加载音频</button>
-            </div>
+            <input type="text" id="audioUrl" class="tool-input" placeholder="输入音频文件 URL (例如 .mp3, .wav, .ogg)" value="https://actions.google.com/sounds/v1/science_fiction/laser_gun_shot_1.ogg">
         </div>
 
         <!-- 波形容器 -->
@@ -140,10 +137,21 @@
             playBtn.innerText = wavesurfer.isPlaying() ? "暂停" : "播放";
         }
 
-        // 4. 支持回车键加载
-        inputField.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                loadAudio();
+        // 4. 输入框变化时自动加载（添加防抖以避免频繁加载）
+        let debounceTimer;
+        inputField.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const url = inputField.value.trim();
+            
+            if (url) {
+                // 500ms 防抖延迟
+                debounceTimer = setTimeout(() => {
+                    loadAudio(url);
+                }, 500);
+            } else {
+                // 如果输入框为空，清除状态
+                statusText.innerText = "";
+                playBtn.disabled = true;
             }
         });
 
