@@ -161,11 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleHashChange() {
-        const path = window.location.hash.substring(1);
+        const hash = window.location.hash.substring(1);
+        // Split hash into path and query string
+        const [path, queryString] = hash.split('?');
         const toolLink = sidebarLinks.find(link => link.dataset.path === path);
 
         if (toolLink) {
-            loadTool(toolLink.dataset.filePath, toolLink);
+            loadTool(toolLink.dataset.filePath, toolLink, queryString);
             toolCards.style.display = 'none';
             toolFrame.style.display = 'block';
         } else {
@@ -176,9 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function loadTool(filePath, clickedLink) {
+    function loadTool(filePath, clickedLink, queryString) {
         if (filePath && typeof filePath === 'string' && filePath.trim() !== '') {
-            toolFrame.src = filePath;
+            // Append query string if present
+            const fullPath = queryString ? `${filePath}?${queryString}` : filePath;
+            toolFrame.src = fullPath;
             sidebarLinks.forEach(link => link.classList.remove('active'));
             if (clickedLink) {
                 clickedLink.classList.add('active');
