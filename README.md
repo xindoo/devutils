@@ -6,7 +6,7 @@ DevUtils 是一个基于 Web 的开发者工具集，旨在简化常见的开发
 
 ## 在线体验
 
-您可以在这里体验：[https://devutils.xindoo.xyz](https://devutils.xindoo.xyz)
+您可以在这里体验：[https://devutils.zxs.io](https://devutils.zxs.io)
 
 ## 功能列表
 

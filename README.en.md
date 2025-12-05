@@ -6,7 +6,7 @@ DevUtils is a web-based suite of developer tools designed to streamline common t
 
 ## Live Demo
 
-You can try it out here: [https://devutils.xindoo.xyz](https://devutils.xindoo.xyz)
+You can try it out here: [https://devutils.zxs.io](https://devutils.zxs.io)
 
 ## Features
 
