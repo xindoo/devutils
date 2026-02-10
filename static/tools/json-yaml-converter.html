@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON/YAML Converter</title>
+    <title>JSON/YAML 转换</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@latest/dist/js-yaml.min.js"></script>
    <style>
@@ -27,26 +27,26 @@
 <body>
     <div class="tool-container tool-container-vertical">
         <div class="tool-header">
-            <h1>JSON/YAML Converter</h1>
-            <p>Convert data between JSON and YAML formats.</p>
+            <h1>JSON/YAML 转换</h1>
+            <p>在 JSON 和 YAML 格式之间转换数据。</p>
         </div>
 
         <div id="errorDisplay" class="tool-error"></div>
 
         <div class="tool-io-section">
-            <label for="inputData" class="tool-label">Input (JSON or YAML):</label>
-            <textarea id="inputData" class="tool-textarea" placeholder="Paste JSON or YAML here..."></textarea>
+            <label for="inputData" class="tool-label">输入 (JSON 或 YAML):</label>
+            <textarea id="inputData" class="tool-textarea" placeholder="在此粘贴 JSON 或 YAML..."></textarea>
         </div>
 
         <div class="tool-controls">
-            <button onclick="convertToJson()" class="tool-button">Convert to JSON</button>
-            <button onclick="convertToYaml()" class="tool-button">Convert to YAML</button>
+            <button onclick="convertToJson()" class="tool-button">转换为 JSON</button>
+            <button onclick="convertToYaml()" class="tool-button">转换为 YAML</button>
         </div>
 
         <div class="tool-io-section">
-            <label for="outputData" class="tool-label">Output:</label>
+            <label for="outputData" class="tool-label">输出:</label>
            <div class="output-container">
-               <textarea id="outputData" class="tool-textarea" readonly placeholder="Conversion result will appear here..."></textarea>
+               <textarea id="outputData" class="tool-textarea" readonly placeholder="转换结果将显示在此处..."></textarea>
                <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                </svg>
@@ -67,13 +67,13 @@
             clearError();
             const yamlInput = inputArea.value.trim();
             if (!yamlInput) {
-                errorDisplay.textContent = 'Please enter YAML data.';
+                errorDisplay.textContent = '请输入 YAML 数据。';
                 outputArea.value = '';
                 return;
             }
 
             if (typeof jsyaml === 'undefined') {
-                 errorDisplay.textContent = 'Error: YAML parsing library not loaded.';
+                 errorDisplay.textContent = '错误: YAML 解析库未加载。';
                  outputArea.value = '';
                  return;
             }
@@ -83,7 +83,7 @@
                 outputArea.value = JSON.stringify(doc, null, 2);
             } catch (e) {
                 console.error("YAML to JSON Error:", e);
-                errorDisplay.textContent = `YAML Parsing Error: ${e.message}`;
+                errorDisplay.textContent = `YAML 解析错误: ${e.message}`;
                 outputArea.value = '';
             }
         }
@@ -92,13 +92,13 @@
             clearError();
             const jsonInput = inputArea.value.trim();
             if (!jsonInput) {
-                errorDisplay.textContent = 'Please enter JSON data.';
+                errorDisplay.textContent = '请输入 JSON 数据。';
                 outputArea.value = '';
                 return;
             }
 
             if (typeof jsyaml === 'undefined') {
-                 errorDisplay.textContent = 'Error: YAML parsing library not loaded.';
+                 errorDisplay.textContent = '错误: YAML 解析库未加载。';
                  outputArea.value = '';
                  return;
             }
@@ -109,9 +109,9 @@
             } catch (e) {
                  console.error("JSON to YAML Error:", e);
                  if (e instanceof SyntaxError) {
-                     errorDisplay.textContent = `JSON Parsing Error: ${e.message}`;
+                     errorDisplay.textContent = `JSON 解析错误: ${e.message}`;
                  } else {
-                     errorDisplay.textContent = `YAML Conversion Error: ${e.message}`;
+                     errorDisplay.textContent = `YAML 转换错误: ${e.message}`;
                  }
                  outputArea.value = '';
             }

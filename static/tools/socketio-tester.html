@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socket.IO Tester</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Socket.IO 测试器</title>
+    <link rel="stylesheet" href="../css/style.css">
     <style>
         /* height is now controlled by flex */
     </style>
@@ -12,8 +12,8 @@
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>Socket.IO Tester</h1>
-            <p>Test your Socket.IO endpoints (v4). Configure URL, path, namespace, transports, query and auth; subscribe/emit events and inspect logs.</p>
+            <h1>Socket.IO 测试器</h1>
+            <p>测试你的 Socket.IO 端点 (v4)。配置 URL、路径、命名空间、传输方式、查询参数和认证；订阅/发送事件并查看日志。</p>
         </div>
 
         <div id="errorDisplay" class="tool-error"></div>
@@ -22,19 +22,19 @@
             <div class="sio-config-panel">
                 <div class="sio-config-grid">
                     <div class="tool-io-section">
-                        <label for="sioUrl" class="tool-label">Server URL:</label>
-                        <input type="text" id="sioUrl" class="tool-input" placeholder="e.g., http://localhost:3000" value="http://localhost:3000">
+                        <label for="sioUrl" class="tool-label">服务器 URL:</label>
+                        <input type="text" id="sioUrl" class="tool-input" placeholder="例如: http://localhost:3000" value="http://localhost:3000">
                     </div>
                     <div class="tool-io-section">
-                        <label for="sioPath" class="tool-label">Path:</label>
+                        <label for="sioPath" class="tool-label">路径:</label>
                         <input type="text" id="sioPath" class="tool-input" placeholder="/socket.io" value="/socket.io">
                     </div>
                     <div class="tool-io-section">
-                        <label for="sioNamespace" class="tool-label">Namespace:</label>
+                        <label for="sioNamespace" class="tool-label">命名空间:</label>
                         <input type="text" id="sioNamespace" class="tool-input" placeholder="/" value="/">
                     </div>
                     <div class="tool-io-section sio-transports">
-                         <label class="tool-label">Transports:</label>
+                         <label class="tool-label">传输方式:</label>
                          <div class="tool-checkbox-group">
                             <label><input type="checkbox" id="transportWebsocket" checked> websocket</label>
                             <label><input type="checkbox" id="transportPolling"> polling</label>
@@ -44,20 +44,20 @@
         
                 <div class="sio-config-grid">
                     <div class="tool-io-section">
-                        <label for="sioQuery" class="tool-label">Query (JSON object):</label>
-                        <textarea id="sioQuery" class="tool-textarea" rows="3" placeholder='e.g., {"token":"abc"}'></textarea>
-                        <p class="tool-help">Note: Query is appended to the connection as URL parameters.</p>
+                        <label for="sioQuery" class="tool-label">查询参数 (JSON 对象):</label>
+                        <textarea id="sioQuery" class="tool-textarea" rows="3" placeholder='例如: {"token":"abc"}'></textarea>
+                        <p class="tool-help">注意：查询参数会作为 URL 参数附加到连接。</p>
                     </div>
                     <div class="tool-io-section">
-                        <label for="sioAuth" class="tool-label">Auth (JSON object):</label>
-                        <textarea id="sioAuth" class="tool-textarea" rows="3" placeholder='e.g., {"token":"abc"}'></textarea>
-                        <p class="tool-help">Note: Auth is sent in the Socket.IO handshake payload.</p>
+                        <label for="sioAuth" class="tool-label">认证 (JSON 对象):</label>
+                        <textarea id="sioAuth" class="tool-textarea" rows="3" placeholder='例如: {"token":"abc"}'></textarea>
+                        <p class="tool-help">注意：认证信息在 Socket.IO 握手载荷中发送。</p>
                     </div>
                 </div>
-        
+
                 <div class="tool-controls">
-                    <button id="connectBtn" class="tool-button">Connect</button>
-                    <button id="disconnectBtn" class="tool-button" disabled>Disconnect</button>
+                    <button id="connectBtn" class="tool-button">连接</button>
+                    <button id="disconnectBtn" class="tool-button" disabled>断开</button>
                 </div>
             </div>
             <div class="sio-interaction-panel">
@@ -65,29 +65,29 @@
         
                 <div class="sio-interaction-grid">
                     <div class="tool-io-section">
-                        <label for="subscribeEvent" class="tool-label">Subscribe Event:</label>
+                        <label for="subscribeEvent" class="tool-label">订阅事件:</label>
                         <div class="tool-input-group">
-                            <input type="text" id="subscribeEvent" class="tool-input" placeholder="event name">
-                            <button id="addSubscriptionBtn" class="tool-button">Add</button>
+                            <input type="text" id="subscribeEvent" class="tool-input" placeholder="事件名称">
+                            <button id="addSubscriptionBtn" class="tool-button">添加</button>
                         </div>
                         <div id="subscriptionsList" class="sio-subscriptions-list"></div>
                     </div>
-        
+
                     <div class="tool-io-section">
-                        <label for="emitEvent" class="tool-label">Emit Event:</label>
+                        <label for="emitEvent" class="tool-label">发送事件:</label>
                          <div class="tool-input-group">
-                            <input type="text" id="emitEvent" class="tool-input" placeholder="event name">
-                             <label class="tool-label-inline"><input type="checkbox" id="payloadIsJSON" checked> Parse payload as JSON</label>
+                            <input type="text" id="emitEvent" class="tool-input" placeholder="事件名称">
+                             <label class="tool-label-inline"><input type="checkbox" id="payloadIsJSON" checked> 将载荷解析为 JSON</label>
                         </div>
-                        <textarea id="emitPayload" class="tool-textarea" placeholder='Payload, e.g., {"hello":"world"} or "text"...'></textarea>
-                        <button id="emitBtn" class="tool-button" disabled>Send</button>
+                        <textarea id="emitPayload" class="tool-textarea" placeholder='载荷，例如: {"hello":"world"} 或 "text"...'></textarea>
+                        <button id="emitBtn" class="tool-button" disabled>发送</button>
                     </div>
                 </div>
-        
+
                 <div class="tool-io-section sio-log-section">
                     <div class="tool-label-container">
-                         <label for="log" class="tool-label">Log:</label>
-                         <button id="clearLogBtn" class="tool-button-sm">Clear Log</button>
+                         <label for="log" class="tool-label">日志:</label>
+                         <button id="clearLogBtn" class="tool-button-sm">清除日志</button>
                     </div>
                     <div id="log" class="sio-log"></div>
                 </div>
@@ -96,6 +96,6 @@
     </div>
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="/static/js/socketio-tester.js"></script>
+    <script src="../js/socketio-tester.js"></script>
 </body>
 </html>

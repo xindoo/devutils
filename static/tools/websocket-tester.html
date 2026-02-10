@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Tester</title>
+    <title>WebSocket 测试器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         #log {
@@ -34,30 +34,30 @@
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>WebSocket Tester</h1>
-            <p>Test your WebSocket endpoints.</p>
+            <h1>WebSocket 测试器</h1>
+            <p>测试你的 WebSocket 端点。</p>
         </div>
 
         <div id="errorDisplay" class="tool-error"></div>
 
         <div class="tool-io-section">
             <label for="wsUrl" class="tool-label">WebSocket URL:</label>
-            <input type="text" id="wsUrl" class="tool-input" placeholder="e.g., wss://echo.websocket.org">
+            <input type="text" id="wsUrl" class="tool-input" placeholder="例如: wss://echo.websocket.org">
         </div>
 
         <div class="tool-controls">
-            <button id="connectBtn" class="tool-button">Connect</button>
-            <button id="disconnectBtn" class="tool-button" disabled>Disconnect</button>
+            <button id="connectBtn" class="tool-button">连接</button>
+            <button id="disconnectBtn" class="tool-button" disabled>断开</button>
         </div>
 
         <div class="tool-io-section">
-            <label for="message" class="tool-label">Message:</label>
-            <textarea id="message" class="tool-textarea" placeholder="Enter message to send..."></textarea>
-            <button id="sendBtn" class="tool-button" disabled>Send</button>
+            <label for="message" class="tool-label">消息:</label>
+            <textarea id="message" class="tool-textarea" placeholder="输入要发送的消息..."></textarea>
+            <button id="sendBtn" class="tool-button" disabled>发送</button>
         </div>
 
         <div class="tool-io-section">
-            <label for="log" class="tool-label">Log:</label>
+            <label for="log" class="tool-label">日志:</label>
             <div id="log"></div>
         </div>
     </div>

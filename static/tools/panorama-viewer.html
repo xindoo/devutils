@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panorama Viewer (2:1)</title>
+    <title>全景图片查看器 (2:1)</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
@@ -22,12 +22,12 @@
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>Panorama Viewer (2:1)</h1>
-            <p>View 2:1 equirectangular panorama images.</p>
+            <h1>全景图片查看器 (2:1)</h1>
+            <p>查看 2:1 等距柱状投影全景图片。</p>
         </div>
 
         <div class="tool-section">
-            <label for="fileInput" class="tool-label">Select Panorama Image:</label>
+            <label for="fileInput" class="tool-label">选择全景图片:</label>
             <input type="file" id="fileInput" class="tool-input" accept="image/*">
         </div>
 
@@ -56,7 +56,7 @@
         "compass": true
     };
 
-    // Initialize with placeholder
+    // 使用占位符初始化
     initializeViewer(baseConfig);
 
     fileInput.addEventListener('change', function(event) {

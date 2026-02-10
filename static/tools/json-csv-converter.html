@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON to CSV Converter</title>
+    <title>JSON 转 CSV</title>
     <link rel="stylesheet" href="../css/style.css">
    <style>
        .output-container {
@@ -26,25 +26,25 @@
 <body>
     <div class="tool-container tool-container-vertical">
         <div class="tool-header">
-            <h1>JSON to CSV Converter</h1>
-            <p>Convert data from JSON format to CSV format.</p>
+            <h1>JSON 转 CSV</h1>
+            <p>将数据从 JSON 格式转换为 CSV 格式。</p>
         </div>
 
         <div id="errorDisplay" class="tool-error"></div>
 
         <div class="tool-io-section">
-            <label for="inputData" class="tool-label">Input (JSON):</label>
-            <textarea id="inputData" class="tool-textarea" placeholder="Paste JSON here..."></textarea>
+            <label for="inputData" class="tool-label">输入 (JSON):</label>
+            <textarea id="inputData" class="tool-textarea" placeholder="在此粘贴 JSON..."></textarea>
         </div>
 
         <div class="tool-controls">
-            <button onclick="convertToCsv()" class="tool-button">Convert to CSV</button>
+            <button onclick="convertToCsv()" class="tool-button">转换为 CSV</button>
         </div>
 
         <div class="tool-io-section">
-            <label for="outputData" class="tool-label">Output (CSV):</label>
+            <label for="outputData" class="tool-label">输出 (CSV):</label>
            <div class="output-container">
-               <textarea id="outputData" class="tool-textarea" readonly placeholder="Conversion result will appear here..."></textarea>
+               <textarea id="outputData" class="tool-textarea" readonly placeholder="转换结果将显示在此处..."></textarea>
                <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                </svg>

@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Base64 Encode/Decode</title>
+    <title>Base64 编解码</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>Base64 Encode/Decode</h1>
-            <p>Encode text to Base64 or decode from Base64.</p>
+            <h1>Base64 编解码</h1>
+            <p>将文本编码为 Base64 格式或从 Base64 解码。</p>
         </div>
 
         <div class="tool-section">
-            <label class="tool-label" for="input">Input</label>
-            <textarea id="input" class="tool-textarea" placeholder="Enter text here..."></textarea>
+            <label class="tool-label" for="input">输入</label>
+            <textarea id="input" class="tool-textarea" placeholder="在此输入文本..."></textarea>
         </div>
 
         <div class="tool-controls">
-            <button class="tool-button" onclick="encode()">Encode</button>
-            <button class="tool-button" onclick="decode()">Decode</button>
+            <button class="tool-button" onclick="encode()">编码</button>
+            <button class="tool-button" onclick="decode()">解码</button>
         </div>
 
         <div class="tool-section">
-            <label class="tool-label" for="output">Output</label>
-            <textarea id="output" class="tool-textarea" placeholder="Result..." readonly></textarea>
+            <label class="tool-label" for="output">输出</label>
+            <textarea id="output" class="tool-textarea" placeholder="结果..." readonly></textarea>
         </div>
     </div>
 
@@ -32,18 +32,26 @@
         function encode() {
             const input = document.getElementById('input').value;
             try {
-                document.getElementById('output').value = btoa(unescape(encodeURIComponent(input))); // Handle UTF-8
+                // 使用 TextEncoder 处理 UTF-8，避免使用已弃用的 unescape
+                const encoder = new TextEncoder();
+                const uint8array = encoder.encode(input);
+                const binaryString = String.fromCharCode(...uint8array);
+                document.getElementById('output').value = btoa(binaryString);
             } catch (e) {
-                document.getElementById('output').value = 'Error encoding: ' + e.message;
+                document.getElementById('output').value = '编码错误: ' + e.message;
             }
         }
 
         function decode() {
             const input = document.getElementById('input').value;
             try {
-                document.getElementById('output').value = decodeURIComponent(escape(atob(input))); // Handle UTF-8
+                // 使用 TextDecoder 处理 UTF-8，避免使用已弃用的 escape
+                const binaryString = atob(input);
+                const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+                const decoder = new TextDecoder();
+                document.getElementById('output').value = decoder.decode(bytes);
             } catch (e) {
-                document.getElementById('output').value = 'Error decoding: ' + e.message;
+                document.getElementById('output').value = '解码错误: ' + e.message;
             }
         }
     </script>
