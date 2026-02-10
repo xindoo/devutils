@@ -8,35 +8,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
     <style>
         .CodeMirror {
-            border: 1px solid #ddd;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             height: calc(100vh - 280px);
             font-size: 14px;
             flex-grow: 1;
+            background: var(--surface);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
+
+        .CodeMirror-gutters {
+            background: rgba(255, 255, 255, 0.3);
+            border-right: 1px solid var(--border);
+        }
+
+        [data-theme="dark"] .CodeMirror-gutters {
+            background: rgba(30, 41, 59, 0.5);
+        }
+
         .tool-io-section {
             display: flex;
             flex-direction: column;
             flex-grow: 1;
             min-height: 0;
         }
+
        .editor-container {
            position: relative;
            flex-grow: 1;
            display: flex;
            flex-direction: column;
        }
+
        .copy-icon {
            position: absolute;
-           top: 5px;
-           right: 15px; /* Adjust for scrollbar */
+           top: 10px;
+           right: 20px;
            cursor: pointer;
-           width: 24px;
-           height: 24px;
-           fill: #fff; /* White icon for dark theme */
+           width: 28px;
+           height: 28px;
+           fill: var(--primary);
            z-index: 10;
+           padding: 6px;
+           background: var(--surface-hover);
+           border-radius: 8px;
+           transition: all 150ms ease;
+           box-shadow: 0 2px 8px var(--shadow-color);
        }
+
        .copy-icon:hover {
-           fill: #ccc;
+           fill: var(--primary-dark);
+           transform: scale(1.1);
+           box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
        }
     </style>
     <script src="https://unpkg.com/prettier@2.8.8/standalone.js"></script>
@@ -46,6 +70,7 @@
     <script src="https://unpkg.com/prettier@2.8.8/parser-markdown.js"></script>
     <script src="https://unpkg.com/prettier@2.8.8/parser-yaml.js"></script>
     <script src="https://unpkg.com/sql-formatter@15.3.1/dist/sql-formatter.min.js"></script>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container tool-container-vertical">

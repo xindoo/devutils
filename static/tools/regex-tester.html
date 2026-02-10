@@ -8,7 +8,7 @@
     <style>
         .editor-container {
             position: relative;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             border-radius: var(--border-radius);
             font-family: monospace;
             font-size: 1em;
@@ -32,7 +32,7 @@
             position: relative;
             z-index: 2;
             color: transparent;
-            caret-color: black; /* Make the cursor visible */
+            caret-color: var(--text-primary); /* Make the cursor visible */
             resize: none;
             border: none;
         }
@@ -48,17 +48,18 @@
             border-radius: 3px;
         }
         .tool-error-inline {
-            color: #d9534f;
+            color: #EF4444;
             font-size: 0.9em;
             margin-top: 5px;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
         <div class="tool-header">
             <h1>正则表达式测试器</h1>
-            <p>在线测试和调试你的正则表达式，匹配结果将实时高亮显示。</p>
+            <p>在线测试和调试你的正则表达式,匹配结果将实时高亮显示。</p>
         </div>
         <div class="tool-content">
             <div class="tool-section">

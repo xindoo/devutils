@@ -8,30 +8,50 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
    <style>
        .CodeMirror {
-           border: 1px solid #ddd;
+           border: 1px solid rgba(148, 163, 184, 0.3);
            font-size: 14px;
            flex-grow: 1;
+           border-radius: 12px;
+           background: rgba(255, 255, 255, 0.4);
+           backdrop-filter: blur(8px);
+           -webkit-backdrop-filter: blur(8px);
        }
+
+       .CodeMirror-gutters {
+           background: rgba(255, 255, 255, 0.3);
+           border-right: 1px solid rgba(148, 163, 184, 0.2);
+       }
+
       .editor-container {
           position: relative;
           flex-grow: 1;
           display: flex;
           flex-direction: column;
       }
+
       .copy-icon {
           position: absolute;
-          top: 5px;
-          right: 15px; /* Adjust for scrollbar */
+          top: 10px;
+          right: 20px;
           cursor: pointer;
-          width: 24px;
-          height: 24px;
-          fill: #fff; /* White icon for dark theme */
+          width: 28px;
+          height: 28px;
+          fill: #3B82F6;
           z-index: 10;
+          padding: 6px;
+          background: rgba(255, 255, 255, 0.9);
+          border-radius: 8px;
+          transition: all 150ms ease;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
+
       .copy-icon:hover {
-          fill: #ccc;
+          fill: #2563EB;
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
       }
    </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
    <div class="tool-container tool-container-vertical">
