@@ -10,38 +10,42 @@
     <style>
         #waveform {
             width: 100%;
-            height: 200px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            height: 220px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 12px;
             overflow: hidden;
             position: relative;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
         }
-        
+
         #loading {
             text-align: center;
-            color: #6c757d;
-            margin-top: 10px;
-            font-size: 0.9em;
-            min-height: 20px;
+            color: #64748B;
+            margin-top: 12px;
+            font-size: 0.95em;
+            min-height: 24px;
+            font-weight: 500;
         }
 
         .waveform-container {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
         }
 
         .play-button {
             width: 100%;
-            padding: 15px;
-            font-size: 16px;
+            padding: 16px;
+            font-size: 1.05em;
         }
 
         .tool-input-with-button {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -49,6 +53,7 @@
             flex-grow: 1;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container tool-container-vertical">
@@ -79,15 +84,15 @@
         // 1. 初始化 Wavesurfer 实例
         let wavesurfer = WaveSurfer.create({
             container: '#waveform',
-            waveColor: '#6c757d',      // 柔和的灰色波形
-            progressColor: '#007bff',  // 项目主色调蓝色
-            cursorColor: '#343a40',    // 深灰色光标
-            barWidth: 2,               
-            barGap: 3,                 
-            barRadius: 3,              
-            height: 200,               
-            normalize: true,           
-            url: ''                    
+            waveColor: '#94A3B8',      // 柔和的灰色波形
+            progressColor: '#3B82F6',  // 项目主色调蓝色
+            cursorColor: '#1E293B',    // 深色光标
+            barWidth: 3,
+            barGap: 2,
+            barRadius: 4,
+            height: 220,
+            normalize: true,
+            url: ''
         });
 
         const playBtn = document.getElementById('playBtn');

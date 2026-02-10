@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player</title>
+    <title>视频播放器</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
@@ -19,19 +19,20 @@
             height: 100%;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container tool-container-vertical">
         <div class="tool-header">
-            <h1>Video Player</h1>
-            <p>Play .mp4 or .m3u8 video streams from a URL.</p>
+            <h1>视频播放器</h1>
+            <p>从 URL 播放 .mp4 或 .m3u8 视频流。</p>
         </div>
 
         <div class="tool-section">
-            <label for="videoUrlInput" class="tool-label">Video URL:</label>
+            <label for="videoUrlInput" class="tool-label">视频 URL:</label>
             <div class="tool-inline-controls">
-                <input type="text" id="videoUrlInput" class="tool-input" placeholder="Enter .mp4 or .m3u8 URL">
-                <button id="loadVideoButton" class="tool-button">Load Video</button>
+                <input type="text" id="videoUrlInput" class="tool-input" placeholder="输入 .mp4 或 .m3u8 URL">
+                <button id="loadVideoButton" class="tool-button">加载视频</button>
             </div>
         </div>
 
@@ -64,7 +65,7 @@
             errorMessageDiv.textContent = '';
 
             if (!url) {
-                displayError("Please enter a video URL.");
+                displayError("请输入视频 URL。");
                 return;
             }
 
@@ -82,21 +83,21 @@
                     hls.attachMedia(videoPlayer);
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
                         videoPlayer.play().catch(e => {
-                            displayError("Could not play video. Autoplay might be blocked.");
+                            displayError("无法播放视频。自动播放可能被阻止。");
                         });
                     });
                     hls.on(Hls.Events.ERROR, function (event, data) {
                         if (data.fatal) {
                             switch(data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
-                                    displayError(`Network error: ${data.details}`);
+                                    displayError(`网络错误: ${data.details}`);
                                     break;
                                 case Hls.ErrorTypes.MEDIA_ERROR:
-                                    displayError(`Media error: ${data.details}`);
+                                    displayError(`媒体错误: ${data.details}`);
                                     hls.recoverMediaError();
                                     break;
                                 default:
-                                    displayError(`An HLS error occurred: ${data.details}`);
+                                    displayError(`发生 HLS 错误: ${data.details}`);
                                     hls.destroy();
                                     hls = null;
                                     break;
@@ -104,17 +105,17 @@
                         }
                     });
                 } else {
-                    displayError("HLS.js is not supported in your browser.");
+                    displayError("您的浏览器不支持 HLS.js。");
                 }
             } else {
                  try {
                     videoPlayer.src = url;
                     videoPlayer.load();
                     videoPlayer.play().catch(e => {
-                        displayError("Could not play video. Autoplay might be blocked.");
+                        displayError("无法播放视频。自动播放可能被阻止。");
                     });
                  } catch (e) {
-                     displayError("Invalid video URL or format.");
+                     displayError("无效的视频 URL 或格式。");
                  }
             }
         }
@@ -128,20 +129,20 @@
         });
 
         videoPlayer.addEventListener('error', (e) => {
-            let errorText = 'An unknown video error occurred.';
+            let errorText = '发生未知的视频错误。';
             if (videoPlayer.error) {
                 switch (videoPlayer.error.code) {
                     case MediaError.MEDIA_ERR_ABORTED:
-                        errorText = 'Video playback aborted.';
+                        errorText = '视频播放已中止。';
                         break;
                     case MediaError.MEDIA_ERR_NETWORK:
-                        errorText = 'A network error caused the video download to fail.';
+                        errorText = '网络错误导致视频下载失败。';
                         break;
                     case MediaError.MEDIA_ERR_DECODE:
-                        errorText = 'Video could not be decoded.';
+                        errorText = '无法解码视频。';
                         break;
                     case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                        errorText = 'Video format not supported.';
+                        errorText = '不支持的视频格式。';
                         break;
                 }
             }

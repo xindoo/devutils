@@ -63,4 +63,8 @@ DevUtils 是一个基于 Web 的开发者工具集，旨在简化常见的开发
     npm install -g serve
     serve .
     ```
+    或者，您可以使用 Python 的 SimpleHTTPServer：
+    ```bash
+    python -m http.server 8000
+    ```
 4.  从侧边栏中选择所需的工具并开始使用。

@@ -31,6 +31,7 @@
            color: #000;
        }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
@@ -160,11 +161,23 @@
                     case 'integer':
                         const min = parseInt(document.getElementById('intMin').value);
                         const max = parseInt(document.getElementById('intMax').value);
+                        if (isNaN(min) || isNaN(max) || min >= max) {
+                            alert('请输入有效的整数范围 (最小值必须小于最大值)');
+                            return;
+                        }
                         results.push(generateInteger(min, max));
                         break;
                     case 'string':
                         const len = parseInt(document.getElementById('strLength').value);
                         const chars = document.getElementById('strChars').value;
+                        if (!chars || chars.length === 0) {
+                            alert('请输入字符集');
+                            return;
+                        }
+                        if (isNaN(len) || len <= 0) {
+                            alert('请输入有效的字符串长度');
+                            return;
+                        }
                         results.push(generateString(len, chars));
                         break;
                     case 'name':

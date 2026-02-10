@@ -26,6 +26,7 @@
             margin-top: 10px;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
@@ -96,6 +97,7 @@
 
         let originalFile = null;
         let originalUrl = null;
+        let compressedUrl = null;
 
         qualitySlider.oninput = () => {
             qualityValue.textContent = qualitySlider.value;
@@ -108,6 +110,12 @@
                 originalUrl = URL.createObjectURL(originalFile);
                 originalPreview.src = originalUrl;
                 originalInfo.textContent = `文件名: ${originalFile.name}, 大小: ${(originalFile.size / 1024).toFixed(2)} KB, 类型: ${originalFile.type}`;
+
+                // 清理旧的压缩图片 URL
+                if (compressedUrl) {
+                    URL.revokeObjectURL(compressedUrl);
+                    compressedUrl = null;
+                }
                 compressedPreview.src = "";
                 compressedInfo.textContent = "";
                 downloadLink.style.display = 'none';
@@ -151,7 +159,11 @@
 
                     canvas.toBlob((blob) => {
                         if (blob) {
-                            const compressedUrl = URL.createObjectURL(blob);
+                            // 清理旧的压缩图片 URL
+                            if (compressedUrl) {
+                                URL.revokeObjectURL(compressedUrl);
+                            }
+                            compressedUrl = URL.createObjectURL(blob);
                             compressedPreview.src = compressedUrl;
                             compressedInfo.textContent = `压缩后大小: ${(blob.size / 1024).toFixed(2)} KB, 类型: ${blob.type}`;
 

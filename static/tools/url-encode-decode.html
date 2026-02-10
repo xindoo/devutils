@@ -1,31 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>URL Encode/Decode</title>
+    <title>URL 编解码</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>URL Encode/Decode</h1>
-            <p>Encode or decode text for use in URLs.</p>
+            <h1>URL 编解码</h1>
+            <p>对文本进行 URL 编码或解码。</p>
         </div>
 
         <div class="tool-section">
-            <label class="tool-label" for="input">Input</label>
-            <textarea id="input" class="tool-textarea" placeholder="Enter text to encode or decode..."></textarea>
+            <label class="tool-label" for="input">输入</label>
+            <textarea id="input" class="tool-textarea" placeholder="输入要编码或解码的文本..."></textarea>
         </div>
 
         <div class="tool-controls">
-            <button class="tool-button" onclick="encode()">URL Encode</button>
-            <button class="tool-button" onclick="decode()">URL Decode</button>
-            <button class="tool-button" onclick="clearAll()">Clear</button>
+            <button class="tool-button" onclick="encode()">URL 编码</button>
+            <button class="tool-button" onclick="decode()">URL 解码</button>
+            <button class="tool-button" onclick="clearAll()">清除</button>
         </div>
 
         <div class="tool-section">
-            <label class="tool-label" for="output">Output</label>
-            <textarea id="output" class="tool-textarea" placeholder="Result..." readonly></textarea>
+            <label class="tool-label" for="output">输出</label>
+            <textarea id="output" class="tool-textarea" placeholder="结果..." readonly></textarea>
         </div>
     </div>
 
@@ -35,7 +36,7 @@
             try {
                 document.getElementById('output').value = encodeURIComponent(input);
             } catch (e) {
-                document.getElementById('output').value = 'Error encoding: ' + e.message;
+                document.getElementById('output').value = '编码错误: ' + e.message;
             }
         }
 
@@ -44,7 +45,7 @@
             try {
                 document.getElementById('output').value = decodeURIComponent(input);
             } catch (e) {
-                document.getElementById('output').value = 'Error decoding: ' + e.message;
+                document.getElementById('output').value = '解码错误: ' + e.message;
             }
         }
 
@@ -53,7 +54,7 @@
             document.getElementById('output').value = '';
         }
 
-        // Allow Enter key to trigger encoding
+        // 允许 Enter 键触发编码
         document.getElementById('input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && e.ctrlKey) {
                 encode();

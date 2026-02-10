@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('progress-bar');
     const downloadLink = document.getElementById('download-link');
 
+    let currentDownloadUrl = null; // 跟踪当前的下载 URL
+
     qualityRange.addEventListener('input', () => {
         qualityValueSpan.textContent = qualityRange.value;
     });
@@ -63,12 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Read the result file from FFmpeg's virtual file system
             const data = ffmpeg.FS('readFile', outputFileName);
 
+            // 清理旧的下载 URL
+            if (currentDownloadUrl) {
+                URL.revokeObjectURL(currentDownloadUrl);
+            }
+
             // Create a Blob and a download URL
             const blob = new Blob([data.buffer], { type: `video/${codec === 'libx264' || codec === 'libx265' ? 'mp4' : 'webm'}` }); // Adjust MIME type based on output codec
-            const url = URL.createObjectURL(blob);
+            currentDownloadUrl = URL.createObjectURL(blob);
 
             statusMessage.textContent = '处理完成！';
-            downloadLink.href = url;
+            downloadLink.href = currentDownloadUrl;
             downloadLink.download = outputFileName;
             downloadLink.textContent = `下载 ${outputFileName}`;
             downloadLink.style.display = 'block';

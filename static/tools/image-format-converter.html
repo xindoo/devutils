@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Format Converter</title>
+    <title>图片格式转换</title>
     <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>Image Format Converter</h1>
-            <p>Convert images to WEBP, PNG, JPEG, GIF, BMP, and TIFF formats.</p>
-            <p><small>Note: Browser support for some formats may be limited. Unsupported formats may be converted to PNG.</small></p>
+            <h1>图片格式转换</h1>
+            <p>将图片转换为 WEBP、PNG、JPEG、GIF、BMP 和 TIFF 格式。</p>
+            <p><small>注意：浏览器对某些格式的支持可能有限。不支持的格式可能会被转换为 PNG。</small></p>
         </div>
         <div class="tool-section">
-            <label for="imageInput" class="tool-label">Select Image:</label>
+            <label for="imageInput" class="tool-label">选择图片:</label>
             <input type="file" id="imageInput" class="tool-input" accept="image/*">
         </div>
         <div class="tool-section">
-            <label for="formatSelect" class="tool-label">Convert to:</label>
+            <label for="formatSelect" class="tool-label">转换为:</label>
             <select id="formatSelect" class="tool-select">
                 <option value="webp">WebP</option>
                 <option value="png">PNG</option>
@@ -29,10 +30,10 @@
             </select>
         </div>
         <div class="tool-controls">
-            <button id="convertBtn" class="tool-button">Convert</button>
+            <button id="convertBtn" class="tool-button">转换</button>
         </div>
         <div class="tool-section">
-            <h2>Converted Image:</h2>
+            <h2>转换后的图片:</h2>
             <div id="output"></div>
         </div>
     </div>
@@ -43,7 +44,7 @@
             const outputDiv = document.getElementById('output');
 
             if (imageInput.files.length === 0) {
-                alert('Please select an image file.');
+                alert('请选择一个图片文件。');
                 return;
             }
 
@@ -59,7 +60,7 @@
                     const ctx = canvas.getContext('2d');
                     const format = formatSelect.value;
 
-                    // For formats that don't support transparency, fill with a white background.
+                    // 对于不支持透明度的格式，填充白色背景
                     if (format === 'jpeg' || format === 'bmp') {
                         ctx.fillStyle = '#FFFFFF';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -80,7 +81,7 @@
                     downloadLink.href = dataUrl;
                     const originalFileName = file.name.substring(0, file.name.lastIndexOf('.'));
                     downloadLink.download = `${originalFileName}.${format}`;
-                    downloadLink.textContent = `Download ${format.toUpperCase()}`;
+                    downloadLink.textContent = `下载 ${format.toUpperCase()}`;
                     downloadLink.className = 'tool-button';
                     outputDiv.appendChild(downloadLink);
                 };

@@ -14,7 +14,7 @@
         .markdown-editor, .markdown-preview {
             width: 50%;
             height: 100%;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             border-radius: var(--border-radius);
             padding: 15px;
             overflow-y: auto;
@@ -23,12 +23,13 @@
             resize: none;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container full-height-tool">
         <div class="tool-header">
             <h1>Markdown 实时预览</h1>
-            <p>在左侧输入 Markdown，在右侧查看实时渲染效果。</p>
+            <p>在左侧输入 Markdown,在右侧查看实时渲染效果。</p>
         </div>
         <div class="tool-content markdown-container">
             <textarea id="markdown-input" class="tool-textarea markdown-editor" placeholder="在此输入 Markdown..."></textarea>

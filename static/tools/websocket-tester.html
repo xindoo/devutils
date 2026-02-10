@@ -1,63 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Tester</title>
+    <title>WebSocket 测试器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         #log {
             height: 300px;
-            border: 1px solid #ccc;
-            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
             overflow-y: scroll;
-            background-color: #f9f9f9;
+            background: var(--surface);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             white-space: pre-wrap;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
         }
+
         .log-message {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 150ms ease;
         }
+
+        .log-message:hover {
+            background: var(--surface-hover);
+        }
+
         .log-message.sent {
-            color: blue;
+            color: #3B82F6;
+            border-left: 3px solid #3B82F6;
         }
+
         .log-message.received {
-            color: green;
+            color: #10B981;
+            border-left: 3px solid #10B981;
         }
+
         .log-message.error {
-            color: red;
+            color: #EF4444;
+            border-left: 3px solid #EF4444;
+            background: rgba(239, 68, 68, 0.1);
         }
+
         .log-message.status {
-            color: orange;
+            color: #F59E0B;
+            border-left: 3px solid #F59E0B;
+        }
+
+        [data-theme="dark"] .log-message.sent {
+            color: #60A5FA;
+            border-left-color: #60A5FA;
+        }
+
+        [data-theme="dark"] .log-message.received {
+            color: #34D399;
+            border-left-color: #34D399;
+        }
+
+        [data-theme="dark"] .log-message.error {
+            color: #F87171;
+            border-left-color: #F87171;
+        }
+
+        [data-theme="dark"] .log-message.status {
+            color: #FBBF24;
+            border-left-color: #FBBF24;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>WebSocket Tester</h1>
-            <p>Test your WebSocket endpoints.</p>
+            <h1>WebSocket 测试器</h1>
+            <p>测试你的 WebSocket 端点。</p>
         </div>
 
         <div id="errorDisplay" class="tool-error"></div>
 
         <div class="tool-io-section">
             <label for="wsUrl" class="tool-label">WebSocket URL:</label>
-            <input type="text" id="wsUrl" class="tool-input" placeholder="e.g., wss://echo.websocket.org">
+            <input type="text" id="wsUrl" class="tool-input" placeholder="例如: wss://echo.websocket.org">
         </div>
 
         <div class="tool-controls">
-            <button id="connectBtn" class="tool-button">Connect</button>
-            <button id="disconnectBtn" class="tool-button" disabled>Disconnect</button>
+            <button id="connectBtn" class="tool-button">连接</button>
+            <button id="disconnectBtn" class="tool-button" disabled>断开</button>
         </div>
 
         <div class="tool-io-section">
-            <label for="message" class="tool-label">Message:</label>
-            <textarea id="message" class="tool-textarea" placeholder="Enter message to send..."></textarea>
-            <button id="sendBtn" class="tool-button" disabled>Send</button>
+            <label for="message" class="tool-label">消息:</label>
+            <textarea id="message" class="tool-textarea" placeholder="输入要发送的消息..."></textarea>
+            <button id="sendBtn" class="tool-button" disabled>发送</button>
         </div>
 
         <div class="tool-io-section">
-            <label for="log" class="tool-label">Log:</label>
+            <label for="log" class="tool-label">日志:</label>
             <div id="log"></div>
         </div>
     </div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panorama Video Viewer (2:1)</title>
+    <title>全景视频查看器 (2:1)</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
@@ -20,24 +20,25 @@
             background-color: #f0f0f0;
         }
     </style>
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>Panorama Video Viewer (2:1)</h1>
-            <p>View 2:1 equirectangular panorama videos from a URL (.mp4 or .m3u8).</p>
+            <h1>全景视频查看器 (2:1)</h1>
+            <p>从 URL 查看 2:1 等距柱状投影全景视频（.mp4 或 .m3u8）。</p>
         </div>
 
         <div class="tool-section">
-            <label for="videoUrlInput" class="tool-label">Video URL:</label>
+            <label for="videoUrlInput" class="tool-label">视频 URL:</label>
             <div class="tool-inline-controls">
-                <input type="text" id="videoUrlInput" class="tool-input" placeholder="Enter .mp4 or .m3u8 URL">
-                <button id="loadVideoButton" class="tool-button">Load Video</button>
+                <input type="text" id="videoUrlInput" class="tool-input" placeholder="输入 .mp4 或 .m3u8 URL">
+                <button id="loadVideoButton" class="tool-button">加载视频</button>
             </div>
         </div>
 
         <div id="panorama" style="flex-grow: 1; min-height: 0;">
-            <p style="text-align:center; padding-top: 20px; color: #555;">Enter a video URL and click Load.</p>
+            <p style="text-align:center; padding-top: 20px; color: #555;">输入视频 URL 并点击加载。</p>
         </div>
     </div>
 
@@ -74,7 +75,7 @@
         } else if (videoUrl.toLowerCase().endsWith('.mp4')) {
             videoElement.src = videoUrl;
         } else {
-            panoramaDiv.innerHTML = '<p style="text-align:center; padding-top: 20px; color: red;">Unsupported video format.</p>';
+            panoramaDiv.innerHTML = '<p style="text-align:center; padding-top: 20px; color: red;">不支持的视频格式。</p>';
             return;
         }
 
@@ -98,7 +99,7 @@
                 console.error("Video playback failed:", e);
                 const playPrompt = document.createElement('p');
                 playPrompt.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0,0,0,0.7); color: white; padding: 15px; border-radius: 5px; z-index: 20; text-align: center; cursor: pointer;';
-                playPrompt.textContent = 'Click/Tap to play video';
+                playPrompt.textContent = '点击/触摸以播放视频';
                 panoramaDiv.appendChild(playPrompt);
                 const playHandler = () => {
                     videoElement.play().then(() => playPrompt.remove()).catch(err => console.error("Manual play failed:", err));
@@ -110,7 +111,7 @@
 
         viewer.on('error', (err) => {
             console.error("Pannellum viewer error:", err);
-            panoramaDiv.innerHTML = `<p style="text-align:center; padding-top: 20px; color: red;">Error loading panorama: ${err}</p>`;
+            panoramaDiv.innerHTML = `<p style="text-align:center; padding-top: 20px; color: red;">加载全景时出错: ${err}</p>`;
             if (document.body.contains(videoElement)) {
                 document.body.removeChild(videoElement);
             }
@@ -122,7 +123,7 @@
         if (url) {
             initializeViewer(url);
         } else {
-            alert("Please enter a video URL.");
+            alert("请输入视频 URL。");
         }
     });
 </script>

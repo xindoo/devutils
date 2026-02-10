@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Difference Tool</title>
+    <title>文本差异对比工具</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/text-diff.css">
+    <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
     <div class="tool-container full-height-tool">
@@ -52,8 +53,7 @@
         </div>
     </div>
 
-    <!-- Load diff-match-patch library (assuming it's available or will be added) -->
-    <!-- If not available, the JS will need a simpler diff implementation -->
+    <!-- 加载 diff-match-patch 库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
     <script src="../js/text-diff.js"></script>
 </body>

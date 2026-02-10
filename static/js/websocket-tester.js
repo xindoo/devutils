@@ -58,8 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         websocket.onerror = (error) => {
-            log(`Error: ${error.message || 'A connection error occurred.'}`, 'error');
-            showError('WebSocket connection failed.');
+            // WebSocket error 事件不包含详细的错误信息
+            log('Error: WebSocket 连接发生错误', 'error');
+            showError('WebSocket 连接失败。');
         };
 
         websocket.onclose = (event) => {
