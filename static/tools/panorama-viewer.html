@@ -8,14 +8,50 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <style>
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
         .tool-container {
-            height: calc(100vh - 40px);
-            padding: 10px;
+            height: 100vh !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            max-width: none !important;
+        }
+        .tool-header {
+            padding: 8px 16px !important;
+            background: var(--bg-color, #fff);
+            border-bottom: 1px solid var(--border-color, #e0e0e0);
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tool-header h1 {
+            margin: 0 !important;
+            font-size: 16px !important;
+            font-weight: 500;
+        }
+        .tool-section {
+            padding: 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tool-section input[type="file"] {
+            font-size: 12px !important;
+            padding: 4px 8px;
+            border: 1px solid var(--border-color, #e0e0e0);
+            border-radius: 4px;
+            background: var(--bg-color, #fff);
+            cursor: pointer;
         }
         #panorama {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
+            flex: 1 !important;
+            width: 100% !important;
+            min-height: 0 !important;
         }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
@@ -23,16 +59,13 @@
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <h1>全景图片查看器 (2:1)</h1>
-            <p>查看 2:1 等距柱状投影全景图片。</p>
+            <h1>全景图片查看器</h1>
+            <div class="tool-section">
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
         </div>
 
-        <div class="tool-section">
-            <label for="fileInput" class="tool-label">选择全景图片:</label>
-            <input type="file" id="fileInput" class="tool-input" accept="image/*">
-        </div>
-
-        <div id="panorama" style="flex-grow: 1; min-height: 0;"></div>
+        <div id="panorama"></div>
     </div>
 
 <script>
