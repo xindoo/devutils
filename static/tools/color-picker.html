@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>颜色选择器与转换器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .color-preview {
+            width: 100%;
+            height: 150px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            transition: background-color 0.2s;
+        }
+        .color-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .color-input-group label {
+            min-width: 80px;
+            font-weight: 500;
+        }
+        .copy-icon {
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            fill: #3B82F6;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            transition: all 150ms ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .copy-icon:hover {
+            fill: #2563EB;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        #color-picker {
+            width: 100%;
+            height: 60px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+    <script src="../js/tool-theme-helper.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>颜色选择器与转换器</h1>
+            <p>选择颜色并在 HEX、RGB、HSL 格式之间转换。</p>
+        </div>
+        
+        <div class="tool-section">
+            <label class="tool-label">选择颜色</label>
+            <input type="color" id="color-picker" value="#3B82F6">
+        </div>
+        
+        <div class="color-preview" id="color-preview"></div>
+        
+        <div class="color-input-group">
+            <label>HEX:</label>
+            <input type="text" id="hex-input" class="tool-input" placeholder="#000000">
+            <svg class="copy-icon" onclick="copyToClipboard('hex-input')" viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+        </div>
+        
+        <div class="color-input-group">
+            <label>RGB:</label>
+            <input type="text" id="rgb-input" class="tool-input" placeholder="rgb(0, 0, 0)">
+            <svg class="copy-icon" onclick="copyToClipboard('rgb-input')" viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+        </div>
+        
+        <div class="color-input-group">
+            <label>HSL:</label>
+            <input type="text" id="hsl-input" class="tool-input" placeholder="hsl(0, 0%, 0%)">
+            <svg class="copy-icon" onclick="copyToClipboard('hsl-input')" viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const colorPicker = document.getElementById('color-picker');
+        const colorPreview = document.getElementById('color-preview');
+        const hexInput = document.getElementById('hex-input');
+        const rgbInput = document.getElementById('rgb-input');
+        const hslInput = document.getElementById('hsl-input');
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+
+            return {
+                h: Math.round(h * 360),
+                s: Math.round(s * 100),
+                l: Math.round(l * 100)
+            };
+        }
+
+        function updateFromPicker() {
+            const hex = colorPicker.value;
+            updateColor(hex);
+        }
+
+        function updateColor(hex) {
+            colorPreview.style.backgroundColor = hex;
+            colorPicker.value = hex;
+            hexInput.value = hex;
+
+            const rgb = hexToRgb(hex);
+            if (rgb) {
+                rgbInput.value = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+                
+                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                hslInput.value = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const content = document.getElementById(elementId).value;
+            if (!content) return;
+            navigator.clipboard.writeText(content);
+        }
+
+        colorPicker.addEventListener('input', updateFromPicker);
+        
+        hexInput.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                updateColor(hex);
+            }
+        });
+
+        // Initialize
+        updateColor('#3B82F6');
+    </script>
+</body>
+</html>
