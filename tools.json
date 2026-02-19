@@ -31,6 +31,18 @@
         "name_en": "Unicode Converter",
         "path": "coder/unicode",
         "filePath": "static/tools/unicode.html"
+      },
+      {
+        "name_zh": "Base32编解码",
+        "name_en": "Base32 Encode/Decode",
+        "path": "coder/base32",
+        "filePath": "static/tools/base32.html"
+      },
+      {
+        "name_zh": "Hex编解码",
+        "name_en": "Hex Encode/Decode",
+        "path": "coder/hex",
+        "filePath": "static/tools/hex.html"
       }
     ]
   },
@@ -48,6 +60,24 @@
         "name_en": "Code Formatter",
         "path": "formatter/code",
         "filePath": "static/tools/code-formatter.html"
+      },
+      {
+        "name_zh": "HTML格式化",
+        "name_en": "HTML Formatter",
+        "path": "formatter/html",
+        "filePath": "static/tools/html-formatter.html"
+      },
+      {
+        "name_zh": "CSS格式化",
+        "name_en": "CSS Formatter",
+        "path": "formatter/css",
+        "filePath": "static/tools/css-formatter.html"
+      },
+      {
+        "name_zh": "XML格式化",
+        "name_en": "XML Formatter",
+        "path": "formatter/xml",
+        "filePath": "static/tools/xml-formatter.html"
       }
     ]
   },
@@ -187,6 +217,23 @@
         "name_en": "Base Converter",
         "path": "converter/base",
         "filePath": "static/tools/base-converter.html"
+      },
+      {
+        "name_zh": "颜色选择器与转换",
+        "name_en": "Color Picker & Converter",
+        "path": "converter/color",
+        "filePath": "static/tools/color-picker.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "安全工具",
+    "tools": [
+      {
+        "name_zh": "JWT解码器",
+        "name_en": "JWT Decoder",
+        "path": "security/jwt-decoder",
+        "filePath": "static/tools/jwt-decoder.html"
       }
     ]
   },
