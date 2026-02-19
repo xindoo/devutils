@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>XML 格式化工具</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
+    <style>
+        .CodeMirror {
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            font-size: 14px;
+            flex-grow: 1;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .CodeMirror-gutters {
+            background: rgba(255, 255, 255, 0.3);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .editor-container {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .copy-icon {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            fill: #3B82F6;
+            z-index: 10;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            transition: all 150ms ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .copy-icon:hover {
+            fill: #2563EB;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+    <script src="../js/tool-theme-helper.js"></script>
+</head>
+<body>
+    <div class="tool-container tool-container-vertical">
+        <div class="tool-header">
+            <h1>XML 格式化工具</h1>
+            <p>格式化和压缩 XML 代码，使其更易于阅读或传输。</p>
+        </div>
+        <div class="tool-controls">
+            <button class="tool-button" onclick="formatXml()">格式化</button>
+            <button class="tool-button" onclick="compressXml()">压缩</button>
+        </div>
+        <div class="tool-io-section">
+            <label class="tool-label" for="xml-area">输入/输出</label>
+            <div class="editor-container">
+                <textarea id="xml-area" placeholder="在此处粘贴 XML..."></textarea>
+                <svg class="copy-icon" onclick="copyToClipboard()" viewBox="0 0 24 24">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
+            </div>
+        </div>
+
+        <div id="error-output" class="tool-error"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+
+    <script>
+        const errorOutput = document.getElementById('error-output');
+        const textarea = document.getElementById('xml-area');
+
+        const editor = CodeMirror.fromTextArea(textarea, {
+            lineNumbers: true,
+            mode: "xml",
+            theme: "material-palenight",
+            matchTags: {bothTags: true},
+            autoCloseTags: true,
+            lineWrapping: true
+        });
+
+        function clearError() {
+            errorOutput.textContent = '';
+        }
+
+        function displayError(message) {
+            errorOutput.textContent = message;
+        }
+
+        function formatXml() {
+            clearError();
+            try {
+                const input = editor.getValue().trim();
+                if (!input) return;
+                
+                let result = '';
+                let indent = '';
+                const tab = '    ';
+                
+                // Split tags
+                const tokens = input.split(/(<[^>]+>)/g).filter(token => token.trim() !== '');
+                
+                tokens.forEach((token, index) => {
+                    if (token.startsWith('</')) {
+                        indent = indent.slice(tab.length);
+                        result += indent + token.trim() + '\n';
+                    } else if (token.startsWith('<') && !token.endsWith('/>') && !token.startsWith('<?') && !token.startsWith('<!')) {
+                        result += indent + token.trim() + '\n';
+                        indent += tab;
+                    } else if (token.startsWith('<')) {
+                        result += indent + token.trim() + '\n';
+                    } else {
+                        const text = token.trim();
+                        if (text) {
+                            result += indent + text + '\n';
+                        }
+                    }
+                });
+                
+                editor.setValue(result.trim());
+            } catch (e) {
+                displayError('格式化错误: ' + e.message);
+            }
+        }
+
+        function compressXml() {
+            clearError();
+            try {
+                const input = editor.getValue().trim();
+                if (!input) return;
+                
+                // Remove whitespace between tags
+                let result = input.replace(/>\s+</g, '><');
+                // Remove leading/trailing whitespace
+                result = result.trim();
+                // Remove unnecessary spaces within tags
+                result = result.replace(/\s+/g, ' ').replace(/>\s</g, '><');
+                
+                editor.setValue(result);
+            } catch (e) {
+                displayError('压缩错误: ' + e.message);
+            }
+        }
+
+        function copyToClipboard() {
+            const content = editor.getValue();
+            if (!content) return;
+            navigator.clipboard.writeText(content).then(() => {
+                const icon = document.querySelector('.copy-icon');
+                const originalPath = icon.innerHTML;
+                icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+                setTimeout(() => {
+                    icon.innerHTML = originalPath;
+                }, 2000);
+            }).catch(err => {
+                alert('无法复制到剪贴板: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
