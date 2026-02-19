@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>JWT 解码器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
+    <style>
+        .CodeMirror {
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            font-size: 14px;
+            flex-grow: 1;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            height: 150px;
+        }
+
+        .CodeMirror-gutters {
+            background: rgba(255, 255, 255, 0.3);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .editor-container {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .token-section {
+            margin-bottom: 20px;
+        }
+
+        .copy-icon {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            fill: #3B82F6;
+            z-index: 10;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            transition: all 150ms ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .copy-icon:hover {
+            fill: #2563EB;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+    <script src="../js/tool-theme-helper.js"></script>
+</head>
+<body>
+   <div class="tool-container tool-container-vertical">
+       <div class="tool-header">
+           <h1>JWT 解码器</h1>
+           <p>解码 JSON Web Token (JWT)，查看其头部和负载信息。</p>
+       </div>
+       <div class="tool-section">
+           <label class="tool-label" for="jwt-input">JWT Token</label>
+           <div class="editor-container">
+               <textarea id="jwt-input" placeholder="在此粘贴 JWT Token..."></textarea>
+           </div>
+       </div>
+       <div class="tool-controls">
+           <button class="tool-button" onclick="decodeJwt()">解码</button>
+       </div>
+       <div id="error-output" class="tool-error"></div>
+       
+       <div id="decoded-output" style="display: none;">
+           <div class="token-section">
+               <label class="tool-label">头部 (Header)</label>
+               <div class="editor-container">
+                   <textarea id="header-output"></textarea>
+                   <svg class="copy-icon" onclick="copyToClipboard('header-output')" viewBox="0 0 24 24">
+                       <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                   </svg>
+               </div>
+           </div>
+           <div class="token-section">
+               <label class="tool-label">负载 (Payload)</label>
+               <div class="editor-container">
+                   <textarea id="payload-output"></textarea>
+                   <svg class="copy-icon" onclick="copyToClipboard('payload-output')" viewBox="0 0 24 24">
+                       <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                   </svg>
+               </div>
+           </div>
+       </div>
+   </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+
+    <script>
+        const errorOutput = document.getElementById('error-output');
+        const jwtInput = document.getElementById('jwt-input');
+        const decodedOutput = document.getElementById('decoded-output');
+        
+        let headerEditor, payloadEditor;
+
+        function clearError() {
+            errorOutput.textContent = '';
+        }
+
+        function displayError(message) {
+            errorOutput.textContent = message;
+        }
+
+        function base64UrlDecode(str) {
+            // Add padding
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (str.length % 4) {
+                str += '=';
+            }
+            return decodeURIComponent(escape(atob(str)));
+        }
+
+        function decodeJwt() {
+            clearError();
+            try {
+                const token = jwtInput.value.trim();
+                if (!token) {
+                    displayError('请输入 JWT Token');
+                    return;
+                }
+
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    displayError('无效的 JWT Token 格式');
+                    return;
+                }
+
+                const header = JSON.parse(base64UrlDecode(parts[0]));
+                const payload = JSON.parse(base64UrlDecode(parts[1]));
+
+                if (!headerEditor) {
+                    headerEditor = CodeMirror.fromTextArea(document.getElementById('header-output'), {
+                        lineNumbers: true,
+                        mode: { name: "javascript", json: true },
+                        theme: "material-palenight",
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        lineWrapping: true,
+                        readOnly: true
+                    });
+                }
+
+                if (!payloadEditor) {
+                    payloadEditor = CodeMirror.fromTextArea(document.getElementById('payload-output'), {
+                        lineNumbers: true,
+                        mode: { name: "javascript", json: true },
+                        theme: "material-palenight",
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        lineWrapping: true,
+                        readOnly: true
+                    });
+                }
+
+                headerEditor.setValue(JSON.stringify(header, null, 4));
+                payloadEditor.setValue(JSON.stringify(payload, null, 4));
+                decodedOutput.style.display = 'block';
+            } catch (e) {
+                displayError('解码失败: ' + e.message);
+            }
+        }
+
+        function copyToClipboard(editorId) {
+            let content;
+            if (editorId === 'header-output') {
+                content = headerEditor.getValue();
+            } else if (editorId === 'payload-output') {
+                content = payloadEditor.getValue();
+            }
+            
+            if (!content) return;
+            navigator.clipboard.writeText(content).then(() => {
+                // Success feedback
+            }).catch(err => {
+                alert('无法复制到剪贴板: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
