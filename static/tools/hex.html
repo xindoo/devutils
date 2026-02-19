@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Hex 编解码</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .editor-container {
+            position: relative;
+        }
+        .copy-icon {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            fill: #3B82F6;
+            z-index: 10;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            transition: all 150ms ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .copy-icon:hover {
+            fill: #2563EB;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+    <script src="../js/tool-theme-helper.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Hex 编解码</h1>
+            <p>在文本和十六进制编码之间进行转换。</p>
+        </div>
+        <div class="tool-content">
+            <div class="tool-section">
+                <label class="tool-label" for="input-text">输入文本</label>
+                <div class="editor-container">
+                    <textarea id="input-text" class="tool-textarea" placeholder="输入要编码或解码的文本..."></textarea>
+                    <svg class="copy-icon" onclick="copyToClipboard('input-text')" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="tool-controls">
+                <button class="tool-button" onclick="encodeHex()">编码</button>
+                <button class="tool-button" onclick="decodeHex()">解码</button>
+            </div>
+            <div class="tool-section">
+                <label class="tool-label" for="output-text">输出结果</label>
+                <div class="editor-container">
+                    <textarea id="output-text" class="tool-textarea" readonly placeholder="编码或解码的结果将显示在这里..."></textarea>
+                    <svg class="copy-icon" onclick="copyToClipboard('output-text')" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div id="error-output" class="tool-error"></div>
+    </div>
+
+    <script>
+        const errorOutput = document.getElementById('error-output');
+
+        function clearError() {
+            errorOutput.textContent = '';
+        }
+
+        function displayError(message) {
+            errorOutput.textContent = message;
+        }
+
+        function encodeHex() {
+            clearError();
+            try {
+                const input = document.getElementById('input-text').value;
+                if (!input) return;
+                
+                let result = '';
+                for (let i = 0; i < input.length; i++) {
+                    result += input.charCodeAt(i).toString(16).padStart(2, '0');
+                }
+                
+                document.getElementById('output-text').value = result;
+            } catch (e) {
+                displayError('编码错误: ' + e.message);
+            }
+        }
+
+        function decodeHex() {
+            clearError();
+            try {
+                const input = document.getElementById('input-text').value.replace(/\s/g, '');
+                if (!input) return;
+                
+                if (input.length % 2 !== 0) {
+                    displayError('无效的十六进制字符串长度');
+                    return;
+                }
+                
+                let result = '';
+                for (let i = 0; i < input.length; i += 2) {
+                    const hex = input.substr(i, 2);
+                    const code = parseInt(hex, 16);
+                    if (isNaN(code)) {
+                        displayError('无效的十六进制字符: ' + hex);
+                        return;
+                    }
+                    result += String.fromCharCode(code);
+                }
+                
+                document.getElementById('output-text').value = result;
+            } catch (e) {
+                displayError('解码错误: ' + e.message);
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const content = document.getElementById(elementId).value;
+            if (!content) return;
+            navigator.clipboard.writeText(content).then(() => {
+                // Success
+            }).catch(err => {
+                alert('无法复制到剪贴板: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
