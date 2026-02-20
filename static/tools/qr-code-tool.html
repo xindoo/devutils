@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>二维码工具 / QR Code Tool</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <!-- QR Code Libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <style>
+        .qr-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .qr-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .qr-section {
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 20px;
+        }
+        
+        .qr-section-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .qr-section-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+            color: var(--text-primary);
+        }
+        
+        .qr-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 220px;
+            background: var(--surface);
+            border-radius: var(--border-radius-sm);
+            margin: 15px 0;
+            padding: 20px;
+        }
+        
+        .qr-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .qr-option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .qr-option-group label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        
+        .qr-option-group input[type="number"],
+        .qr-option-group input[type="color"],
+        .qr-option-group select {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+        
+        .qr-option-group input[type="color"] {
+            height: 38px;
+            cursor: pointer;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+        }
+        
+        .file-upload-area.dragover {
+            border-color: var(--primary);
+            background: var(--surface);
+        }
+        
+        .file-upload-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        #decode-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--surface);
+            border-radius: var(--border-radius-sm);
+            min-height: 60px;
+        }
+        
+        #decode-result pre {
+            margin: 10px 0 0 0;
+            padding: 10px;
+            background: var(--surface);
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        #uploaded-image-preview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: var(--border-radius-sm);
+            display: none;
+            object-fit: contain;
+        }
+        
+        /* 滚动容器 - 确保内容可滚动 */
+        .tool-scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0;
+            min-height: 0;
+        }
+        
+        /* 确保工具容器在独立页面模式下也能正常滚动 */
+        @media (min-width: 769px) {
+            .tool-container {
+                min-height: auto !important;
+                height: 100% !important;
+                max-height: 100vh !important;
+            }
+        }
+        
+        /* 文件上传图标 */
+        .file-upload-icon svg {
+            width: 48px;
+            height: 48px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>二维码工具 / QR Code Tool</h1>
+            <p>生成和解析二维码。支持自定义尺寸、颜色和错误纠正级别。</p>
+        </div>
+
+        <div class="tool-scroll-container">
+        <div class="qr-layout">
+            <!-- 生成二维码区域 -->
+            <div class="qr-section">
+                <div class="qr-section-header">
+                    <h2>生成二维码 / Generate QR Code</h2>
+                </div>
+
+                <div class="tool-section">
+                    <label class="tool-label" for="qr-text">文本/URL / Text/URL</label>
+                    <textarea id="qr-text" class="tool-textarea" placeholder="输入要生成二维码的文本或 URL..."></textarea>
+                </div>
+
+                <div class="qr-options">
+                    <div class="qr-option-group">
+                        <label for="qr-size">尺寸 / Size (px)</label>
+                        <input type="number" id="qr-size" value="256" min="128" max="512">
+                    </div>
+                    <div class="qr-option-group">
+                        <label for="qr-error-level">错误纠正级别 / Error Level</label>
+                        <select id="qr-error-level">
+                            <option value="L">L (7%)</option>
+                            <option value="M" selected>M (15%)</option>
+                            <option value="Q">Q (25%)</option>
+                            <option value="H">H (30%)</option>
+                        </select>
+                    </div>
+                    <div class="qr-option-group">
+                        <label for="qr-color-dark">前景色 / Foreground</label>
+                        <input type="color" id="qr-color-dark" value="#000000">
+                    </div>
+                    <div class="qr-option-group">
+                        <label for="qr-color-light">背景色 / Background</label>
+                        <input type="color" id="qr-color-light" value="#ffffff">
+                    </div>
+                </div>
+
+                <div class="tool-controls">
+                    <button class="tool-button" onclick="generateQRCode()">生成 / Generate</button>
+                    <button class="tool-button" id="download-btn" onclick="downloadQRCode()" style="display: none;">下载 / Download</button>
+                </div>
+
+                <div class="qr-preview" id="qr-preview">
+                    <span style="color: var(--text-muted);">二维码将在此显示 / QR code will appear here</span>
+                </div>
+            </div>
+
+            <!-- 解析二维码区域 -->
+            <div class="qr-section">
+                <div class="qr-section-header">
+                    <h2>解析二维码 / Decode QR Code</h2>
+                </div>
+
+                <div class="tool-section">
+                    <label class="tool-label">上传图片 / Upload Image</label>
+                    <div class="file-upload-area" id="file-upload-area" onclick="document.getElementById('qr-file-input').click()">
+                        <div class="file-upload-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                        </div>
+                        <p>点击或拖拽图片到此处 / Click or drag image here</p>
+                        <p style="font-size: 0.85em; color: var(--text-muted);">支持 PNG, JPG, GIF</p>
+                    </div>
+                    <input type="file" id="qr-file-input" accept="image/*" style="display: none;">
+                    <img id="uploaded-image-preview" alt="Uploaded preview">
+                </div>
+
+                <div class="tool-controls">
+                    <button class="tool-button" onclick="decodeQRCode()">解析 / Decode</button>
+                </div>
+
+                <div class="tool-section" id="decode-result">
+                    <span style="color: var(--text-muted);">解析结果将在此显示 / Decoded result will appear here</span>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQRCode = null;
+
+        // 生成二维码
+        function generateQRCode() {
+            const text = document.getElementById('qr-text').value.trim();
+            
+            if (!text) {
+                alert('请输入文本或 URL / Please enter text or URL');
+                return;
+            }
+
+            const size = parseInt(document.getElementById('qr-size').value);
+            const colorDark = document.getElementById('qr-color-dark').value;
+            const colorLight = document.getElementById('qr-color-light').value;
+            const errorLevel = document.getElementById('qr-error-level').value;
+
+            // 清空预览区域
+            const previewDiv = document.getElementById('qr-preview');
+            previewDiv.innerHTML = '';
+
+            const correctLevelMap = {
+                'L': QRCode.CorrectLevel.L,
+                'M': QRCode.CorrectLevel.M,
+                'Q': QRCode.CorrectLevel.Q,
+                'H': QRCode.CorrectLevel.H
+            };
+
+            try {
+                currentQRCode = new QRCode(previewDiv, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: colorDark,
+                    colorLight: colorLight,
+                    correctLevel: correctLevelMap[errorLevel]
+                });
+
+                document.getElementById('download-btn').style.display = 'inline-block';
+            } catch (error) {
+                previewDiv.innerHTML = '<span style="color: #EF4444;">生成失败: ' + error.message + '</span>';
+            }
+        }
+
+        // 下载二维码
+        function downloadQRCode() {
+            const previewDiv = document.getElementById('qr-preview');
+            const img = previewDiv.querySelector('img');
+            
+            if (img) {
+                const link = document.createElement('a');
+                link.download = 'qrcode.png';
+                link.href = img.src;
+                link.click();
+            } else {
+                const canvas = previewDiv.querySelector('canvas');
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            }
+        }
+
+        // 解析二维码
+        function decodeQRCode() {
+            const fileInput = document.getElementById('qr-file-input');
+            const resultDiv = document.getElementById('decode-result');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('请先选择一张图片 / Please select an image first');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'dontInvert'
+                    });
+
+                    if (code) {
+                        resultDiv.innerHTML = '<strong>解析结果 / Decoded Result:</strong><br>' +
+                            '<pre>' + escapeHtml(code.data) + '</pre>';
+                    } else {
+                        resultDiv.innerHTML = '<span style="color: #EF4444;">未能识别二维码，请确保图片清晰且包含有效的二维码。<br>Failed to detect QR code. Please ensure the image is clear and contains a valid QR code.</span>';
+                    }
+                };
+                img.src = event.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 文件拖拽处理
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('qr-file-input');
+        const imagePreview = document.getElementById('uploaded-image-preview');
+
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                fileInput.files = files;
+                showImagePreview(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                showImagePreview(this.files[0]);
+            }
+        });
+
+        function showImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
