@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颜色选择器与转换器</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
@@ -16,28 +17,36 @@
         .color-input-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             align-items: center;
         }
-        .color-input-group label {
-            min-width: 80px;
-            font-weight: 500;
+        .color-input-group .color-format-label {
+            min-width: 50px;
+            font-weight: 600;
+            font-size: 0.9em;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            letter-spacing: 0.2px;
+            margin-bottom: 0;
         }
         .copy-icon {
             cursor: pointer;
             width: 28px;
             height: 28px;
-            fill: #3B82F6;
+            fill: var(--primary);
             padding: 6px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            transition: all 150ms ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+            box-shadow: 0 1px 2px var(--shadow-color);
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
         .copy-icon:hover {
-            fill: #2563EB;
+            fill: var(--primary-dark);
             transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
         }
         #color-picker {
             width: 100%;
@@ -64,7 +73,7 @@
         <div class="color-preview" id="color-preview"></div>
         
         <div class="color-input-group">
-            <label>HEX:</label>
+            <label class="color-format-label">HEX:</label>
             <input type="text" id="hex-input" class="tool-input" placeholder="#000000">
             <svg class="copy-icon" onclick="copyToClipboard('hex-input')" viewBox="0 0 24 24">
                 <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
@@ -72,7 +81,7 @@
         </div>
         
         <div class="color-input-group">
-            <label>RGB:</label>
+            <label class="color-format-label">RGB:</label>
             <input type="text" id="rgb-input" class="tool-input" placeholder="rgb(0, 0, 0)">
             <svg class="copy-icon" onclick="copyToClipboard('rgb-input')" viewBox="0 0 24 24">
                 <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
@@ -80,7 +89,7 @@
         </div>
         
         <div class="color-input-group">
-            <label>HSL:</label>
+            <label class="color-format-label">HSL:</label>
             <input type="text" id="hsl-input" class="tool-input" placeholder="hsl(0, 0%, 0%)">
             <svg class="copy-icon" onclick="copyToClipboard('hsl-input')" viewBox="0 0 24 24">
                 <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>

@@ -2,25 +2,22 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JWT 解码器</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
     <style>
         .CodeMirror {
-            border: 1px solid rgba(148, 163, 184, 0.3);
+            border: 1px solid var(--border);
             font-size: 14px;
             flex-grow: 1;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            border-radius: var(--border-radius-sm);
             height: 150px;
         }
 
         .CodeMirror-gutters {
-            background: rgba(255, 255, 255, 0.3);
-            border-right: 1px solid rgba(148, 163, 184, 0.2);
+            border-right: 1px solid var(--border);
         }
 
         .editor-container {
@@ -36,24 +33,26 @@
 
         .copy-icon {
             position: absolute;
-            top: 10px;
-            right: 20px;
+            top: 8px;
+            right: 8px;
             cursor: pointer;
             width: 28px;
             height: 28px;
-            fill: #3B82F6;
+            fill: var(--primary);
             z-index: 10;
             padding: 6px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            transition: all 150ms ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+            box-shadow: 0 1px 2px var(--shadow-color);
+            box-sizing: border-box;
         }
 
         .copy-icon:hover {
-            fill: #2563EB;
+            fill: var(--primary-dark);
             transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
         }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
@@ -67,7 +66,7 @@
        <div class="tool-section">
            <label class="tool-label" for="jwt-input">JWT Token</label>
            <div class="editor-container">
-               <textarea id="jwt-input" placeholder="在此粘贴 JWT Token..."></textarea>
+               <textarea id="jwt-input" class="tool-textarea" placeholder="在此粘贴 JWT Token..."></textarea>
            </div>
        </div>
        <div class="tool-controls">

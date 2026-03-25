@@ -6,30 +6,34 @@
     <link rel="stylesheet" href="../css/style.css">
     <style>
         .options-group {
-            margin-bottom: 15px;
-            border: 1px solid #eee;
-            padding: 15px;
-            border-radius: 8px;
-            display: none; /* Hidden by default */
+            display: none;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--surface-hover);
         }
         .options-group label {
             font-weight: normal;
         }
-       .output-container {
-           position: relative;
-       }
-       .copy-icon {
-           position: absolute;
-           top: 5px;
-           right: 5px;
-           cursor: pointer;
-           width: 24px;
-           height: 24px;
-           fill: #888;
-       }
-       .copy-icon:hover {
-           color: #000;
-       }
+        .output-container {
+            position: relative;
+        }
+        .copy-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+            transition: fill var(--transition-fast);
+        }
+        .copy-icon:hover {
+            fill: var(--primary);
+        }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
 </head>
@@ -51,17 +55,17 @@
             </select>
         </div>
 
-        <div id="options-integer" class="options-group tool-inline-controls">
-            <label for="intMin" class="tool-label">最小值:</label>
-            <input type="number" id="intMin" class="tool-input" value="0">
-            <label for="intMax" class="tool-label">最大值:</label>
-            <input type="number" id="intMax" class="tool-input" value="100">
+        <div id="options-integer" class="options-group">
+            <label for="intMin" class="tool-label" style="margin-bottom:0;">最小值:</label>
+            <input type="number" id="intMin" class="tool-input" value="0" style="width:100px;">
+            <label for="intMax" class="tool-label" style="margin-bottom:0;">最大值:</label>
+            <input type="number" id="intMax" class="tool-input" value="100" style="width:100px;">
         </div>
 
-        <div id="options-string" class="options-group tool-inline-controls">
-            <label for="strLength" class="tool-label">长度:</label>
-            <input type="number" id="strLength" class="tool-input" value="16">
-            <label for="strChars" class="tool-label">包含字符:</label>
+        <div id="options-string" class="options-group">
+            <label for="strLength" class="tool-label" style="margin-bottom:0;">长度:</label>
+            <input type="number" id="strLength" class="tool-input" value="16" style="width:80px;">
+            <label for="strChars" class="tool-label" style="margin-bottom:0;">包含字符:</label>
             <input type="text" id="strChars" class="tool-input" value="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789">
         </div>
 
@@ -144,7 +148,7 @@
             const selectedType = dataTypeSelect.value;
             const optionsDiv = document.getElementById(`options-${selectedType}`);
             if (optionsDiv) {
-                optionsDiv.style.display = 'flex';
+                optionsDiv.style.display = 'flex'; // .options-group uses flex
             }
         }
 

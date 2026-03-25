@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图片格式转换</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .converted-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background-color: var(--surface-hover);
+            margin-bottom: 12px;
+        }
+    </style>
     <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
@@ -33,7 +44,7 @@
             <button id="convertBtn" class="tool-button">转换</button>
         </div>
         <div class="tool-section">
-            <h2>转换后的图片:</h2>
+            <label class="tool-label">转换后的图片:</label>
             <div id="output"></div>
         </div>
     </div>
@@ -74,7 +85,7 @@
                     outputDiv.innerHTML = '';
                     const newImg = document.createElement('img');
                     newImg.src = dataUrl;
-                    newImg.style.maxWidth = '100%';
+                    newImg.className = 'converted-image';
                     outputDiv.appendChild(newImg);
 
                     const downloadLink = document.createElement('a');

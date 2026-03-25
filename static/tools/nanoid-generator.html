@@ -8,86 +8,113 @@
         .generator-options {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
-            align-items: center;
+            gap: 16px;
+            align-items: flex-end;
         }
         .option-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
         .option-group label {
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.2px;
         }
-        .option-group input, .option-group select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+        .option-group input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.95em;
+            box-sizing: border-box;
+            background-color: var(--surface);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            transition: all var(--transition-fast);
+        }
+        .option-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         .generated-ids {
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
         .id-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 8px;
-            font-family: monospace;
-            font-size: 16px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 12px 14px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.95em;
+            transition: all var(--transition-fast);
+        }
+        .id-item:hover {
+            border-color: var(--primary);
+            background: var(--surface);
         }
         .id-value {
             flex: 1;
             word-break: break-all;
             margin-right: 10px;
+            color: var(--text-primary);
         }
         .copy-icon {
             cursor: pointer;
             width: 20px;
             height: 20px;
-            fill: #888;
+            fill: var(--text-muted);
             flex-shrink: 0;
+            transition: fill var(--transition-fast);
         }
         .copy-icon:hover {
-            fill: #000;
+            fill: var(--primary);
         }
         .alphabet-preset {
-            margin-top: 10px;
+            margin-top: 4px;
         }
         .preset-buttons {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-top: 5px;
+            margin-top: 6px;
         }
         .preset-btn {
-            padding: 4px 8px;
-            background: #e9ecef;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+            padding: 5px 10px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
             cursor: pointer;
-            font-size: 12px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            transition: all var(--transition-fast);
         }
         .preset-btn:hover {
-            background: #dee2e6;
+            background: var(--surface);
+            border-color: var(--primary);
+            color: var(--primary);
         }
         .preset-btn.active {
-            background: #007bff;
+            background: var(--primary);
             color: white;
-            border-color: #007bff;
+            border-color: var(--primary);
         }
         .stats {
-            margin-top: 15px;
-            padding: 10px;
-            background: #e7f3ff;
-            border-radius: 4px;
-            font-size: 14px;
+            padding: 12px 14px;
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            line-height: 1.8;
         }
     </style>
     <script src="https://unpkg.com/nanoid@4/nanoid.js"></script>
@@ -210,7 +237,7 @@
                 
                 showStats(ids, length, customAlphabet);
             } catch (error) {
-                generatedIdsDiv.innerHTML = `<div class="id-item" style="background: #f8d7da; border-color: #f5c6cb; color: #721c24;">错误: ${error.message}</div>`;
+                generatedIdsDiv.innerHTML = `<div class="tool-error">错误: ${error.message}</div>`;
                 statsDiv.style.display = 'none';
             }
         }

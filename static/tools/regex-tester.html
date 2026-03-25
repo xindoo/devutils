@@ -50,7 +50,13 @@
         .tool-error-inline {
             color: #EF4444;
             font-size: 0.9em;
-            margin-top: 5px;
+            margin-top: 4px;
+            min-height: 1em;
+        }
+        .match-count {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 4px;
         }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
@@ -61,18 +67,16 @@
             <h1>正则表达式测试器</h1>
             <p>在线测试和调试你的正则表达式,匹配结果将实时高亮显示。</p>
         </div>
-        <div class="tool-content">
-            <div class="tool-section">
-                <label class="tool-label" for="regex-input">正则表达式</label>
-                <input type="text" id="regex-input" class="tool-input" placeholder="输入你的正则表达式">
-                <div id="regex-error" class="tool-error-inline"></div>
-            </div>
-            <div class="tool-section">
-                <label class="tool-label" for="test-string-input">测试字符串</label>
-                <div class="editor-container">
-                    <textarea id="test-string-input" spellcheck="false" placeholder="在此输入用于测试的字符串..."></textarea>
-                    <div id="highlight-output"></div>
-                </div>
+        <div class="tool-section">
+            <label class="tool-label" for="regex-input">正则表达式</label>
+            <input type="text" id="regex-input" class="tool-input" placeholder="输入你的正则表达式">
+            <div id="regex-error" class="tool-error-inline"></div>
+        </div>
+        <div class="tool-section">
+            <label class="tool-label" for="test-string-input">测试字符串</label>
+            <div class="editor-container">
+                <textarea id="test-string-input" spellcheck="false" placeholder="在此输入用于测试的字符串..."></textarea>
+                <div id="highlight-output"></div>
             </div>
         </div>
     </div>

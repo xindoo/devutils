@@ -8,39 +8,55 @@
         .hash-options {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 12px;
         }
         .hash-options label {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             cursor: pointer;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        .hash-options label:hover {
+            color: var(--text-primary);
         }
         #results-table {
             border-collapse: collapse;
             width: 100%;
-            margin-top: 15px;
+            margin-top: 8px;
         }
         #results-table th, #results-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
+            border: 1px solid var(--border);
+            padding: 10px 12px;
             text-align: left;
-            font-family: monospace;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.9em;
             word-break: break-all;
+            color: var(--text-primary);
         }
         #results-table th {
-            background-color: #f8f9fa;
+            background-color: var(--surface-hover);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-       .copy-icon {
-           cursor: pointer;
-           width: 20px;
-           height: 20px;
-           fill: #888;
-       }
-       .copy-icon:hover {
-           fill: #000;
-       }
+        #results-table tbody tr:hover {
+            background-color: var(--surface-hover);
+        }
+        .copy-icon {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+            transition: fill var(--transition-fast);
+        }
+        .copy-icon:hover {
+            fill: var(--primary);
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="../js/tool-theme-helper.js"></script>

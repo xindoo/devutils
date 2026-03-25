@@ -6,20 +6,21 @@
     <link rel="stylesheet" href="../css/style.css">
     <style>
         .preview-container {
-            margin-top: 15px;
+            flex: 1;
         }
         .preview-container img {
             max-width: 100%;
             height: auto;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border);
             margin-top: 10px;
             display: block;
-            background-color: #f8f9fa;
+            background-color: var(--surface-hover);
+            border-radius: var(--border-radius-sm);
         }
-        .info {
-            font-size: 0.9em;
-            color: #555;
-            margin-top: 5px;
+        .preview-row {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
         }
         #download-link {
             display: none;
@@ -67,16 +68,16 @@
             <button onclick="compressImage()" class="tool-button">压缩图片</button>
         </div>
 
-        <div class="tool-section" style="display: flex; flex-direction: row; gap: 20px;">
-            <div class="preview-container" style="flex: 1;">
+        <div class="tool-section preview-row">
+            <div class="preview-container">
                 <label class="tool-label">原图预览:</label>
                 <img id="original-preview" src="" alt="原图">
-                <div id="original-info" class="info"></div>
+                <div id="original-info" class="tool-help"></div>
             </div>
-            <div class="preview-container" style="flex: 1;">
+            <div class="preview-container">
                 <label class="tool-label">压缩后预览:</label>
                 <img id="compressed-preview" src="" alt="压缩后图片">
-                <div id="compressed-info" class="info"></div>
+                <div id="compressed-info" class="tool-help"></div>
                 <a id="download-link" class="tool-button" download="compressed_image.jpg">下载压缩图片</a>
             </div>
         </div>

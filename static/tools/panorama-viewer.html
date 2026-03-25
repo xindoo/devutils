@@ -22,8 +22,8 @@
         }
         .tool-header {
             padding: 8px 16px !important;
-            background: var(--bg-color, #fff);
-            border-bottom: 1px solid var(--border-color, #e0e0e0);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
             display: flex;
             justify-content: space-between;
@@ -43,9 +43,10 @@
         .tool-section input[type="file"] {
             font-size: 12px !important;
             padding: 4px 8px;
-            border: 1px solid var(--border-color, #e0e0e0);
-            border-radius: 4px;
-            background: var(--bg-color, #fff);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface);
+            color: var(--text-primary);
             cursor: pointer;
         }
         #panorama {

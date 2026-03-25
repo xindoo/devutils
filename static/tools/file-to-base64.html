@@ -20,7 +20,7 @@
         </div>
 
         <div class="tool-section" id="file-info-section" style="display: none;">
-            <h3>文件信息</h3>
+            <label class="tool-label">文件信息</label>
             <div id="file-info" class="tool-result">
                 <!-- File info will be displayed here -->
             </div>
@@ -187,7 +187,7 @@
             // Show temporary success message
             const originalText = copyButton.textContent;
             copyButton.textContent = '已复制!';
-            copyButton.style.backgroundColor = '#28a745';
+            copyButton.style.backgroundColor = '#10B981';
             
             setTimeout(() => {
                 copyButton.textContent = originalText;

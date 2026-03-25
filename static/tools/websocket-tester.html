@@ -9,14 +9,12 @@
         #log {
             height: 300px;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            overflow-y: scroll;
-            background: var(--surface);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            border-radius: var(--border-radius-sm);
+            padding: 14px;
+            overflow-y: auto;
+            background: var(--surface-hover);
             white-space: pre-wrap;
-            font-family: 'Monaco', 'Courier New', monospace;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
             font-size: 0.9em;
             line-height: 1.6;
         }
@@ -94,9 +92,11 @@
             <button id="disconnectBtn" class="tool-button" disabled>断开</button>
         </div>
 
-        <div class="tool-io-section">
+        <div class="tool-section">
             <label for="message" class="tool-label">消息:</label>
             <textarea id="message" class="tool-textarea" placeholder="输入要发送的消息..."></textarea>
+        </div>
+        <div class="tool-controls">
             <button id="sendBtn" class="tool-button" disabled>发送</button>
         </div>
 

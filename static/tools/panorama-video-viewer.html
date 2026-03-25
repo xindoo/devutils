@@ -38,8 +38,8 @@
             margin: 0 !important;
             padding: 8px 16px !important;
             text-align: left !important;
-            background: var(--bg-color, #fff) !important;
-            border-bottom: 1px solid var(--border, rgba(148, 163, 184, 0.3)) !important;
+            background: var(--surface) !important;
+            border-bottom: 1px solid var(--border) !important;
             flex-shrink: 0;
         }
         /* 禁用全局 tool-header 的装饰下划线 */
@@ -54,14 +54,14 @@
         .tool-header p {
             margin: 0 !important;
             font-size: 12px !important;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         .tool-section {
             margin: 0 !important;
             padding: 8px 16px !important;
-            background: var(--bg-color, #fff) !important;
-            border-bottom: 1px solid var(--border, rgba(148, 163, 184, 0.3)) !important;
+            background: var(--surface) !important;
+            border-bottom: 1px solid var(--border) !important;
             flex-shrink: 0;
         }
         .tool-section label {
@@ -71,25 +71,11 @@
             display: flex;
             gap: 8px;
         }
-        .tool-inline-controls input {
-            flex: 1;
-            padding: 6px 12px;
-            border: 1px solid var(--border-color, #e0e0e0);
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        .tool-inline-controls button {
-            padding: 6px 16px;
-            background: var(--primary-color, #007bff);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-        .tool-inline-controls button:hover {
-            opacity: 0.9;
+        .panorama-placeholder {
+            text-align: center;
+            padding-top: 40px;
+            color: var(--text-muted);
+            font-size: 14px;
         }
         #panorama {
             flex: 1;
@@ -142,13 +128,13 @@
         </div>
         <div class="tool-section">
             <div class="tool-inline-controls">
-                <input type="text" id="videoUrlInput" placeholder="输入视频 URL (.mp4 或 .m3u8)">
-                <button id="loadVideoButton">加载</button>
+                <input type="text" id="videoUrlInput" class="tool-input" placeholder="输入视频 URL (.mp4 或 .m3u8)">
+                <button id="loadVideoButton" class="tool-button">加载</button>
             </div>
         </div>
 
         <div id="panorama">
-            <p style="text-align:center; padding-top: 40px; color: #888; font-size: 14px;">输入视频 URL 并点击加载</p>
+            <p class="panorama-placeholder">输入视频 URL 并点击加载</p>
         </div>
     </div>
 

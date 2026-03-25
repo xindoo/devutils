@@ -6,13 +6,16 @@
     <title>视频压缩与编码转换</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        progress {
+        #progress-bar {
             width: 100%;
             margin-top: 10px;
+            height: 8px;
+            border-radius: var(--border-radius-sm);
+            accent-color: var(--primary);
         }
         #download-link {
             display: none;
-            margin-top: 10px;
+            margin-top: 12px;
         }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
@@ -51,7 +54,7 @@
             <label class="tool-label">输出:</label>
             <p id="status-message"></p>
             <progress id="progress-bar" value="0" max="100"></progress>
-            <a id="download-link" class="tool-button" style="display: none;">下载处理后的视频</a>
+            <a id="download-link" class="tool-button">下载处理后的视频</a>
         </div>
     </div>
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>

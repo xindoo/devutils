@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Counter</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .stat-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9em;
+        }
+        .stat-chip-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .stat-chip-value {
+            color: var(--primary);
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
     <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>
@@ -13,16 +39,24 @@
             <h1>字符/单词/行数统计</h1>
             <p>实时统计文本的字符数、单词数和行数。</p>
         </div>
-        <div class="tool-content">
-            <div class="tool-section">
-                <textarea id="text-input" class="tool-textarea" placeholder="在此输入文本..." style="min-height: 150px;"></textarea>
-            </div>
-            <div class="tool-section">
-                <p id="stats-bar">
-                    字符: <span id="char-count">0</span> |
-                    单词: <span id="word-count">0</span> |
-                    行数: <span id="line-count">0</span>
-                </p>
+        <div class="tool-section">
+            <label class="tool-label" for="text-input">输入文本:</label>
+            <textarea id="text-input" class="tool-textarea" placeholder="在此输入文本..." style="min-height: 200px;"></textarea>
+        </div>
+        <div class="tool-result">
+            <div class="stats-bar">
+                <div class="stat-chip">
+                    <span class="stat-chip-label">字符 / Characters</span>
+                    <span class="stat-chip-value" id="char-count">0</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="stat-chip-label">单词 / Words</span>
+                    <span class="stat-chip-value" id="word-count">0</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="stat-chip-label">行数 / Lines</span>
+                    <span class="stat-chip-value" id="line-count">0</span>
+                </div>
             </div>
         </div>
     </div>

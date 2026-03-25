@@ -8,19 +8,134 @@
     <style>
         .markdown-container {
             display: flex;
-            gap: 20px;
-            height: 100%;
-        }
-        .markdown-editor, .markdown-preview {
-            width: 50%;
-            height: 100%;
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            overflow-y: auto;
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
         }
         .markdown-editor {
+            width: 50%;
             resize: none;
+            flex-shrink: 0;
+        }
+        .markdown-preview {
+            width: 50%;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 16px 20px;
+            overflow-y: auto;
+            background-color: var(--surface);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            box-sizing: border-box;
+        }
+        .markdown-preview h1, .markdown-preview h2, .markdown-preview h3,
+        .markdown-preview h4, .markdown-preview h5, .markdown-preview h6 {
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-weight: 700;
+        }
+        .markdown-preview p { margin: 0.6em 0; }
+        .markdown-preview code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--surface-hover);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--primary);
+        }
+        .markdown-preview pre {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 14px;
+            overflow-x: auto;
+        }
+        .markdown-preview pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-primary);
+        }
+        .markdown-preview blockquote {
+            border-left: 4px solid var(--primary);
+            margin: 0.8em 0;
+            padding: 4px 14px;
+            color: var(--text-secondary);
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+        }
+        .markdown-preview a { color: var(--primary); }
+        .markdown-preview hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.2em 0;
+        }
+        .markdown-preview table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.8em 0;
+        }
+        .markdown-preview th, .markdown-preview td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .markdown-preview th {
+            background: var(--surface-hover);
+            font-weight: 600;
+        }
+        .markdown-preview ul, .markdown-preview ol {
+            padding-left: 1.5em;
+            margin: 0.5em 0;
+        }
+        .panel-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .panel-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            min-height: 0;
+        }
+        .panel-wrapper .tool-textarea {
+            flex: 1;
+            resize: none;
+            min-height: 0;
+        }
+        .preview-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            min-height: 0;
+        }
+        .preview-wrapper .markdown-preview {
+            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Full-height layout overrides */
+        .tool-container.full-height-tool {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: none;
+            height: 100vh;
+            margin: 0;
+            padding: 15px;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            box-sizing: border-box;
+            min-height: unset;
         }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
@@ -29,11 +144,17 @@
     <div class="tool-container full-height-tool">
         <div class="tool-header">
             <h1>Markdown 实时预览</h1>
-            <p>在左侧输入 Markdown,在右侧查看实时渲染效果。</p>
+            <p>在左侧输入 Markdown，在右侧查看实时渲染效果。</p>
         </div>
-        <div class="tool-content markdown-container">
-            <textarea id="markdown-input" class="tool-textarea markdown-editor" placeholder="在此输入 Markdown..."></textarea>
-            <div id="markdown-output" class="markdown-preview"></div>
+        <div class="markdown-container">
+            <div class="panel-wrapper">
+                <span class="panel-label">编辑器 / Editor</span>
+                <textarea id="markdown-input" class="tool-textarea" placeholder="在此输入 Markdown..."></textarea>
+            </div>
+            <div class="preview-wrapper">
+                <span class="panel-label">预览 / Preview</span>
+                <div id="markdown-output" class="markdown-preview"></div>
+            </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
