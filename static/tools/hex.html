@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hex 编解码</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
@@ -15,16 +16,17 @@
             cursor: pointer;
             width: 28px;
             height: 28px;
-            fill: #3B82F6;
+            fill: var(--primary);
             z-index: 10;
             padding: 6px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
+            background: var(--surface);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--border);
             transition: all 150ms ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px var(--shadow-color);
         }
         .copy-icon:hover {
-            fill: #2563EB;
+            fill: var(--primary-dark);
             transform: scale(1.1);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
@@ -37,30 +39,31 @@
             <h1>Hex 编解码</h1>
             <p>在文本和十六进制编码之间进行转换。</p>
         </div>
-        <div class="tool-content">
-            <div class="tool-section">
-                <label class="tool-label" for="input-text">输入文本</label>
-                <div class="editor-container">
-                    <textarea id="input-text" class="tool-textarea" placeholder="输入要编码或解码的文本..."></textarea>
-                    <svg class="copy-icon" onclick="copyToClipboard('input-text')" viewBox="0 0 24 24">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="tool-controls">
-                <button class="tool-button" onclick="encodeHex()">编码</button>
-                <button class="tool-button" onclick="decodeHex()">解码</button>
-            </div>
-            <div class="tool-section">
-                <label class="tool-label" for="output-text">输出结果</label>
-                <div class="editor-container">
-                    <textarea id="output-text" class="tool-textarea" readonly placeholder="编码或解码的结果将显示在这里..."></textarea>
-                    <svg class="copy-icon" onclick="copyToClipboard('output-text')" viewBox="0 0 24 24">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                </div>
+        <div class="tool-section">
+            <label class="tool-label" for="input-text">输入文本</label>
+            <div class="editor-container">
+                <textarea id="input-text" class="tool-textarea" placeholder="输入要编码或解码的文本..."></textarea>
+                <svg class="copy-icon" onclick="copyToClipboard('input-text')" viewBox="0 0 24 24">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
             </div>
         </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" onclick="encodeHex()">编码</button>
+            <button class="tool-button" onclick="decodeHex()">解码</button>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label" for="output-text">输出结果</label>
+            <div class="editor-container">
+                <textarea id="output-text" class="tool-textarea" readonly placeholder="编码或解码的结果将显示在这里..."></textarea>
+                <svg class="copy-icon" onclick="copyToClipboard('output-text')" viewBox="0 0 24 24">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
+            </div>
+        </div>
+
         <div id="error-output" class="tool-error"></div>
     </div>
 
