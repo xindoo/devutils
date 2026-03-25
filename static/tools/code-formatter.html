@@ -9,22 +9,15 @@
     <style>
         .CodeMirror {
             border: 1px solid var(--border);
-            border-radius: 12px;
-            height: calc(100vh - 280px);
+            border-radius: var(--border-radius);
             font-size: 14px;
             flex-grow: 1;
             background: var(--surface);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
         }
 
         .CodeMirror-gutters {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--surface-hover);
             border-right: 1px solid var(--border);
-        }
-
-        [data-theme="dark"] .CodeMirror-gutters {
-            background: rgba(30, 41, 59, 0.5);
         }
 
         .tool-io-section {

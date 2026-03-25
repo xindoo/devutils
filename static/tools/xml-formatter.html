@@ -8,18 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
     <style>
         .CodeMirror {
-            border: 1px solid rgba(148, 163, 184, 0.3);
+            border: 1px solid var(--border);
             font-size: 14px;
             flex-grow: 1;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            border-radius: var(--border-radius);
+            background: var(--surface);
         }
 
         .CodeMirror-gutters {
-            background: rgba(255, 255, 255, 0.3);
-            border-right: 1px solid rgba(148, 163, 184, 0.2);
+            background: var(--surface-hover);
+            border-right: 1px solid var(--border);
         }
 
         .editor-container {
@@ -36,17 +34,17 @@
             cursor: pointer;
             width: 28px;
             height: 28px;
-            fill: #3B82F6;
+            fill: var(--primary);
             z-index: 10;
             padding: 6px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            transition: all 150ms ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: var(--surface-hover);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+            box-shadow: 0 2px 8px var(--shadow-color);
         }
 
         .copy-icon:hover {
-            fill: #2563EB;
+            fill: var(--primary-dark);
             transform: scale(1.1);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
