@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(json.dumps\\([t[''''id''''] for t in data], indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(type\\(data\\)\\); print\\(str\\(data\\)[:500]\\)\")",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); tools=[t for cat in data for t in cat[''''tools'''']]; print\\(''''\\\\n''''.join\\([t[''''filePath''''] for t in tools]\\)\\)\")",
+      "Bash(tmux list-panes:*)",
+      "Bash(tmux list-sessions:*)"
+    ]
+  }
+}
