@@ -18,26 +18,32 @@
         <div class="tool-section">
             <label for="timestampInput" class="tool-label">时间戳 (秒 或 毫秒):</label>
             <input type="number" id="timestampInput" class="tool-input" placeholder="例如: 1678886400 or 1678886400000">
-            <button onclick="convertTimestamp()" class="tool-button">转换为日期字符串</button>
-            <div id="timestampResult" class="tool-result"></div>
-            <div id="timestampError" class="tool-error"></div>
         </div>
+        <div class="tool-controls">
+            <button onclick="convertTimestamp()" class="tool-button">转换为日期字符串</button>
+        </div>
+        <div id="timestampResult" class="tool-result"></div>
+        <div id="timestampError" class="tool-error"></div>
 
         <!-- Date String to Timestamp -->
         <div class="tool-section">
             <label for="dateStringInput" class="tool-label">日期字符串:</label>
             <input type="text" id="dateStringInput" class="tool-input" placeholder="例如: 2023-03-15 12:00:00 或 ISO 8601 格式">
+        </div>
+        <div class="tool-controls">
             <button onclick="convertDateString()" class="tool-button">转换为时间戳</button>
-            <div id="dateStringResult" class="tool-result"></div>
-            <div id="dateStringError" class="tool-error"></div>
         </div>
+        <div id="dateStringResult" class="tool-result"></div>
+        <div id="dateStringError" class="tool-error"></div>
 
-         <!-- Current Timestamp -->
-         <div class="tool-section">
+        <!-- Current Timestamp -->
+        <div class="tool-section">
             <label class="tool-label">当前时间戳:</label>
-            <button onclick="getCurrentTimestamp()" class="tool-button">获取当前时间戳</button>
-            <div id="currentTimestampResult" class="tool-result"></div>
         </div>
+        <div class="tool-controls">
+            <button onclick="getCurrentTimestamp()" class="tool-button">获取当前时间戳</button>
+        </div>
+        <div id="currentTimestampResult" class="tool-result"></div>
     </div>
 
     <script>

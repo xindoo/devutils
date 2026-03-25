@@ -12,15 +12,23 @@
        }
        .copy-icon {
            position: absolute;
-           top: 5px;
-           right: 5px;
+           top: 8px;
+           right: 8px;
            cursor: pointer;
-           width: 24px;
-           height: 24px;
-           fill: #888;
+           width: 28px;
+           height: 28px;
+           fill: var(--primary);
+           padding: 6px;
+           background: var(--surface);
+           border-radius: var(--border-radius-sm);
+           transition: all var(--transition-fast);
+           box-shadow: 0 1px 3px var(--shadow-color);
+           box-sizing: border-box;
        }
        .copy-icon:hover {
-           fill: #000;
+           fill: var(--primary-dark);
+           transform: scale(1.1);
+           box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
        }
    </style>
     <script src="../js/tool-theme-helper.js"></script>
