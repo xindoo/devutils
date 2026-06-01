@@ -383,6 +383,11 @@
         });
     }
 
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
     loadVideoButton.addEventListener('click', function() {
         const url = videoUrlInput.value.trim();
         if (url) {
@@ -395,6 +400,15 @@
     videoUrlInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             loadVideoButton.click();
+        }
+    });
+
+    // 页面加载时检查 URL 参数
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoUrl = getQueryParam('videoUrl');
+        if (videoUrl) {
+            videoUrlInput.value = videoUrl;
+            initializeViewer(videoUrl);
         }
     });
 </script>
