@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePreview() {
         const markdownText = markdownInput.value;
-        markdownOutput.innerHTML = marked.parse(markdownText);
+        markdownOutput.innerHTML = DOMPurify.sanitize(marked.parse(markdownText));
     }
 
     markdownInput.addEventListener('input', updatePreview);

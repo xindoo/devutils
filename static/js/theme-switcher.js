@@ -30,8 +30,11 @@
 
     /**
      * Apply theme to the document
+     * @param {string} theme
+     * @param {boolean} animate - animate the transition
+     * @param {boolean} persist - save to localStorage (only for explicit user choices)
      */
-    function applyTheme(theme, animate = false) {
+    function applyTheme(theme, animate = false, persist = true) {
         const root = document.documentElement;
 
         // Add animation class if requested
@@ -49,8 +52,11 @@
             root.removeAttribute('data-theme');
         }
 
-        // Save to localStorage
-        localStorage.setItem(THEME_KEY, theme);
+        // Save to localStorage only for explicit user choices, so the
+        // "follow system preference" behavior keeps working
+        if (persist) {
+            localStorage.setItem(THEME_KEY, theme);
+        }
 
         // Update toggle button if it exists
         updateToggleButton(theme);
@@ -95,7 +101,7 @@
     function init() {
         // Apply saved theme immediately (before DOM loads)
         const currentTheme = getCurrentTheme();
-        applyTheme(currentTheme, false);
+        applyTheme(currentTheme, false, false);
 
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
@@ -111,7 +117,7 @@
                 const savedTheme = localStorage.getItem(THEME_KEY);
                 if (!savedTheme) {
                     const newTheme = e.matches ? THEME_DARK : THEME_LIGHT;
-                    applyTheme(newTheme, true);
+                    applyTheme(newTheme, true, false);
                 }
             });
         }

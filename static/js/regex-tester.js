@@ -18,9 +18,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const regex = new RegExp(regexValue, 'g');
-            const highlightedString = stringValue.replace(regex, (match) => {
-                return `<span class="highlight">${escapeHtml(match)}</span>`;
-            });
+            // Split the string into matched/unmatched segments and escape every
+            // segment before building HTML, so unescaped input never reaches innerHTML
+            let highlightedString = '';
+            let lastIndex = 0;
+            let match;
+            while ((match = regex.exec(stringValue)) !== null) {
+                highlightedString += escapeHtml(stringValue.slice(lastIndex, match.index));
+                highlightedString += `<span class="highlight">${escapeHtml(match[0])}</span>`;
+                lastIndex = match.index + match[0].length;
+                if (match[0].length === 0) {
+                    regex.lastIndex++; // Avoid infinite loop on zero-length matches
+                }
+            }
+            highlightedString += escapeHtml(stringValue.slice(lastIndex));
             
             highlightOutput.innerHTML = highlightedString;
 
@@ -32,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function escapeHtml(text) {
         return text
-            .replace(/&/g, "&")
-            .replace(/</g, "<")
-            .replace(/>/g, ">")
-            .replace(/"/g, '"')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
 

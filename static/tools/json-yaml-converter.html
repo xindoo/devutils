@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON/YAML 转换</title>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/js-yaml@latest/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
    <style>
        .output-container {
            position: relative;
@@ -126,14 +126,17 @@
             }
         }
 
+        let copyTimer = null;
+        const copyIcon = document.querySelector('.copy-icon');
+        const originalIconHtml = copyIcon.innerHTML;
+
         function copyToClipboard() {
            if (!outputArea.value) return;
            navigator.clipboard.writeText(outputArea.value).then(() => {
-               const icon = document.querySelector('.copy-icon');
-               const originalPath = icon.innerHTML;
-               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
-               setTimeout(() => {
-                   icon.innerHTML = originalPath;
+               clearTimeout(copyTimer);
+               copyIcon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+               copyTimer = setTimeout(() => {
+                   copyIcon.innerHTML = originalIconHtml;
                }, 2000);
            }).catch(err => {
                alert('无法复制到剪贴板: ' + err);

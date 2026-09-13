@@ -93,7 +93,7 @@
                                     displayError(`网络错误: ${data.details}`);
                                     break;
                                 case Hls.ErrorTypes.MEDIA_ERROR:
-                                    displayError(`媒体错误: ${data.details}`);
+                                    // 先尝试恢复媒体错误（displayError 会销毁 hls 实例，导致后续 recoverMediaError 抛 TypeError）
                                     hls.recoverMediaError();
                                     break;
                                 default:
@@ -103,6 +103,13 @@
                                     break;
                             }
                         }
+                    });
+                } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Safari/iOS 不支持 MSE，但可原生播放 HLS
+                    videoPlayer.src = url;
+                    videoPlayer.load();
+                    videoPlayer.play().catch(e => {
+                        displayError("无法播放视频。自动播放可能被阻止。");
                     });
                 } else {
                     displayError("您的浏览器不支持 HLS.js。");

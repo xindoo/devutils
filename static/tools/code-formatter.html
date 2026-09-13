@@ -75,7 +75,8 @@
         <div class="tool-inline-controls">
             <label for="parser-select" class="tool-label">语言/解析器:</label>
             <select id="parser-select" class="tool-select">
-                <option value="babel" selected>Babel (JS/TS/JSON)</option>
+                <option value="babel">Babel (JS/TS)</option>
+                <option value="json" selected>JSON</option>
                 <option value="html">HTML</option>
                 <option value="css">CSS/Less/SCSS</option>
                 <option value="markdown">Markdown</option>
@@ -126,6 +127,7 @@
 
         const parserModeMap = {
             babel: { name: "javascript", json: true },
+            json: { name: "javascript", json: true },
             html: "htmlmixed",
             css: "css",
             markdown: "markdown",
@@ -181,8 +183,19 @@
                 if (selectedParser === 'sql') {
                     formattedCode = sqlFormatter.format(code);
                 } else {
+                    // babel 解析器无法解析 JSON 文档，自动检测后改用 json 解析器
+                    let parser = selectedParser;
+                    const trimmed = code.trim();
+                    if (selectedParser === 'babel' && /^[\[{]/.test(trimmed)) {
+                        try {
+                            JSON.parse(trimmed);
+                            parser = 'json';
+                        } catch (e) {
+                            // 不是合法 JSON，保持 babel
+                        }
+                    }
                     formattedCode = prettier.format(code, {
-                        parser: selectedParser,
+                        parser: parser,
                         plugins: prettierPlugins,
                     });
                 }
@@ -203,15 +216,18 @@
         }
         parserSelect.dispatchEvent(new Event('change'));
 
+        let copyTimer = null;
+        const copyIcon = document.querySelector('.copy-icon');
+        const originalIconHtml = copyIcon.innerHTML;
+
         function copyToClipboard() {
            const content = editor.getValue();
            if (!content) return;
            navigator.clipboard.writeText(content).then(() => {
-               const icon = document.querySelector('.copy-icon');
-               const originalPath = icon.innerHTML;
-               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
-               setTimeout(() => {
-                   icon.innerHTML = originalPath;
+               clearTimeout(copyTimer);
+               copyIcon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+               copyTimer = setTimeout(() => {
+                   copyIcon.innerHTML = originalIconHtml;
                }, 2000);
            }).catch(err => {
                alert('无法复制到剪贴板: ' + err);

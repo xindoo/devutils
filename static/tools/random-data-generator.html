@@ -102,10 +102,16 @@
         const outputArea = document.getElementById('output');
 
         function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
+            // 优先使用密码学安全的 crypto.randomUUID，不可用时回退到 crypto.getRandomValues
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+            bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+            const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+            return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
         }
 
         function generateInteger(min, max) {
@@ -154,7 +160,8 @@
 
         function generateData() {
             const type = dataTypeSelect.value;
-            const count = parseInt(countInput.value) || 1;
+            // 钳制数量，避免负数（静默空输出）或超大值（冻结页面）
+            const count = Math.min(1000, Math.max(1, parseInt(countInput.value) || 1));
             let results = [];
 
             for (let i = 0; i < count; i++) {
@@ -195,14 +202,20 @@
             outputArea.value = results.join('\n');
         }
 
-         function copyToClipboard() {
+       // 复制图标状态与定时器：缓存原始图标，重复复制时先清除上一个定时器，避免卡在对勾状态
+       const COPY_ICON_PATH = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>';
+       const CHECK_ICON_PATH = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>';
+       let copyIconTimer = null;
+
+       function copyToClipboard() {
            if (!outputArea.value) return;
            navigator.clipboard.writeText(outputArea.value).then(() => {
                const icon = document.querySelector('.copy-icon');
-               const originalPath = icon.innerHTML;
-               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
-               setTimeout(() => {
-                   icon.innerHTML = originalPath;
+               if (copyIconTimer) clearTimeout(copyIconTimer);
+               icon.innerHTML = CHECK_ICON_PATH;
+               copyIconTimer = setTimeout(() => {
+                   icon.innerHTML = COPY_ICON_PATH;
+                   copyIconTimer = null;
                }, 2000);
            }).catch(err => {
                alert('无法复制到剪贴板: ' + err);

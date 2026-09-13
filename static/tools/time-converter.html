@@ -64,14 +64,17 @@
                 return;
             }
 
-            const timestamp = parseInt(timestampInput, 10);
-            if (isNaN(timestamp)) {
+            const timestamp = Number(timestampInput);
+            if (!isFinite(timestamp)) {
                 errorDiv.textContent = '无效的时间戳格式。';
                 return;
             }
 
-            // Determine if it's seconds or milliseconds (simple heuristic)
-            const date = new Date(timestamp * (timestampInput.length <= 10 ? 1000 : 1));
+            // 按数值阈值判断秒/毫秒：绝对值 >= 1e11（12 位）视为毫秒（覆盖 1973~2001 年的
+            // 12 位毫秒时间戳如 999999999999），否则视为秒（覆盖常规 10 位秒级时间戳）。
+            // 注意不能用 1e12 作为阈值，否则 999999999999 仍会被误乘 1000 得到 3 万年后日期
+            const ms = Math.abs(timestamp) >= 1e11 ? timestamp : timestamp * 1000;
+            const date = new Date(ms);
 
             if (isNaN(date.getTime())) {
                  errorDiv.textContent = '无法解析时间戳。';

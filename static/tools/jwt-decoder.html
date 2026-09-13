@@ -169,6 +169,8 @@
                 payloadEditor.setValue(JSON.stringify(payload, null, 4));
                 decodedOutput.style.display = 'block';
             } catch (e) {
+                // 隐藏旧结果，避免错误提示与上一次的解码结果并存造成误导
+                decodedOutput.style.display = 'none';
                 displayError('解码失败: ' + e.message);
             }
         }

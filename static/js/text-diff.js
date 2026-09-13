@@ -96,7 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let node;
         while (node = walker.nextNode()) {
             if (node.nodeType === Node.TEXT_NODE) {
-                text += node.textContent;
+                // Skip zero-width spaces (used to keep empty editable divs focusable)
+                text += node.textContent.replace(/\u200B/g, '');
             } else if (node.nodeName === 'BR') {
                 text += '\n';
             } else if (node.nodeName === 'DIV' && node !== element) {

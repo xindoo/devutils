@@ -84,11 +84,20 @@
 
         function displayFileInfo(file) {
             const fileSizeKB = (file.size / 1024).toFixed(2);
-            fileInfo.innerHTML = `
-                <strong>文件名:</strong> ${file.name}<br>
-                <strong>文件大小:</strong> ${fileSizeKB} KB<br>
-                <strong>文件类型:</strong> ${file.type || '未知'}
-            `;
+            // 用 textContent 构建，避免文件名/类型中的 HTML 字符被注入
+            fileInfo.textContent = '';
+            const rows = [
+                ['文件名:', file.name],
+                ['文件大小:', fileSizeKB + ' KB'],
+                ['文件类型:', file.type || '未知']
+            ];
+            rows.forEach(([label, value]) => {
+                const strong = document.createElement('strong');
+                strong.textContent = label;
+                fileInfo.appendChild(strong);
+                fileInfo.appendChild(document.createTextNode(value));
+                fileInfo.appendChild(document.createElement('br'));
+            });
             fileInfoSection.style.display = 'block';
             optionsSection.style.display = 'block';
         }

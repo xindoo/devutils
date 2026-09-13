@@ -95,11 +95,21 @@
         function loadAudio(customUrl) {
             // 优先使用传入的 customUrl，否则使用输入框的值
             const url = customUrl || inputField.value.trim();
-            
+
             if (!url) {
                 alert("请输入音频 URL");
                 return;
             }
+
+            // 基本校验：避免对打字中途的不完整 URL 发起加载
+            try {
+                new URL(url);
+            } catch (e) {
+                return;
+            }
+
+            // 复位之前的错误状态颜色
+            statusText.style.color = "";
 
             // 确保输入框显示当前加载的 URL
             inputField.value = url;

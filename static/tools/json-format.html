@@ -128,9 +128,8 @@
             clearError();
             try {
                 const input = editor.getValue();
-                editor.setValue(input
-                    .replace(/\\/g, '\\\\')
-                    .replace(/"/g, '\\"'));
+                // JSON.stringify 生成合法 JSON 字符串主体，正确转义 \、"、换行等控制字符
+                editor.setValue(JSON.stringify(input).slice(1, -1));
             } catch (e) {
                  displayError('转义错误: ' + e.message);
             }
@@ -140,23 +139,25 @@
             clearError();
             try {
                 const input = editor.getValue();
-                 editor.setValue(input
-                    .replace(/\\"/g, '"')
-                    .replace(/\\\\/g, '\\'));
+                // 单趟反转义，按从左到右顺序处理 \\ 与 \" 等转义序列
+                editor.setValue(input.replace(/\\(\\|"|\/|b|f|n|r|t|u[0-9a-fA-F]{4})/g, m => JSON.parse('"' + m + '"')));
             } catch (e) {
                  displayError('去转义错误: ' + e.message);
             }
         }
 
+        let copyTimer = null;
+        const copyIcon = document.querySelector('.copy-icon');
+        const originalIconHtml = copyIcon.innerHTML;
+
         function copyToClipboard() {
            const content = editor.getValue();
            if (!content) return;
            navigator.clipboard.writeText(content).then(() => {
-               const icon = document.querySelector('.copy-icon');
-               const originalPath = icon.innerHTML;
-               icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
-               setTimeout(() => {
-                   icon.innerHTML = originalPath;
+               clearTimeout(copyTimer);
+               copyIcon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+               copyTimer = setTimeout(() => {
+                   copyIcon.innerHTML = originalIconHtml;
                }, 2000);
            }).catch(err => {
                alert('无法复制到剪贴板: ' + err);

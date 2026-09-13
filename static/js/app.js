@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBox = document.getElementById('search-box');
 
     console.log('Fetching tools...'); // Log start
-    fetch('/tools.json') // Fetch the tool list from the root
+    fetch('tools.json') // Fetch relative to index.html (works under GitHub Pages subpath)
         .then(response => {
             console.log('Fetch response received:', response.status); // Log status
             if (!response.ok) {

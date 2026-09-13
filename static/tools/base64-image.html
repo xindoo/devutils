@@ -67,23 +67,28 @@
                 return;
             }
 
-            if (!/^[A-Za-z0-9+/=]+$/.test(base64String.replace(/\s/g, ''))) {
+            // 统一去除空白后再校验/嗅探/拼接，避免带换行的 base64 处理不一致
+            const clean = base64String.replace(/\s/g, '');
+
+            // 完整 data URI 含 : ; , 字符，无法通过纯 Base64 校验，需先单独处理
+            if (clean.startsWith('data:image')) {
+                imageOutput.src = clean;
+                return;
+            }
+
+            if (!/^[A-Za-z0-9+/=]+$/.test(clean)) {
                  displayError('输入内容似乎不是有效的 Base64 编码。');
                  return;
             }
 
             let mimeType = 'image/png';
-            if (base64String.startsWith('/9j/')) mimeType = 'image/jpeg';
-            else if (base64String.startsWith('iVBORw0KGgo')) mimeType = 'image/png';
-            else if (base64String.startsWith('R0lGODlh')) mimeType = 'image/gif';
-            else if (base64String.startsWith('PHN2Zy')) mimeType = 'image/svg+xml';
-            else if (base64String.startsWith('data:image')) {
-                 imageOutput.src = base64String;
-                 return;
-            }
+            if (clean.startsWith('/9j/')) mimeType = 'image/jpeg';
+            else if (clean.startsWith('iVBORw0KGgo')) mimeType = 'image/png';
+            else if (clean.startsWith('R0lGODlh')) mimeType = 'image/gif';
+            else if (clean.startsWith('PHN2Zy')) mimeType = 'image/svg+xml';
 
             try {
-                imageOutput.src = `data:${mimeType};base64,${base64String}`;
+                imageOutput.src = `data:${mimeType};base64,${clean}`;
                 imageOutput.onerror = () => {
                     displayError('无法加载图片，请检查 Base64 数据和格式。');
                 };

@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const charCount = document.getElementById('char-count');
     const wordCount = document.getElementById('word-count');
     const lineCount = document.getElementById('line-count');
-    const statsBar = document.getElementById('stats-bar');
-    const toolContent = textInput.closest('.tool-content');
+    const statsBar = document.querySelector('.stats-bar');
+    const toolContent = textInput.closest('.tool-container');
 
     function updateCounts() {
         const text = textInput.value;

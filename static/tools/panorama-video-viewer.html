@@ -144,6 +144,7 @@
     const panoramaDiv = document.getElementById('panorama');
 
     let scene, camera, renderer, sphere, videoElement, hlsInstance;
+    let rafId = null; // 当前渲染循环的 RAF 句柄，避免重复启动多个循环
     let isUserInteracting = false;
     let lon = 0, lat = 0;
     let onPointerDownPointerX = 0, onPointerDownPointerY = 0;
@@ -186,6 +187,7 @@
         renderer.domElement.addEventListener('pointerup', onPointerUp);
         renderer.domElement.addEventListener('wheel', onWheel);
 
+        window.removeEventListener('resize', onWindowResize);
         window.addEventListener('resize', onWindowResize);
     }
 
@@ -222,7 +224,7 @@
     }
 
     function animate() {
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
         update();
     }
 
@@ -241,7 +243,25 @@
 
     function initializeViewer(videoUrl) {
         // 清理旧内容
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+        if (sphere) {
+            // 释放旧场景资源，避免 GPU 显存泄漏
+            if (sphere.geometry) sphere.geometry.dispose();
+            if (sphere.material) {
+                if (sphere.material.map) sphere.material.map.dispose();
+                sphere.material.dispose();
+            }
+            sphere = null;
+        }
         if (renderer) {
+            window.removeEventListener('resize', onWindowResize);
+            renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+            renderer.domElement.removeEventListener('pointermove', onPointerMove);
+            renderer.domElement.removeEventListener('pointerup', onPointerUp);
+            renderer.domElement.removeEventListener('wheel', onWheel);
             panoramaDiv.removeChild(renderer.domElement);
             renderer.dispose();
         }
@@ -251,6 +271,8 @@
         }
         if (videoElement) {
             videoElement.pause();
+            videoElement.removeAttribute('src');
+            videoElement.load(); // 停止旧视频的下载
             videoElement = null;
         }
         panoramaDiv.innerHTML = '';

@@ -259,7 +259,7 @@
                 return;
             }
 
-            const size = parseInt(document.getElementById('qr-size').value);
+            const size = Math.min(512, Math.max(128, parseInt(document.getElementById('qr-size').value) || 256));
             const colorDark = document.getElementById('qr-color-dark').value;
             const colorLight = document.getElementById('qr-color-light').value;
             const errorLevel = document.getElementById('qr-error-level').value;
@@ -287,7 +287,10 @@
 
                 document.getElementById('download-btn').style.display = 'inline-block';
             } catch (error) {
-                previewDiv.innerHTML = '<span style="color: #EF4444;">生成失败: ' + error.message + '</span>';
+                const errorSpan = document.createElement('span');
+                errorSpan.style.color = '#EF4444';
+                errorSpan.textContent = '生成失败: ' + error.message;
+                previewDiv.appendChild(errorSpan);
             }
         }
 

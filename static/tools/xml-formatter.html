@@ -103,15 +103,22 @@
             try {
                 const input = editor.getValue().trim();
                 if (!input) return;
-                
+
+                // 先提取 CDATA 段，避免其中的 ">" 被拆分破坏
+                const cdataBlocks = [];
+                const withoutCdata = input.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, (m) => {
+                    cdataBlocks.push(m);
+                    return `\u0000${cdataBlocks.length - 1}\u0000`;
+                });
+
                 let result = '';
                 let indent = '';
                 const tab = '    ';
-                
-                // Split tags
-                const tokens = input.split(/(<[^>]+>)/g).filter(token => token.trim() !== '');
-                
-                tokens.forEach((token, index) => {
+
+                // Split tags，容忍引号内出现的 ">"
+                const tokens = withoutCdata.split(/(<!--[\s\S]*?-->|<(?:[^>"']|"[^"]*"|'[^']*')*>)/g).filter(token => token.trim() !== '');
+
+                tokens.forEach((token) => {
                     if (token.startsWith('</')) {
                         indent = indent.slice(tab.length);
                         result += indent + token.trim() + '\n';
@@ -127,7 +134,10 @@
                         }
                     }
                 });
-                
+
+                // 恢复 CDATA 段
+                result = result.replace(/\u0000(\d+)\u0000/g, (_, i) => cdataBlocks[Number(i)]);
+
                 editor.setValue(result.trim());
             } catch (e) {
                 displayError('格式化错误: ' + e.message);
@@ -139,29 +149,40 @@
             try {
                 const input = editor.getValue().trim();
                 if (!input) return;
-                
+
+                // 先提取 CDATA 段，避免其中的空白被折叠
+                const cdataBlocks = [];
+                let work = input.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, (m) => {
+                    cdataBlocks.push(m);
+                    return `\u0000${cdataBlocks.length - 1}\u0000`;
+                });
+
                 // Remove whitespace between tags
-                let result = input.replace(/>\s+</g, '><');
-                // Remove leading/trailing whitespace
-                result = result.trim();
+                work = work.replace(/>\s+</g, '><').trim();
                 // Remove unnecessary spaces within tags
-                result = result.replace(/\s+/g, ' ').replace(/>\s</g, '><');
-                
-                editor.setValue(result);
+                work = work.replace(/\s+/g, ' ').replace(/>\s</g, '><');
+
+                // 恢复 CDATA 段
+                work = work.replace(/\u0000(\d+)\u0000/g, (_, i) => cdataBlocks[Number(i)]);
+
+                editor.setValue(work);
             } catch (e) {
                 displayError('压缩错误: ' + e.message);
             }
         }
 
+        let copyTimer = null;
+        const copyIcon = document.querySelector('.copy-icon');
+        const originalIconHtml = copyIcon.innerHTML;
+
         function copyToClipboard() {
             const content = editor.getValue();
             if (!content) return;
             navigator.clipboard.writeText(content).then(() => {
-                const icon = document.querySelector('.copy-icon');
-                const originalPath = icon.innerHTML;
-                icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
-                setTimeout(() => {
-                    icon.innerHTML = originalPath;
+                clearTimeout(copyTimer);
+                copyIcon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+                copyTimer = setTimeout(() => {
+                    copyIcon.innerHTML = originalIconHtml;
                 }, 2000);
             }).catch(err => {
                 alert('无法复制到剪贴板: ' + err);

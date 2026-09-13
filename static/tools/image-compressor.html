@@ -131,8 +131,9 @@
             }
 
             const quality = parseFloat(qualitySlider.value);
-            const maxWidth = parseInt(maxWidthInput.value) || Infinity;
-            const maxHeight = parseInt(maxHeightInput.value) || Infinity;
+            // 最大宽/高必须为正数，否则 canvas 负尺寸会抛异常；非法输入回退为不限制
+            const maxWidth = Math.max(1, parseInt(maxWidthInput.value)) || Infinity;
+            const maxHeight = Math.max(1, parseInt(maxHeightInput.value)) || Infinity;
             const outputFormat = outputFormatSelect.value;
 
             const reader = new FileReader();

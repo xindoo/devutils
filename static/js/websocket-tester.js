@@ -28,8 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     connectBtn.addEventListener('click', () => {
+        // Disable immediately to prevent repeated clicks while connecting
+        // (a second WebSocket would overwrite the first reference)
+        connectBtn.disabled = true;
+
         const url = wsUrlInput.value.trim();
         if (!url) {
+            connectBtn.disabled = false;
             showError('WebSocket URL cannot be empty.');
             return;
         }
@@ -38,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             websocket = new WebSocket(url);
         } catch (e) {
+            connectBtn.disabled = false;
             showError(`Invalid WebSocket URL: ${e.message}`);
             return;
         }

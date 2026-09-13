@@ -83,12 +83,14 @@
             try {
                 const input = document.getElementById('input-text').value;
                 if (!input) return;
-                
+
+                // 先转 UTF-8 字节，保证中文等多字节字符编解码可逆
+                const bytes = new TextEncoder().encode(input);
                 let result = '';
-                for (let i = 0; i < input.length; i++) {
-                    result += input.charCodeAt(i).toString(16).padStart(2, '0');
+                for (let i = 0; i < bytes.length; i++) {
+                    result += bytes[i].toString(16).padStart(2, '0');
                 }
-                
+
                 document.getElementById('output-text').value = result;
             } catch (e) {
                 displayError('编码错误: ' + e.message);
@@ -107,6 +109,7 @@
                 }
                 
                 let result = '';
+                const bytes = [];
                 for (let i = 0; i < input.length; i += 2) {
                     const hex = input.substr(i, 2);
                     const code = parseInt(hex, 16);
@@ -114,9 +117,11 @@
                         displayError('无效的十六进制字符: ' + hex);
                         return;
                     }
-                    result += String.fromCharCode(code);
+                    bytes.push(code);
                 }
-                
+                // 按 UTF-8 还原，与编码端 TextEncoder 对应
+                result = new TextDecoder().decode(new Uint8Array(bytes));
+
                 document.getElementById('output-text').value = result;
             } catch (e) {
                 displayError('解码错误: ' + e.message);

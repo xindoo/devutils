@@ -62,8 +62,15 @@
             const file = imageInput.files[0];
             const reader = new FileReader();
 
+            reader.onerror = () => {
+                alert('无法加载图片文件。');
+            };
+
             reader.onload = (e) => {
                 const img = new Image();
+                img.onerror = () => {
+                    alert('无法加载图片文件。');
+                };
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width;
@@ -82,6 +89,13 @@
                     const mimeType = `image/${format}`;
                     const dataUrl = canvas.toDataURL(mimeType);
 
+                    // 部分浏览器对不支持的格式（如 bmp/tiff/gif）会静默回退为 PNG，
+                    // 此时下载扩展名也改为 .png，避免内容与扩展名不一致
+                    let outputFormat = format;
+                    if (format !== 'png' && dataUrl.startsWith('data:image/png')) {
+                        outputFormat = 'png';
+                    }
+
                     outputDiv.innerHTML = '';
                     const newImg = document.createElement('img');
                     newImg.src = dataUrl;
@@ -90,9 +104,13 @@
 
                     const downloadLink = document.createElement('a');
                     downloadLink.href = dataUrl;
-                    const originalFileName = file.name.substring(0, file.name.lastIndexOf('.'));
-                    downloadLink.download = `${originalFileName}.${format}`;
-                    downloadLink.textContent = `下载 ${format.toUpperCase()}`;
+                    // 无扩展名文件时 lastIndexOf 返回 -1，substring(0, -1) 会得到空字符串，此时回退为原文件名
+                    const dotIndex = file.name.lastIndexOf('.');
+                    const baseName = dotIndex > 0 ? file.name.substring(0, dotIndex) : (file.name || 'converted');
+                    downloadLink.download = `${baseName}.${outputFormat}`;
+                    downloadLink.textContent = outputFormat !== format
+                        ? `下载 PNG（浏览器不支持 ${format.toUpperCase()}，已回退）`
+                        : `下载 ${format.toUpperCase()}`;
                     downloadLink.className = 'tool-button';
                     outputDiv.appendChild(downloadLink);
                 };

@@ -103,13 +103,25 @@
             try {
                 const input = editor.getValue().trim();
                 if (!input) return;
-                
+
+                // 先提取字符串与 url(...) 内容，避免其中的 ; { } 被换行破坏
+                const protectedParts = [];
+                const masked = input
+                    .replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, (m) => {
+                        protectedParts.push(m);
+                        return `\u0000${protectedParts.length - 1}\u0000`;
+                    })
+                    .replace(/url\([^)]*\)/gi, (m) => {
+                        protectedParts.push(m);
+                        return `\u0000${protectedParts.length - 1}\u0000`;
+                    });
+
                 let result = '';
                 let indent = 0;
                 const tab = '    ';
-                
+
                 // Basic CSS formatting
-                result = input
+                result = masked
                     .replace(/\{/g, ' {\n')
                     .replace(/\}/g, '\n}\n')
                     .replace(/;/g, ';\n')
@@ -123,7 +135,10 @@
                         return formatted;
                     })
                     .join('\n');
-                
+
+                // 恢复被保护的字符串与 url(...)
+                result = result.replace(/\u0000(\d+)\u0000/g, (_, i) => protectedParts[Number(i)]);
+
                 editor.setValue(result);
             } catch (e) {
                 displayError('格式化错误: ' + e.message);
@@ -142,7 +157,8 @@
                     .replace(/\s*{\s*/g, '{')
                     .replace(/\s*}\s*/g, '}')
                     .replace(/\s*;\s*/g, ';')
-                    .replace(/\s*:\s*/g, ':')
+                    // 仅压缩声明区（{ 或 ; 之后的属性名后）的冒号，避免改变选择器语义
+                    .replace(/([{;]\s*)([a-zA-Z-*_][a-zA-Z-]*)\s*:\s*/g, '$1$2:')
                     .replace(/\s*,\s*/g, ',')
                     .replace(/;}/g, '}') // Remove trailing semicolons
                     .trim();
@@ -153,15 +169,18 @@
             }
         }
 
+        let copyTimer = null;
+        const copyIcon = document.querySelector('.copy-icon');
+        const originalIconHtml = copyIcon.innerHTML;
+
         function copyToClipboard() {
             const content = editor.getValue();
             if (!content) return;
             navigator.clipboard.writeText(content).then(() => {
-                const icon = document.querySelector('.copy-icon');
-                const originalPath = icon.innerHTML;
-                icon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
-                setTimeout(() => {
-                    icon.innerHTML = originalPath;
+                clearTimeout(copyTimer);
+                copyIcon.innerHTML = `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`;
+                copyTimer = setTimeout(() => {
+                    copyIcon.innerHTML = originalIconHtml;
                 }, 2000);
             }).catch(err => {
                 alert('无法复制到剪贴板: ' + err);

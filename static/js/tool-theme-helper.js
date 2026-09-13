@@ -49,7 +49,7 @@
                 let newStyle = style
                     .replace(/#f8f9fa/gi, 'var(--surface)')
                     .replace(/#ffffff/gi, 'var(--surface)')
-                    .replace(/#fff/gi, 'var(--surface)')
+                    .replace(/#fff(?![0-9a-f])/gi, 'var(--surface)')
                     .replace(/#dee2e6/gi, 'var(--border)')
                     .replace(/#6c757d/gi, 'var(--text-secondary)')
                     .replace(/#343a40/gi, 'var(--text-primary)');

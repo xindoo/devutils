@@ -6,7 +6,13 @@
     <title>Cron转换</title>
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://unpkg.com/cronstrue/dist/cronstrue.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cron-parser@latest/dist/cron-parser.min.js"></script>
+    <script src="https://unpkg.com/cronstrue@2/dist/cronstrue.min.js"></script>
+    <!-- cron-parser 无 UMD/浏览器构建，所有版本的 dist/cron-parser.min.js 均不存在；
+         改用 jsDelivr 的 +esm 打包（固定版本），通过 module script 挂载到 window.cronParser -->
+    <script type="module">
+        import * as cronParserModule from 'https://cdn.jsdelivr.net/npm/cron-parser@4.9.0/+esm';
+        window.cronParser = cronParserModule;
+    </script>
     <script src="../js/tool-theme-helper.js"></script>
 </head>
 <body>

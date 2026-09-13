@@ -9,12 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadLink = document.getElementById('download-link');
 
     let currentDownloadUrl = null; // 跟踪当前的下载 URL
+    let busy = false; // 防止并发处理
 
     qualityRange.addEventListener('input', () => {
         qualityValueSpan.textContent = qualityRange.value;
     });
 
     compressButton.addEventListener('click', async () => {
+        if (busy) return; // 避免并发创建多个 FFmpeg 实例
+        busy = true;
+        try {
+            await compressVideo();
+        } finally {
+            busy = false;
+        }
+    });
+
+    async function compressVideo() {
         const file = fileInput.files[0];
         if (!file) {
             statusMessage.textContent = '请先选择一个视频文件。';
@@ -47,18 +58,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const crf = 40 - (quality / 100) * (40 - 18);
             const outputFileName = `compressed_${file.name.split('.').slice(0, -1).join('.')}.${codec === 'libx264' || codec === 'libx265' ? 'mp4' : 'webm'}`; // Simple output naming
 
+            // libvpx-vp9 不支持 -preset，且 WebM 容器无法直接封装 AAC 音轨，
+            // 因此 vp9 分支音频改用 libopus 编码，其他分支保持原有参数
+            const audioArgs = codec === 'vp9'
+                ? ['-c:a', 'libopus', '-b:a', '128k']
+                : ['-preset', 'medium', '-c:a', 'copy']; // 编码速度与压缩效率/音频流直接拷贝
             const command = [
                 '-i', file.name,
                 '-c:v', codec,
                 '-crf', crf.toFixed(0), // Constant Rate Factor for quality
-                '-preset', 'medium', // Encoding speed vs compression efficiency
-                '-c:a', 'copy', // Copy audio stream without re-encoding
+                ...audioArgs,
                 outputFileName
             ];
 
             // Run FFmpeg command
             ffmpeg.setProgress(({ ratio }) => {
-                progressBar.value = ratio * 100;
+                // ffmpeg.wasm 在某些流上会报告 -1 或 >1 的 ratio，需钳制到 0-100
+                if (typeof ratio === 'number' && !isNaN(ratio)) {
+                    progressBar.value = Math.min(100, Math.max(0, ratio * 100));
+                }
             });
             await ffmpeg.run(...command);
 
@@ -83,9 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             statusMessage.textContent = '处理失败: ' + error.message;
             console.error('FFmpeg processing error:', error);
-        } finally {
-            // Clean up FFmpeg's virtual file system if necessary
-            // ffmpeg.exit(); // FFmpeg.wasm v0.11.x does not have ffmpeg.exit()
         }
-    });
+    }
 });

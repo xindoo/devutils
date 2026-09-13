@@ -273,6 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
  log(`Connect error: ${err && err.message ? err.message : safeStringify(err)}`, 'error');
  showError(`Connect error: ${err && err.message ? err.message : safeStringify(err)}`);
  setDisconnectedUI();
+ // Close and drop the failed socket so instances don't leak
+ socket.close();
+ socket = null;
  });
 
  socket.on('error', (err) => {

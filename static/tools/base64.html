@@ -37,7 +37,12 @@
                 // 使用 TextEncoder 处理 UTF-8，避免使用已弃用的 unescape
                 const encoder = new TextEncoder();
                 const uint8array = encoder.encode(input);
-                const binaryString = String.fromCharCode(...uint8array);
+                // 分块拼接，避免大输入时参数展开导致栈溢出
+                const CHUNK = 0x8000;
+                let binaryString = '';
+                for (let i = 0; i < uint8array.length; i += CHUNK) {
+                    binaryString += String.fromCharCode.apply(null, uint8array.subarray(i, i + CHUNK));
+                }
                 document.getElementById('output').value = btoa(binaryString);
             } catch (e) {
                 document.getElementById('output').value = '编码错误: ' + e.message;
