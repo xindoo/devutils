@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>全景视频查看器 (2:1)</title>
     <link rel="stylesheet" href="../css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- three.js r160+ 已移除 UMD 构建，改用 ES Module（r160 存在的 build/three.min.js 为弃用警告 shim） -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     <style>
         html, body {
             height: 100%;
@@ -138,7 +138,9 @@
         </div>
     </div>
 
-<script>
+<script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
     const videoUrlInput = document.getElementById('videoUrlInput');
     const loadVideoButton = document.getElementById('loadVideoButton');
     const panoramaDiv = document.getElementById('panorama');
