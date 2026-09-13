@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON转SQL</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .sql-inline { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+        .sql-inline label { color: var(--text-secondary); font-size: 0.9em; }
+        .copy-btn {
+            padding: 6px 14px;
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 0.88em;
+            transition: all var(--transition-fast);
+        }
+        .copy-btn:hover { background: var(--surface-hover); }
+        #sqlOutput { min-height: 200px; }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>JSON转SQL</h1>
+            <p>把 JSON 对象数组转换为含列名的批量 INSERT 语句。</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="jsonInput" class="tool-label">JSON 输入（对象数组）:</label>
+            <textarea id="jsonInput" class="tool-textarea" placeholder='例如: [{"id":1,"name":"alice","active":true},{"id":2,"name":null,"active":false}]'></textarea>
+        </div>
+
+        <div class="sql-inline">
+            <label for="tableName" class="tool-label">表名:</label>
+            <input type="text" id="tableName" class="tool-input" value="my_table" style="max-width: 180px;">
+            <select id="modeSelect" class="tool-select">
+                <option value="single" selected>单条多 VALUES</option>
+                <option value="multi">多条 INSERT</option>
+            </select>
+            <button id="copyBtn" class="copy-btn">复制</button>
+        </div>
+
+        <div class="tool-controls">
+            <button id="generateBtn" class="tool-button">生成 SQL</button>
+        </div>
+        <div id="sqlError" class="tool-error"></div>
+
+        <div class="tool-section">
+            <label class="tool-label">SQL 结果:</label>
+            <pre id="sqlOutput" class="tool-result">-- 粘贴 JSON 后点击"生成 SQL"</pre>
+        </div>
+    </div>
+
+<script>
+    const jsonInput = document.getElementById('jsonInput');
+    const tableName = document.getElementById('tableName');
+    const modeSelect = document.getElementById('modeSelect');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const sqlOutput = document.getElementById('sqlOutput');
+    const sqlError = document.getElementById('sqlError');
+
+    const MAX_ROWS = 5000; // 防止超大输入冻结页面
+    const MAX_COLS = 200;
+
+    function clearError() {
+        sqlError.style.display = 'none';
+        sqlError.textContent = '';
+    }
+
+    function showError(msg) {
+        sqlError.textContent = msg;
+        sqlError.style.display = 'block';
+    }
+
+    function quoteIdent(name) {
+        // 标识符用双引号包裹并转义内部双引号（兼容 PostgreSQL / SQLite 风格）
+        return '"' + String(name).replace(/"/g, '""') + '"';
+    }
+
+    function sqlLiteral(value) {
+        if (value === null || value === undefined) return 'NULL';
+        switch (typeof value) {
+            case 'number':
+                return Number.isFinite(value) ? String(value) : 'NULL';
+            case 'boolean':
+                return value ? 'TRUE' : 'FALSE';
+            case 'string':
+                return "'" + value.replace(/'/g, "''") + "'";
+            default:
+                // 对象/数组序列化为 JSON 字符串
+                return "'" + JSON.stringify(value).replace(/'/g, "''") + "'";
+        }
+    }
+
+    function buildInsert(columns, rowValues) {
+        const cols = columns.map(quoteIdent).join(', ');
+        return rowValues.map(values =>
+            'INSERT INTO ' + quoteIdent(tableName.value.trim() || 'my_table') +
+            ' (' + cols + ') VALUES (' + values.join(', ') + ');'
+        );
+    }
+
+    function runGenerate() {
+        clearError();
+        try {
+            const raw = JSON.parse(jsonInput.value.trim());
+            if (!Array.isArray(raw)) {
+                throw new Error('输入必须是 JSON 数组（对象数组）。');
+            }
+            if (raw.length === 0) {
+                throw new Error('数组为空，没有可生成的数据。');
+            }
+            if (raw.length > MAX_ROWS) {
+                throw new Error('行数超过 ' + MAX_ROWS + '，请缩减数据后重试。');
+            }
+
+            // 列取所有行的键并集，缺失键填 NULL
+            const colSet = new Set();
+            for (const row of raw) {
+                if (row === null || typeof row !== 'object' || Array.isArray(row)) {
+                    throw new Error('数组元素必须全部是对象，索引 ' + raw.indexOf(row) + ' 不是对象。');
+                }
+                Object.keys(row).forEach(k => colSet.add(k));
+            }
+            const columns = Array.from(colSet);
+            if (columns.length > MAX_COLS) {
+                throw new Error('列数超过 ' + MAX_COLS + '，请检查数据。');
+            }
+
+            const rowValues = raw.map(row =>
+                columns.map(col => sqlLiteral(row[col] === undefined ? null : row[col]))
+            );
+
+            let lines;
+            if (modeSelect.value === 'single') {
+                const cols = columns.map(quoteIdent).join(', ');
+                const values = rowValues.map(v => '(' + v.join(', ') + ')').join(',\n  ');
+                lines = [
+                    'INSERT INTO ' + quoteIdent(tableName.value.trim() || 'my_table') +
+                    ' (' + cols + ') VALUES',
+                    '  ' + values + ';'
+                ];
+            } else {
+                lines = buildInsert(columns, rowValues);
+            }
+
+            sqlOutput.textContent = lines.join('\n');
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                showError('JSON 解析失败: ' + e.message);
+            } else {
+                showError(e.message);
+            }
+            sqlOutput.textContent = '';
+        }
+    }
+
+    let copyTimer = null;
+    async function copyResult() {
+        const text = sqlOutput.textContent;
+        if (!text || text.startsWith('--')) return;
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e2) { /* 忽略 */ }
+            document.body.removeChild(ta);
+        }
+        copyBtn.textContent = '已复制 ✓';
+        if (copyTimer) clearTimeout(copyTimer);
+        copyTimer = setTimeout(() => { copyBtn.textContent = '复制'; }, 2000);
+    }
+
+    generateBtn.addEventListener('click', runGenerate);
+    copyBtn.addEventListener('click', copyResult);
+    jsonInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runGenerate();
+    });
+</script>
+</body>
+</html>

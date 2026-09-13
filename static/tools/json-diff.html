@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON对比</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .diff-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .diff-grid .tool-textarea {
+            min-height: 180px;
+        }
+        @media (max-width: 720px) {
+            .diff-grid { grid-template-columns: 1fr; }
+        }
+        .diff-tree {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .diff-added   { color: #16A34A; background: rgba(22, 163, 74, 0.10); }
+        .diff-removed { color: #EF4444; background: rgba(239, 68, 68, 0.10); }
+        .diff-changed { color: #D97706; background: rgba(217, 119, 6, 0.10); }
+        .diff-path { color: var(--text-muted); font-size: 0.85em; }
+        .diff-toggle {
+            margin-top: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .diff-toggle label { color: var(--text-secondary); font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>JSON对比</h1>
+            <p>递归对比两份 JSON，树形展示新增、删除与修改的差异。</p>
+        </div>
+
+        <div class="diff-grid">
+            <div class="tool-section">
+                <label for="jsonA" class="tool-label">JSON A（旧）:</label>
+                <textarea id="jsonA" class="tool-textarea" placeholder='例如: {"name":"devutils","version":1,"tags":["a","b"]}'></textarea>
+            </div>
+            <div class="tool-section">
+                <label for="jsonB" class="tool-label">JSON B（新）:</label>
+                <textarea id="jsonB" class="tool-textarea" placeholder='例如: {"name":"devutils","version":2,"tags":["a","c"],"new":true}'></textarea>
+            </div>
+        </div>
+
+        <div class="tool-controls">
+            <button id="compareBtn" class="tool-button">对比</button>
+            <button id="swapBtn" class="tool-button">交换 A/B</button>
+            <button id="clearBtn" class="tool-button">清空</button>
+        </div>
+        <div id="diffError" class="tool-error"></div>
+
+        <div class="diff-toggle">
+            <label><input type="checkbox" id="onlyDiff" checked> 只显示有差异的路径</label>
+            <label><input type="checkbox" id="collapseSame" checked> 折叠相同部分</label>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">差异结果:</label>
+            <div id="diffOutput" class="tool-result diff-tree">等待对比…</div>
+        </div>
+    </div>
+
+<script>
+    const jsonA = document.getElementById('jsonA');
+    const jsonB = document.getElementById('jsonB');
+    const compareBtn = document.getElementById('compareBtn');
+    const swapBtn = document.getElementById('swapBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const diffOutput = document.getElementById('diffOutput');
+    const diffError = document.getElementById('diffError');
+    const onlyDiff = document.getElementById('onlyDiff');
+    const collapseSame = document.getElementById('collapseSame');
+
+    const MAX_DEPTH = 500; // 递归深度保护，防止超深嵌套栈溢出
+    const MAX_NODES = 20000; // 节点数保护，防止超大 JSON 冻结页面
+
+    function clearError() {
+        diffError.style.display = 'none';
+        diffError.textContent = '';
+    }
+
+    function showError(msg) {
+        diffError.textContent = msg;
+        diffError.style.display = 'block';
+    }
+
+    function parseJson(text, label) {
+        const trimmed = text.trim();
+        if (!trimmed) {
+            throw new Error(label + ' 输入为空。');
+        }
+        try {
+            return JSON.parse(trimmed);
+        } catch (e) {
+            throw new Error(label + ' 不是合法的 JSON: ' + e.message);
+        }
+    }
+
+    // 递归收集差异，返回差异节点数组（路径 + 类型 + 值）
+    function collectDiffs(a, b, path, out, depth) {
+        if (out.length >= MAX_NODES) {
+            throw new Error('差异节点超过 ' + MAX_NODES + ' 个，已停止遍历。请缩小输入规模。');
+        }
+        if (depth > MAX_DEPTH) {
+            out.push({ type: 'changed', path: path, detail: '（嵌套过深，超过 ' + MAX_DEPTH + ' 层，停止下钻）' });
+            return;
+        }
+
+        const aType = typeOf(a);
+        const bType = typeOf(b);
+
+        if (aType !== bType) {
+            out.push({ type: 'changed', path: path, detail: typeTag(a) + ' → ' + typeTag(b) });
+            return;
+        }
+
+        if (aType === 'object') {
+            const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+            for (const key of keys) {
+                const childPath = path ? path + '.' + key : key;
+                if (!(key in a)) {
+                    out.push({ type: 'added', path: childPath, detail: fmtValue(b[key]) });
+                } else if (!(key in b)) {
+                    out.push({ type: 'removed', path: childPath, detail: fmtValue(a[key]) });
+                } else {
+                    collectDiffs(a[key], b[key], childPath, out, depth + 1);
+                }
+            }
+        } else if (aType === 'array') {
+            const len = Math.max(a.length, b.length);
+            for (let i = 0; i < len; i++) {
+                const childPath = path + '[' + i + ']';
+                if (i >= a.length) {
+                    out.push({ type: 'added', path: childPath, detail: fmtValue(b[i]) });
+                } else if (i >= b.length) {
+                    out.push({ type: 'removed', path: childPath, detail: fmtValue(a[i]) });
+                } else {
+                    collectDiffs(a[i], b[i], childPath, out, depth + 1);
+                }
+            }
+        } else if (!deepEqual(a, b)) {
+            out.push({ type: 'changed', path: path, detail: fmtValue(a) + ' → ' + fmtValue(b) });
+        }
+    }
+
+    function typeOf(v) {
+        if (v === null) return 'null';
+        if (Array.isArray(v)) return 'array';
+        return typeof v === 'object' ? 'object' : 'primitive';
+    }
+
+    function typeTag(v) {
+        const t = typeOf(v);
+        if (t === 'object' || t === 'array') return t === 'object' ? '对象' : '数组';
+        return t === 'null' ? 'null' : '原始值(' + fmtValue(v) + ')';
+    }
+
+    function deepEqual(a, b) {
+        return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function fmtValue(v) {
+        const s = JSON.stringify(v);
+        if (s === undefined) return 'undefined';
+        return s.length > 120 ? s.slice(0, 117) + '…' : s;
+    }
+
+    // 把差异渲染为 DOM 树（textContent 构建，杜绝注入）
+    function renderDiffs(diffs) {
+        diffOutput.textContent = '';
+        const showSame = !onlyDiff.checked;
+        const collapse = collapseSame.checked;
+
+        if (diffs.length === 0) {
+            diffOutput.textContent = collapse ? '两份 JSON 完全一致 ✓' : '两份 JSON 完全一致 ✓（无差异节点）';
+            return;
+        }
+
+        const head = document.createElement('div');
+        head.textContent = '共 ' + diffs.length + ' 处差异:';
+        head.style.fontWeight = '600';
+        head.style.marginBottom = '6px';
+        diffOutput.appendChild(head);
+
+        const frag = document.createDocumentFragment();
+        for (const d of diffs) {
+            const row = document.createElement('div');
+            row.className = 'diff-' + d.type;
+
+            const badge = document.createElement('span');
+            badge.textContent = d.type === 'added' ? '[新增] ' : d.type === 'removed' ? '[删除] ' : '[修改] ';
+            row.appendChild(badge);
+
+            const p = document.createElement('span');
+            p.className = 'diff-path';
+            p.textContent = d.path;
+            row.appendChild(p);
+
+            const detail = document.createElement('span');
+            detail.textContent = '  ' + d.detail;
+            row.appendChild(detail);
+
+            frag.appendChild(row);
+        }
+        diffOutput.appendChild(frag);
+
+        if (!showSame) return;
+
+        const note = document.createElement('div');
+        note.className = 'diff-path';
+        note.style.marginTop = '8px';
+        note.textContent = '（提示：相同部分已折叠；取消勾选"折叠相同部分"后这里仍只列差异。完整值请以输入为准。）';
+        diffOutput.appendChild(note);
+    }
+
+    function runCompare() {
+        clearError();
+        diffOutput.textContent = '对比中…';
+        try {
+            const a = parseJson(jsonA.value, 'JSON A');
+            const b = parseJson(jsonB.value, 'JSON B');
+            const diffs = [];
+            collectDiffs(a, b, '$', diffs, 0);
+            renderDiffs(diffs);
+        } catch (e) {
+            diffOutput.textContent = '';
+            showError(e.message);
+        }
+    }
+
+    compareBtn.addEventListener('click', runCompare);
+
+    [jsonA, jsonB].forEach(t => t.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runCompare();
+    }));
+
+    swapBtn.addEventListener('click', () => {
+        const tmp = jsonA.value;
+        jsonA.value = jsonB.value;
+        jsonB.value = tmp;
+        runCompare();
+    });
+
+    clearBtn.addEventListener('click', () => {
+        jsonA.value = '';
+        jsonB.value = '';
+        clearError();
+        diffOutput.textContent = '等待对比…';
+    });
+
+    onlyDiff.addEventListener('change', runCompare);
+    collapseSame.addEventListener('change', runCompare);
+</script>
+</body>
+</html>

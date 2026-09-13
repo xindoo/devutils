@@ -39,6 +39,12 @@
         "filePath": "static/tools/base32.html"
       },
       {
+        "name_zh": "Base58/Base62编解码",
+        "name_en": "Base58/Base62 Encode/Decode",
+        "path": "coder/base58-base62",
+        "filePath": "static/tools/base58-base62.html"
+      },
+      {
         "name_zh": "Hex编解码",
         "name_en": "Hex Encode/Decode",
         "path": "coder/hex",
@@ -82,6 +88,35 @@
     ]
   },
   {
+    "categoryName": "JSON工具",
+    "tools": [
+      {
+        "name_zh": "JSON对比",
+        "name_en": "JSON Diff",
+        "path": "json/diff",
+        "filePath": "static/tools/json-diff.html"
+      },
+      {
+        "name_zh": "JSON转TypeScript/Go",
+        "name_en": "JSON to TypeScript/Go",
+        "path": "json/to-code",
+        "filePath": "static/tools/json-to-code.html"
+      },
+      {
+        "name_zh": "JSON转SQL",
+        "name_en": "JSON to SQL",
+        "path": "json/to-sql",
+        "filePath": "static/tools/json-sql.html"
+      },
+      {
+        "name_zh": "JSONPath/XPath测试",
+        "name_en": "JSONPath/XPath Tester",
+        "path": "json/jsonpath-xpath",
+        "filePath": "static/tools/jsonpath-xpath.html"
+      }
+    ]
+  },
+  {
     "categoryName": "图片工具",
     "tools": [
       {
@@ -101,6 +136,18 @@
        "name_en": "Image Format Converter",
        "path": "image/format-converter",
        "filePath": "static/tools/image-format-converter.html"
+     },
+     {
+       "name_zh": "图片裁剪/旋转",
+       "name_en": "Image Crop & Rotate",
+       "path": "image/crop",
+       "filePath": "static/tools/image-crop.html"
+     },
+     {
+       "name_zh": "Favicon生成",
+       "name_en": "Favicon Generator",
+       "path": "image/favicon",
+       "filePath": "static/tools/favicon-generator.html"
      }
     ]
   },
@@ -124,6 +171,12 @@
         "name_en": "NanoID Generator",
         "path": "generator/nanoid",
         "filePath": "static/tools/nanoid-generator.html"
+      },
+      {
+        "name_zh": "密码生成器",
+        "name_en": "Password Generator",
+        "path": "generator/password",
+        "filePath": "static/tools/password-generator.html"
       }
     ]
   },
@@ -153,6 +206,24 @@
         "name_en": "Text Counter",
         "path": "text/counter",
         "filePath": "static/tools/text-counter.html"
+      },
+      {
+        "name_zh": "HTML转Markdown",
+        "name_en": "HTML to Markdown",
+        "path": "text/html-to-markdown",
+        "filePath": "static/tools/html-to-markdown.html"
+      },
+      {
+        "name_zh": "文本批量处理",
+        "name_en": "Text Batch Tools",
+        "path": "text/batch",
+        "filePath": "static/tools/text-batch.html"
+      },
+      {
+        "name_zh": "CSV预览器",
+        "name_en": "CSV Viewer",
+        "path": "text/csv-viewer",
+        "filePath": "static/tools/csv-viewer.html"
       }
     ]
   },
@@ -223,6 +294,36 @@
         "name_en": "Color Picker & Converter",
         "path": "converter/color",
         "filePath": "static/tools/color-picker.html"
+      },
+      {
+        "name_zh": "二维码生成/识别",
+        "name_en": "QR Code Tool",
+        "path": "converter/qr-code",
+        "filePath": "static/tools/qr-code-tool.html"
+      },
+      {
+        "name_zh": "数字转中文大写金额",
+        "name_en": "Number to Chinese Amount",
+        "path": "converter/chinese-amount",
+        "filePath": "static/tools/chinese-amount.html"
+      },
+      {
+        "name_zh": "单位换算",
+        "name_en": "Unit Converter",
+        "path": "converter/unit",
+        "filePath": "static/tools/unit-converter.html"
+      },
+      {
+        "name_zh": "IP/子网计算器",
+        "name_en": "IP/Subnet Calculator",
+        "path": "converter/ip-calculator",
+        "filePath": "static/tools/ip-calculator.html"
+      },
+      {
+        "name_zh": "代码截图",
+        "name_en": "Code Screenshot",
+        "path": "converter/code-screenshot",
+        "filePath": "static/tools/code-screenshot.html"
       }
     ]
   },
@@ -251,6 +352,41 @@
         "name_en": "Socket.IO Tester",
         "path": "network/socketio-tester",
         "filePath": "static/tools/socketio-tester.html"
+      },
+      {
+        "name_zh": "UserAgent解析",
+        "name_en": "UserAgent Parser",
+        "path": "network/ua-parser",
+        "filePath": "static/tools/ua-parser.html"
+      },
+      {
+        "name_zh": "HTTP状态码/Header速查",
+        "name_en": "HTTP Reference",
+        "path": "network/http-reference",
+        "filePath": "static/tools/http-reference.html"
+      }
+    ]
+  },
+  {
+    "categoryName": "其他工具",
+    "tools": [
+      {
+        "name_zh": "HTML实时预览沙箱",
+        "name_en": "HTML Sandbox",
+        "path": "misc/html-sandbox",
+        "filePath": "static/tools/html-sandbox.html"
+      },
+      {
+        "name_zh": "键盘KeyCode查询",
+        "name_en": "Keyboard KeyCode",
+        "path": "misc/keycode",
+        "filePath": "static/tools/keycode.html"
+      },
+      {
+        "name_zh": "颜色对比度检查/渐变生成",
+        "name_en": "Color Contrast & Gradient",
+        "path": "misc/color-contrast",
+        "filePath": "static/tools/color-contrast.html"
       }
     ]
   }

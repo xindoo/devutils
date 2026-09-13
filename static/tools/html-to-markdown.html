@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML转Markdown</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <script src="https://unpkg.com/turndown@7/dist/turndown.js"></script>
+    <script src="https://unpkg.com/turndown-plugin-gfm@1/dist/turndown-plugin-gfm.js"></script>
+    <style>
+        .hm-panes {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .hm-panes > div {
+            flex: 1 1 320px;
+            min-width: 280px;
+        }
+        .hm-panes textarea {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 320px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>HTML转Markdown</h1>
+            <p>HTML to Markdown — 将 HTML 片段/文档转换为 Markdown（支持 GFM 表格/删除线/任务列表）</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="htmlFile" class="tool-label">或选择 .html 文件:</label>
+            <input type="file" id="htmlFile" class="tool-input" accept=".html,.htm,text/html">
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">选项:</label>
+            <div class="tool-inline-controls">
+                <label style="display: inline-flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="optGfm" checked> GFM 扩展（表格/删除线/任务列表）
+                </label>
+                <label style="display: inline-flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="optCodeBlocks" checked> 代码块使用 ``` 围栏
+                </label>
+                <label style="display: inline-flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="optHeadingStyle" checked> ATX 风格标题（#）
+                </label>
+                <span style="display: inline-flex; align-items: center; gap: 5px;">
+                    <label class="tool-label" style="margin: 0;" for="optBullet">列表符号:</label>
+                    <select id="optBullet" class="tool-select">
+                        <option value="*" selected>*</option>
+                        <option value="-">-</option>
+                        <option value="+">+</option>
+                    </select>
+                </span>
+            </div>
+        </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" id="convertBtn">转换 →</button>
+        </div>
+        <div id="convertError" class="tool-error" style="display: none;"></div>
+
+        <div class="hm-panes" style="margin-top: 14px;">
+            <div>
+                <label for="htmlInput" class="tool-label">HTML 输入:</label>
+                <textarea id="htmlInput" class="tool-textarea" placeholder="粘贴 HTML 内容，例如: <h1>标题</h1><p>段落，含 <strong>加粗</strong>。</p>"></textarea>
+            </div>
+            <div>
+                <label for="mdOutput" class="tool-label">Markdown 输出:</label>
+                <textarea id="mdOutput" class="tool-textarea" readonly placeholder="转换结果将显示在这里"></textarea>
+            </div>
+        </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" id="copyBtn">复制 Markdown</button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const htmlInput = document.getElementById('htmlInput');
+    const mdOutput = document.getElementById('mdOutput');
+    const convertBtn = document.getElementById('convertBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const convertError = document.getElementById('convertError');
+    const htmlFile = document.getElementById('htmlFile');
+    const optGfm = document.getElementById('optGfm');
+    const optCodeBlocks = document.getElementById('optCodeBlocks');
+    const optHeadingStyle = document.getElementById('optHeadingStyle');
+    const optBullet = document.getElementById('optBullet');
+
+    let copyTimer = null;
+    const COPY_ICON_PATH = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>';
+    const CHECK_ICON_PATH = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>';
+
+    function showError(msg) {
+        convertError.textContent = msg;
+        convertError.style.display = 'block';
+    }
+    function clearError() {
+        convertError.textContent = '';
+        convertError.style.display = 'none';
+    }
+
+    function buildTurndown() {
+        if (typeof TurndownService !== 'function') {
+            throw new Error('turndown 库加载失败，请检查网络后刷新页面。');
+        }
+        const td = new TurndownService({
+            headingStyle: optHeadingStyle.checked ? 'atx' : 'setext',
+            codeBlockStyle: optCodeBlocks.checked ? 'fenced' : 'indented',
+            bulletListMarker: optBullet.value,
+            emDelimiter: '_',
+            hr: '---'
+        });
+        if (optGfm.checked && typeof window.turndownPluginGfm === 'object' && window.turndownPluginGfm !== null) {
+            td.use(window.turndownPluginGfm.gfm);
+        }
+        return td;
+    }
+
+    convertBtn.addEventListener('click', function () {
+        clearError();
+        const html = htmlInput.value;
+        if (!html.trim()) {
+            showError('请先输入 HTML 内容。');
+            return;
+        }
+        try {
+            const td = buildTurndown();
+            mdOutput.value = td.turndown(html);
+        } catch (e) {
+            mdOutput.value = '';
+            showError('转换失败: ' + e.message);
+        }
+    });
+
+    htmlFile.addEventListener('change', function () {
+        const file = htmlFile.files && htmlFile.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onerror = function () { showError('读取文件失败。'); };
+        reader.onload = function (e) {
+            htmlInput.value = e.target.result;
+            clearError();
+        };
+        reader.readAsText(file);
+    });
+
+    copyBtn.addEventListener('click', function () {
+        if (!mdOutput.value) {
+            showError('没有可复制的内容。');
+            return;
+        }
+        clearError();
+        navigator.clipboard.writeText(mdOutput.value).then(function () {
+            const icon = copyBtn.querySelector('.copy-icon');
+            if (icon) {
+                if (copyTimer) clearTimeout(copyTimer);
+                icon.innerHTML = CHECK_ICON_PATH;
+                copyTimer = setTimeout(function () {
+                    icon.innerHTML = COPY_ICON_PATH;
+                    copyTimer = null;
+                }, 2000);
+            }
+        }).catch(function (err) {
+            showError('无法复制到剪贴板: ' + err);
+        });
+    });
+});
+</script>
+</body>
+</html>

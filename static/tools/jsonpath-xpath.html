@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONPath/XPath测试</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .px-grid {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 12px;
+        }
+        @media (max-width: 720px) {
+            .px-grid { grid-template-columns: 1fr; }
+        }
+        .px-divider {
+            border-top: 1px solid var(--border);
+            margin: 22px 0;
+        }
+        .px-count { color: var(--text-secondary); font-size: 0.9em; }
+        .px-result { min-height: 120px; max-height: 420px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>JSONPath/XPath测试</h1>
+            <p>对 JSON 用 JSONPath、对 XML 用 XPath 求值并展示全部匹配。</p>
+        </div>
+
+        <!-- JSONPath -->
+        <div class="tool-section">
+            <label for="jsonInput" class="tool-label">JSON 输入:</label>
+            <textarea id="jsonInput" class="tool-textarea" style="min-height: 150px;" placeholder='例如: {"store":{"book":[{"title":"A","price":10},{"title":"B","price":25}]}}'></textarea>
+        </div>
+        <div class="px-grid">
+            <div class="tool-section">
+                <label for="jpExpr" class="tool-label">JSONPath 表达式:</label>
+                <input type="text" id="jpExpr" class="tool-input" placeholder="例如: $.store.book[*].price">
+            </div>
+            <div class="tool-section">
+                <div class="tool-inline-controls">
+                    <button id="jpRun" class="tool-button">求值 JSONPath</button>
+                    <span id="jpCount" class="px-count"></span>
+                </div>
+            </div>
+        </div>
+        <div id="jpError" class="tool-error"></div>
+        <div class="tool-section">
+            <label class="tool-label">JSONPath 匹配结果:</label>
+            <pre id="jpOutput" class="tool-result px-result">等待求值…</pre>
+        </div>
+
+        <div class="px-divider"></div>
+
+        <!-- XPath -->
+        <div class="tool-section">
+            <label for="xmlInput" class="tool-label">XML 输入:</label>
+            <textarea id="xmlInput" class="tool-textarea" style="min-height: 150px;" placeholder="例如: <store><book><title>A</title><price>10</price></book></store>"></textarea>
+        </div>
+        <div class="px-grid">
+            <div class="tool-section">
+                <label for="xpExpr" class="tool-label">XPath 表达式:</label>
+                <input type="text" id="xpExpr" class="tool-input" placeholder="例如: //book/price/text()">
+            </div>
+            <div class="tool-section">
+                <div class="tool-inline-controls">
+                    <button id="xpRun" class="tool-button">求值 XPath</button>
+                    <span id="xpCount" class="px-count"></span>
+                </div>
+            </div>
+        </div>
+        <div id="xpError" class="tool-error"></div>
+        <div class="tool-section">
+            <label class="tool-label">XPath 匹配结果:</label>
+            <pre id="xpOutput" class="tool-result px-result">等待求值…</pre>
+        </div>
+    </div>
+
+<script>
+    // ---------- JSONPath（自实现子集）----------
+    // 支持: $  .key  ['key']  ..key(递归下降)  [*]  [n]  [a,b]  [start:end](切片)
+    //       以及 ?(@.price < 25) 简单过滤（仅支持 @.path op value：op ∈ < <= > >= == !=）
+    // 不支持的语法会明确报错，而不是静默给出错误结果。
+    function jsonPathError(msg) { throw new Error('JSONPath: ' + msg); }
+
+    function tokenizeJsonPath(expr) {
+        const tokens = [];
+        let i = 0;
+        if (expr[0] !== '$') jsonPathError("表达式必须以 $ 开头，收到: " + expr.slice(0, 20));
+        i++;
+        while (i < expr.length) {
+            const c = expr[i];
+            if (c === '.' ) {
+                if (expr[i + 1] === '.') {
+                    // 递归下降 ..key：合并为单个 descendant token（含属性名）
+                    i += 2;
+                    let dname = '';
+                    while (i < expr.length && /[\w$\-\u4e00-\u9fa5]/.test(expr[i])) { dname += expr[i]; i++; }
+                    if (!dname) jsonPathError('.. 后必须紧跟属性名（如 ..key）；暂不支持 ..[ ] 组合');
+                    tokens.push({ t: 'descendant', name: dname });
+                    continue;
+                }
+                i++;
+                // .[ 之类的写法容错
+                if (expr[i] === '[') continue;
+                let name = '';
+                while (i < expr.length && /[\w$\-\u4e00-\u9fa5]/.test(expr[i])) { name += expr[i]; i++; }
+                if (!name) jsonPathError('点号后缺少属性名，位置 ' + i);
+                tokens.push({ t: 'prop', name: name });
+            } else if (c === '[') {
+                let j = expr.indexOf(']', i);
+                if (j === -1) jsonPathError('方括号未闭合');
+                // 括号内可能有嵌套（过滤表达式含 @.a[0]），扫描平衡
+                let depth = 1, k = i + 1, inner = '';
+                while (k < expr.length && depth > 0) {
+                    if (expr[k] === '[') depth++;
+                    if (expr[k] === ']') { depth--; if (depth === 0) break; }
+                    inner += expr[k];
+                    k++;
+                }
+                if (depth !== 0) jsonPathError('方括号未闭合');
+                tokens.push(parseBracket(inner.trim()));
+                i = k + 1;
+            } else if (c === ' ') {
+                i++;
+            } else {
+                jsonPathError('无法解析的字符 "' + c + '"，位置 ' + i + '。当前支持: $.key  ..key  [*]  [n]  [a,b]  [start:end]  [?(表达式)]');
+            }
+        }
+        return tokens;
+    }
+
+    function parseBracket(inner) {
+        if (inner === '*') return { t: 'wildcard' };
+        if (inner.startsWith('?')) {
+            const m = inner.match(/^\?\s*\(\s*@((?:\.\w+|\['[^']+'\]|\["[^"]+"\])*)\s*(==|!=|<=|>=|<|>)\s*(-?\d+(?:\.\d+)?|'[^']*'|"[^"]*"|true|false|null)\s*\)$/);
+            if (!m) jsonPathError('过滤表达式仅支持 ?(@.path op value)，op ∈ < <= > >= == !=。收到: ' + inner);
+            const pathStr = m[1];
+            const propNames = [];
+            const re = /\.(\w+)|\['([^']+)'\]|\["([^"]+)"\]/g;
+            let mm;
+            while ((mm = re.exec(pathStr)) !== null) propNames.push(mm[1] || mm[2] || mm[3]);
+            let value = m[3];
+            if (value === 'true') value = true;
+            else if (value === 'false') value = false;
+            else if (value === 'null') value = null;
+            else if (/^['"]/.test(value)) value = value.slice(1, -1);
+            else value = Number(value);
+            return { t: 'filter', path: propNames, op: m[2], value: value };
+        }
+        if (inner.startsWith('"') || inner.startsWith("'")) {
+            const name = inner.slice(1, -1);
+            if (!name) jsonPathError('空的字符串键');
+            return { t: 'prop', name: name };
+        }
+        if (inner.includes(':')) {
+            const parts = inner.split(':').map(s => s.trim());
+            if (parts.length !== 2 || parts.some(p => p !== '' && !/^-?\d+$/.test(p))) {
+                jsonPathError('切片仅支持 [start:end]，收到: ' + inner);
+            }
+            return { t: 'slice', start: parts[0] === '' ? null : parseInt(parts[0], 10), end: parts[1] === '' ? null : parseInt(parts[1], 10) };
+        }
+        if (inner.includes(',')) {
+            const idx = inner.split(',').map(s => s.trim());
+            if (idx.some(s => !/^-?\d+$/.test(s))) jsonPathError('联合下标仅支持数字，收到: ' + inner);
+            return { t: 'union', idx: idx.map(s => parseInt(s, 10)) };
+        }
+        if (/^-?\d+$/.test(inner)) return { t: 'index', n: parseInt(inner, 10) };
+        jsonPathError('无法识别的括号内容: ' + inner);
+    }
+
+    function getByProps(obj, propNames) {
+        let cur = obj;
+        for (const p of propNames) {
+            if (cur === null || typeof cur !== 'object' || !(p in cur)) return undefined;
+            cur = cur[p];
+        }
+        return cur;
+    }
+
+    function compareValues(actual, op, expected) {
+        if (actual === undefined) return false;
+        switch (op) {
+            case '==': return actual == expected; // eslint-disable-line eqeqeq
+            case '!=': return actual != expected; // eslint-disable-line eqeqeq
+            case '<': return actual < expected;
+            case '<=': return actual <= expected;
+            case '>': return actual > expected;
+            case '>=': return actual >= expected;
+            default: return false;
+        }
+    }
+
+    function applyToken(values, token) {
+        const out = [];
+        for (const v of values) {
+            switch (token.t) {
+                case 'prop':
+                    if (v !== null && typeof v === 'object' && !Array.isArray(v) && token.name in v) {
+                        out.push(v[token.name]);
+                    }
+                    break;
+                case 'descendant':
+                    collectDescendant(v, token.name, out);
+                    break;
+                case 'wildcard':
+                    if (Array.isArray(v)) out.push(...v);
+                    else if (v !== null && typeof v === 'object') out.push(...Object.values(v));
+                    break;
+                case 'index': {
+                    const n = token.n < 0 ? token.n : token.n;
+                    if (Array.isArray(v)) {
+                        const idx = n < 0 ? v.length + n : n;
+                        if (idx >= 0 && idx < v.length) out.push(v[idx]);
+                    }
+                    break;
+                }
+                case 'union':
+                    if (Array.isArray(v)) {
+                        for (const n of token.idx) {
+                            const idx = n < 0 ? v.length + n : n;
+                            if (idx >= 0 && idx < v.length) out.push(v[idx]);
+                        }
+                    }
+                    break;
+                case 'slice': {
+                    if (Array.isArray(v)) out.push(...v.slice(token.start ?? undefined, token.end ?? undefined));
+                    break;
+                }
+                case 'filter':
+                    if (Array.isArray(v)) {
+                        for (const item of v) {
+                            if (item !== null && typeof item === 'object') {
+                                const actual = getByProps(item, token.path);
+                                if (compareValues(actual, token.op, token.value)) out.push(item);
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+        return out;
+    }
+
+    function collectDescendant(v, name, out) {
+        if (v === null || typeof v !== 'object') return;
+        if (!Array.isArray(v) && name in v) out.push(v[name]);
+        for (const child of Array.isArray(v) ? v : Object.values(v)) {
+            collectDescendant(child, name, out);
+        }
+    }
+
+    function runJsonPath() {
+        jpError.style.display = 'none';
+        jpError.textContent = '';
+        jpOutput.textContent = '';
+        jpCount.textContent = '';
+        try {
+            const data = JSON.parse(jsonInput.value.trim());
+            const tokens = tokenizeJsonPath(jpExpr.value.trim());
+            let values = [data];
+            for (const tok of tokens) {
+                values = applyToken(values, tok);
+                if (values.length === 0) break;
+            }
+            jpCount.textContent = values.length + ' 个匹配';
+            if (values.length === 0) {
+                jpOutput.textContent = '（无匹配）';
+            } else {
+                jpOutput.textContent = values.map(v => {
+                    const s = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
+                    return s;
+                }).join('\n──────────\n');
+            }
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                jpError.textContent = 'JSON 解析失败: ' + e.message;
+            } else {
+                jpError.textContent = e.message;
+            }
+            jpError.style.display = 'block';
+        }
+    }
+
+    // ---------- XPath ----------
+    function xmlNodeToString(node) {
+        if (node.nodeType === Node.DOCUMENT_NODE) return new XMLSerializer().serializeToString(node.documentElement);
+        if (node.nodeType === Node.ATTRIBUTE_NODE) return node.value;
+        if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) return node.nodeValue.trim();
+        return new XMLSerializer().serializeToString(node);
+    }
+
+    function runXPath() {
+        xpError.style.display = 'none';
+        xpError.textContent = '';
+        xpOutput.textContent = '';
+        xpCount.textContent = '';
+        try {
+            const doc = new DOMParser().parseFromString(xmlInput.value.trim(), 'text/xml');
+            const parseError = doc.querySelector('parsererror');
+            if (parseError) {
+                throw new Error('XML 解析失败: ' + parseError.textContent.slice(0, 200));
+            }
+            const result = doc.evaluate(xpExpr.value.trim(), doc, null, XPathResult.ANY_TYPE, null);
+            const items = [];
+            switch (result.resultType) {
+                case XPathResult.NUMBER_TYPE: items.push(String(result.numberValue)); break;
+                case XPathResult.STRING_TYPE: items.push(result.stringValue); break;
+                case XPathResult.BOOLEAN_TYPE: items.push(String(result.booleanValue)); break;
+                default: {
+                    let node;
+                    while ((node = result.iterateNext()) !== null) {
+                        items.push(xmlNodeToString(node));
+                        if (items.length > 1000) break; // 保护
+                    }
+                }
+            }
+            xpCount.textContent = items.length + ' 个匹配';
+            xpOutput.textContent = items.length === 0 ? '（无匹配）' : items.join('\n──────────\n');
+        } catch (e) {
+            xpError.textContent = e.message;
+            xpError.style.display = 'block';
+        }
+    }
+
+    const jsonInput = document.getElementById('jsonInput');
+    const jpExpr = document.getElementById('jpExpr');
+    const jpRun = document.getElementById('jpRun');
+    const jpOutput = document.getElementById('jpOutput');
+    const jpError = document.getElementById('jpError');
+    const jpCount = document.getElementById('jpCount');
+    const xmlInput = document.getElementById('xmlInput');
+    const xpExpr = document.getElementById('xpExpr');
+    const xpRun = document.getElementById('xpRun');
+    const xpOutput = document.getElementById('xpOutput');
+    const xpError = document.getElementById('xpError');
+    const xpCount = document.getElementById('xpCount');
+
+    jpRun.addEventListener('click', runJsonPath);
+    xpRun.addEventListener('click', runXPath);
+    jsonInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runJsonPath();
+    });
+    xmlInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runXPath();
+    });
+</script>
+</body>
+</html>

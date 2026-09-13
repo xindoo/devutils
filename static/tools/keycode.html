@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>键盘 KeyCode 查询</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .kc-monitor {
+            border: 2px dashed var(--border);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            text-align: center;
+            transition: border-color var(--transition-fast), background-color var(--transition-fast);
+            cursor: pointer;
+            user-select: none;
+        }
+        .kc-monitor.active {
+            border-color: var(--primary);
+            background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+        }
+        .kc-main-key {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: SFMono-Regular, Menlo, Consolas, monospace;
+            margin: 8px 0;
+            min-height: 56px;
+            word-break: break-all;
+        }
+        .kc-codes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .kc-code-chip {
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 6px 12px;
+            background: var(--surface);
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .kc-code-chip strong { color: var(--primary); }
+        .kc-modifiers {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .kc-mod {
+            padding: 6px 18px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+        }
+        .kc-mod.on {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .kc-history {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .kc-history-chip {
+            font-family: SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 13px;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface);
+            color: var(--text-primary);
+        }
+        .kc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .kc-table th, .kc-table td {
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            text-align: left;
+            color: var(--text-primary);
+        }
+        .kc-table th {
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+        }
+        .kc-table code {
+            font-family: SFMono-Regular, Menlo, Consolas, monospace;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>键盘 KeyCode 查询</h1>
+            <p>按下任意键查看 event.key / code / keyCode（Keyboard Event Inspector）。点击下方区域或开关启用监听。</p>
+        </div>
+
+        <div class="tool-controls">
+            <label style="display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
+                <input type="checkbox" id="listenToggle"> 启用全局监听（启用后点击本页面任意位置按键即可捕获）
+            </label>
+            <button id="clearHistoryBtn" class="tool-button tool-button-sm" style="margin-left: auto;">清空历史</button>
+        </div>
+
+        <div id="kcMonitor" class="kc-monitor" tabindex="0">
+            <div style="color: var(--text-muted); font-size: 13px;">在此区域按下任意键（或启用全局监听后直接按键）</div>
+            <div id="mainKey" class="kc-main-key">按任意键…</div>
+            <div class="kc-codes">
+                <span class="kc-code-chip">event.key: <strong id="keyVal">-</strong></span>
+                <span class="kc-code-chip">event.code: <strong id="codeVal">-</strong></span>
+                <span class="kc-code-chip">keyCode: <strong id="keyCodeVal">-</strong></span>
+                <span class="kc-code-chip">which: <strong id="whichVal">-</strong></span>
+            </div>
+            <div class="kc-modifiers">
+                <span class="kc-mod" id="modCtrl">Ctrl</span>
+                <span class="kc-mod" id="modShift">Shift</span>
+                <span class="kc-mod" id="modAlt">Alt</span>
+                <span class="kc-mod" id="modMeta">Meta</span>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">最近按键（最新在前，最多 20 条）:</label>
+            <div id="kcHistory" class="kc-history">
+                <span style="color: var(--text-muted); font-size: 13px;">暂无记录</span>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">常用键速查表:</label>
+            <table class="kc-table">
+                <thead>
+                    <tr><th>按键</th><th>event.key</th><th>event.code</th><th>keyCode</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>回车</td><td><code>Enter</code></td><td><code>Enter</code></td><td><code>13</code></td></tr>
+                    <tr><td>Esc</td><td><code>Escape</code></td><td><code>Escape</code></td><td><code>27</code></td></tr>
+                    <tr><td>空格</td><td><code>" "</code></td><td><code>Space</code></td><td><code>32</code></td></tr>
+                    <tr><td>Tab</td><td><code>Tab</code></td><td><code>Tab</code></td><td><code>9</code></td></tr>
+                    <tr><td>退格</td><td><code>Backspace</code></td><td><code>Backspace</code></td><td><code>8</code></td></tr>
+                    <tr><td>上/下/左/右</td><td><code>ArrowUp/Down/Left/Right</code></td><td><code>同 key</code></td><td><code>38/40/37/39</code></td></tr>
+                    <tr><td>删除</td><td><code>Delete</code></td><td><code>Delete</code></td><td><code>46</code></td></tr>
+                    <tr><td>Shift</td><td><code>Shift</code></td><td><code>ShiftLeft/Right</code></td><td><code>16</code></td></tr>
+                    <tr><td>Ctrl</td><td><code>Control</code></td><td><code>ControlLeft/Right</code></td><td><code>17</code></td></tr>
+                    <tr><td>Alt</td><td><code>Alt</code></td><td><code>AltLeft/Right</code></td><td><code>18</code></td></tr>
+                    <tr><td>Meta(Win/Cmd)</td><td><code>Meta</code></td><td><code>MetaLeft/Right</code></td><td><code>91/93</code></td></tr>
+                    <tr><td>F1–F12</td><td><code>F1…F12</code></td><td><code>F1…F12</code></td><td><code>112–123</code></td></tr>
+                    <tr><td>数字 0–9（主键盘）</td><td><code>"0"…"9"</code></td><td><code>Digit0…Digit9</code></td><td><code>48–57</code></td></tr>
+                    <tr><td>字母 a–z</td><td><code>"a"…"z"</code></td><td><code>KeyA…KeyZ</code></td><td><code>65–90</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+(function () {
+    var listenToggle = document.getElementById('listenToggle');
+    var clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    var kcMonitor = document.getElementById('kcMonitor');
+    var mainKey = document.getElementById('mainKey');
+    var keyVal = document.getElementById('keyVal');
+    var codeVal = document.getElementById('codeVal');
+    var keyCodeVal = document.getElementById('keyCodeVal');
+    var whichVal = document.getElementById('whichVal');
+    var kcHistory = document.getElementById('kcHistory');
+    var modEls = {
+        Control: document.getElementById('modCtrl'),
+        Shift: document.getElementById('modShift'),
+        Alt: document.getElementById('modAlt'),
+        Meta: document.getElementById('modMeta')
+    };
+
+    var history = [];
+    var MAX_HISTORY = 20;
+
+    function renderHistory() {
+        kcHistory.textContent = '';
+        if (history.length === 0) {
+            var empty = document.createElement('span');
+            empty.style.color = 'var(--text-muted)';
+            empty.style.fontSize = '13px';
+            empty.textContent = '暂无记录';
+            kcHistory.appendChild(empty);
+            return;
+        }
+        history.forEach(function (item) {
+            var chip = document.createElement('span');
+            chip.className = 'kc-history-chip';
+            chip.textContent = item;
+            kcHistory.appendChild(chip);
+        });
+    }
+
+    function displayKey(e) {
+        var keyDisplay = e.key === ' ' ? '空格 (Space)' : e.key;
+        mainKey.textContent = keyDisplay;
+        keyVal.textContent = e.key;
+        codeVal.textContent = e.code || '-';
+        keyCodeVal.textContent = String(e.keyCode);
+        whichVal.textContent = String(e.which);
+
+        Object.keys(modEls).forEach(function (mod) {
+            modEls[mod].classList.toggle('on', !!e.getModifierState && e.getModifierState(mod));
+        });
+
+        // 历史记录：key + code + keyCode
+        var entry = keyDisplay + ' · ' + (e.code || '-') + ' · ' + e.keyCode;
+        if (history.length === 0 || history[0] !== entry) {
+            history.unshift(entry);
+            if (history.length > MAX_HISTORY) history.pop();
+            renderHistory();
+        }
+    }
+
+    function onKeyDown(e) {
+        // 未启用全局监听时，仅当监控区域获得焦点才响应
+        if (!listenToggle.checked && document.activeElement !== kcMonitor) return;
+        // 不拦截任何默认行为，避免影响页面滚动/快捷键；也不捕获输入框内打字
+        var tag = (e.target && e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+        displayKey(e);
+    }
+
+    // 捕获阶段监听，确保能在页面滚动快捷键等场景下展示（不 preventDefault）
+    document.addEventListener('keydown', onKeyDown, true);
+
+    // 监控区域聚焦态视觉反馈
+    kcMonitor.addEventListener('mouseenter', function () { kcMonitor.classList.add('active'); });
+    kcMonitor.addEventListener('mouseleave', function () { kcMonitor.classList.remove('active'); });
+
+    clearHistoryBtn.addEventListener('click', function () {
+        history = [];
+        renderHistory();
+    });
+
+    renderHistory();
+})();
+</script>
+</body>
+</html>

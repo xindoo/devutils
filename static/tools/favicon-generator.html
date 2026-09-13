@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favicon生成</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .fav-grid {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .fav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface-hover);
+        }
+        .fav-item img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            image-rendering: auto;
+        }
+        .fav-item span {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .fav-item a {
+            font-size: 0.8em;
+        }
+        .fav-snippet {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Favicon生成</h1>
+            <p>Favicon Generator — 从任意图片生成多尺寸网站图标与 .ico 文件</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="imageInput" class="tool-label">选择图片（建议正方形 PNG/SVG）:</label>
+            <input type="file" id="imageInput" class="tool-input" accept="image/*">
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">背景填充（透明图片在浅色背景下不易观察，可加底色预览；不影响导出）:</label>
+            <div class="tool-inline-controls">
+                <label style="display: inline-flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="bgToggle"> 预览加底色
+                </label>
+                <input type="color" id="bgColor" class="tool-input" style="width: 48px; padding: 2px;" value="#ffffff">
+            </div>
+        </div>
+
+        <div id="resultArea" style="display: none;">
+            <div class="tool-section">
+                <label class="tool-label">各尺寸预览（点击尺寸名下载对应 PNG）:</label>
+                <div id="sizeGrid" class="fav-grid"></div>
+            </div>
+
+            <div class="tool-section">
+                <label class="tool-label">打包下载:</label>
+                <div class="tool-controls">
+                    <a id="icoLink" class="tool-button" style="text-decoration: none; display: inline-block;" download="favicon.ico">下载 favicon.ico（含 16/32/48/64/128/256）</a>
+                    <a id="png512Link" class="tool-button" style="text-decoration: none; display: inline-block;" download="favicon-512x512.png">下载 512×512 PNG</a>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <label class="tool-label">HTML 引用代码（复制到 &lt;head&gt; 中）:</label>
+                <pre id="snippet" class="tool-result fav-snippet"></pre>
+                <div class="tool-controls">
+                    <button class="tool-button" id="copyBtn">复制代码</button>
+                </div>
+            </div>
+        </div>
+        <div id="favError" class="tool-error" style="display: none;"></div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const imageInput = document.getElementById('imageInput');
+    const resultArea = document.getElementById('resultArea');
+    const sizeGrid = document.getElementById('sizeGrid');
+    const icoLink = document.getElementById('icoLink');
+    const png512Link = document.getElementById('png512Link');
+    const snippet = document.getElementById('snippet');
+    const copyBtn = document.getElementById('copyBtn');
+    const favError = document.getElementById('favError');
+    const bgToggle = document.getElementById('bgToggle');
+    const bgColor = document.getElementById('bgColor');
+
+    const PNG_SIZES = [16, 32, 48, 96, 128, 180, 256];
+    const ICO_SIZES = [16, 32, 48, 64, 128, 256];
+    const pngUrls = {}; // size -> objectURL
+    let currentIconUrl = null; // 当前打包 ico 的 objectURL
+    let sourceImage = null;
+
+    function showError(msg) {
+        favError.textContent = msg;
+        favError.style.display = 'block';
+    }
+    function clearError() {
+        favError.textContent = '';
+        favError.style.display = 'none';
+    }
+    function revokeAll() {
+        Object.keys(pngUrls).forEach(function (k) {
+            URL.revokeObjectURL(pngUrls[k]);
+            delete pngUrls[k];
+        });
+        if (currentIconUrl) { URL.revokeObjectURL(currentIconUrl); currentIconUrl = null; }
+    }
+
+    // 把源图绘制为 size×size 的 canvas（保持比例，居中留白）
+    function renderSquare(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const sw = sourceImage.naturalWidth, sh = sourceImage.naturalHeight;
+        const scale = Math.min(size / sw, size / sh);
+        const dw = sw * scale, dh = sh * scale;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(sourceImage, (size - dw) / 2, (size - dh) / 2, dw, dh);
+        return canvas;
+    }
+
+    // ---------- 手工打包 ICO（ICONDIR + ICONDIRENTRY + PNG 数据） ----------
+    function buildIco(pngBuffers) {
+        // pngBuffers: [{size, buffer(ArrayBuffer)}]，已按 ICO_SIZES 顺序
+        const count = pngBuffers.length;
+        const headerSize = 6 + 16 * count;
+        const totalSize = headerSize + pngBuffers.reduce(function (s, b) { return s + b.buffer.byteLength; }, 0);
+        const out = new ArrayBuffer(totalSize);
+        const view = new DataView(out);
+        const bytes = new Uint8Array(out);
+        // ICONDIR
+        view.setUint16(0, 0, true);      // reserved
+        view.setUint16(2, 1, true);      // type: icon
+        view.setUint16(4, count, true);  // image count
+        let offset = headerSize;
+        pngBuffers.forEach(function (b, i) {
+            const e = 6 + 16 * i;
+            view.setUint8(e, b.size >= 256 ? 0 : b.size);  // width（256 写 0）
+            view.setUint8(e + 1, b.size >= 256 ? 0 : b.size); // height
+            view.setUint8(e + 2, 0);          // 调色板色数
+            view.setUint8(e + 3, 0);          // reserved
+            view.setUint16(e + 4, 1, true);   // color planes
+            view.setUint16(e + 6, 32, true);  // bits per pixel
+            view.setUint32(e + 8, b.buffer.byteLength, true); // 数据长度
+            view.setUint32(e + 12, offset, true);             // 数据偏移
+            bytes.set(new Uint8Array(b.buffer), offset);
+            offset += b.buffer.byteLength;
+        });
+        return out;
+    }
+
+    function canvasBlob(canvas) {
+        return new Promise(function (resolve, reject) {
+            canvas.toBlob(function (blob) {
+                if (blob) resolve(blob); else reject(new Error('canvas.toBlob 失败'));
+            }, 'image/png');
+        });
+    }
+
+    async function generate() {
+        clearError();
+        revokeAll();
+        sizeGrid.innerHTML = '';
+
+        // 生成各尺寸 PNG
+        const pngBuffers = [];
+        for (const size of PNG_SIZES) {
+            const canvas = renderSquare(size);
+            const blob = await canvasBlob(canvas);
+            const url = URL.createObjectURL(blob);
+            pngUrls[size] = url;
+
+            const item = document.createElement('div');
+            item.className = 'fav-item';
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = size + 'x' + size;
+            if (bgToggle.checked) img.style.background = bgColor.value;
+            const label = document.createElement('span');
+            label.textContent = size + '×' + size;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'favicon-' + size + 'x' + size + '.png';
+            link.textContent = '下载';
+            link.className = 'tool-button';
+            link.style.padding = '4px 10px';
+            link.style.fontSize = '0.8em';
+            item.appendChild(img);
+            item.appendChild(label);
+            item.appendChild(link);
+            sizeGrid.appendChild(item);
+
+            if (ICO_SIZES.indexOf(size) !== -1) {
+                pngBuffers.push({ size: size, buffer: await blob.arrayBuffer() });
+            }
+        }
+        // 512 大图（仅下载用，不进网格）
+        const bigBlob = await canvasBlob(renderSquare(512));
+        png512Link.href = URL.createObjectURL(bigBlob);
+        // 注意：512 大图 blob URL 不进 pngUrls 管理，页面卸载时由浏览器回收
+
+        // 打包 ICO
+        const icoBuffer = buildIco(pngBuffers);
+        const icoBlob = new Blob([icoBuffer], { type: 'image/x-icon' });
+        currentIconUrl = URL.createObjectURL(icoBlob);
+        icoLink.href = currentIconUrl;
+
+        // HTML 片段（纯静态文本，无注入风险）
+        snippet.textContent =
+            '<link rel="icon" type="image/x-icon" href="/favicon.ico">\n' +
+            '<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">\n' +
+            '<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">\n' +
+            '<link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">';
+        resultArea.style.display = 'block';
+    }
+
+    imageInput.addEventListener('change', function () {
+        const file = imageInput.files && imageInput.files[0];
+        if (!file) return;
+        clearError();
+        resultArea.style.display = 'none';
+        if (sourceImage) URL.revokeObjectURL(sourceImage.src);
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+            sourceImage = img;
+            generate().catch(function (e) { showError('生成失败: ' + e.message); });
+        };
+        img.onerror = function () {
+            URL.revokeObjectURL(url);
+            showError('无法加载图片文件，请选择有效的图片。');
+        };
+        img.src = url;
+    });
+
+    // 底色切换只影响预览观感，重新套用样式即可（不重新生成）
+    function applyPreviewBg() {
+        const items = sizeGrid.querySelectorAll('.fav-item img');
+        items.forEach(function (img) {
+            img.style.background = bgToggle.checked ? bgColor.value : '';
+        });
+    }
+    bgToggle.addEventListener('change', applyPreviewBg);
+    bgColor.addEventListener('input', applyPreviewBg);
+
+    copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(snippet.textContent).then(function () {
+            const original = copyBtn.textContent;
+            copyBtn.textContent = '已复制 ✓';
+            copyBtn.disabled = true;
+            setTimeout(function () {
+                copyBtn.textContent = original;
+                copyBtn.disabled = false;
+            }, 1500);
+        }).catch(function (err) {
+            showError('无法复制到剪贴板: ' + err);
+        });
+    });
+});
+</script>
+</body>
+</html>

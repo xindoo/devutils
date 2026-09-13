@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码截图</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .shot-card {
+            font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            box-sizing: border-box;
+            white-space: pre;
+            overflow: hidden;
+        }
+        .shot-titlebar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .shot-dots {
+            display: flex;
+            gap: 8px;
+        }
+        .shot-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .shot-preview {
+            max-width: 100%;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            margin-top: 6px;
+        }
+        .shot-preview-wrap {
+            background:
+                repeating-conic-gradient(var(--surface-hover) 0% 25%, var(--surface) 0% 50%) 50% / 20px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>代码截图</h1>
+            <p>Code Screenshot — 生成精美的代码分享图片（PNG）</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="codeInput" class="tool-label">代码内容:</label>
+            <textarea id="codeInput" class="tool-textarea" style="min-height: 200px;" placeholder="粘贴要截图的代码..."></textarea>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">样式设置:</label>
+            <div class="tool-inline-controls">
+                <span style="display: inline-flex; align-items: center; gap: 5px;">
+                    <label class="tool-label" style="margin: 0;" for="langSelect">语言:</label>
+                    <select id="langSelect" class="tool-select">
+                        <option value="javascript" selected>JavaScript</option>
+                        <option value="json">JSON</option>
+                        <option value="html">HTML</option>
+                        <option value="python">Python</option>
+                        <option value="plain">纯文本</option>
+                    </select>
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 5px;">
+                    <label class="tool-label" style="margin: 0;" for="themeSelect">主题:</label>
+                    <select id="themeSelect" class="tool-select">
+                        <option value="dark" selected>深色</option>
+                        <option value="light">浅色</option>
+                    </select>
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 5px;">
+                    <label class="tool-label" style="margin: 0;" for="paddingRange">内边距:</label>
+                    <input type="range" id="paddingRange" min="16" max="64" value="32" style="width: 90px;">
+                    <span id="paddingValue">32</span>
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 5px;">
+                    <label class="tool-label" style="margin: 0;" for="radiusRange">圆角:</label>
+                    <input type="range" id="radiusRange" min="0" max="24" value="12" style="width: 90px;">
+                    <span id="radiusValue">12</span>
+                </span>
+                <label style="display: inline-flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="showDots" checked> 显示 macOS 窗口按钮
+                </label>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <label for="titleInput" class="tool-label">窗口标题（可选）:</label>
+            <input type="text" id="titleInput" class="tool-input" placeholder="例如: utils.js">
+        </div>
+
+        <div class="tool-controls">
+            <button class="tool-button" id="generateBtn">生成截图</button>
+        </div>
+        <div id="shotError" class="tool-error" style="display: none;"></div>
+
+        <div id="shotResult" style="display: none; margin-top: 14px;">
+            <div class="tool-section">
+                <label class="tool-label">预览:</label>
+                <div class="shot-preview-wrap">
+                    <img id="shotPreview" class="shot-preview" alt="代码截图预览">
+                </div>
+            </div>
+            <div class="tool-controls">
+                <a id="downloadLink" class="tool-button" style="text-decoration: none; display: inline-block;" download="code-screenshot.png">下载 PNG</a>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const codeInput = document.getElementById('codeInput');
+    const langSelect = document.getElementById('langSelect');
+    const themeSelect = document.getElementById('themeSelect');
+    const paddingRange = document.getElementById('paddingRange');
+    const paddingValue = document.getElementById('paddingValue');
+    const radiusRange = document.getElementById('radiusRange');
+    const radiusValue = document.getElementById('radiusValue');
+    const showDots = document.getElementById('showDots');
+    const titleInput = document.getElementById('titleInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const shotError = document.getElementById('shotError');
+    const shotResult = document.getElementById('shotResult');
+    const shotPreview = document.getElementById('shotPreview');
+    const downloadLink = document.getElementById('downloadLink');
+
+    paddingRange.addEventListener('input', function () { paddingValue.textContent = paddingRange.value; });
+    radiusRange.addEventListener('input', function () { radiusValue.textContent = radiusRange.value; });
+
+    function showError(msg) {
+        shotError.textContent = msg;
+        shotError.style.display = 'block';
+    }
+    function clearError() {
+        shotError.textContent = '';
+        shotError.style.display = 'none';
+    }
+
+    // ---------- 配色（导出图中使用内联样式，不依赖页面 CSS 变量） ----------
+    const THEMES = {
+        dark: {
+            bg: '#1E293B', fg: '#E2E8F0', title: '#94A3B8', dotBg: '#334155',
+            border: '#334155',
+            colors: { keyword: '#C792EA', string: '#A5D6A5', comment: '#64748B', number: '#F78C6C', tag: '#82AAFF', punctuation: '#94A3B8' }
+        },
+        light: {
+            bg: '#FFFFFF', fg: '#1E293B', title: '#64748B', dotBg: '#F1F5F9',
+            border: '#E2E8F0',
+            colors: { keyword: '#9333EA', string: '#15803D', comment: '#94A3B8', number: '#EA580C', tag: '#2563EB', punctuation: '#64748B' }
+        }
+    };
+    const KEYWORDS = {
+        javascript: ['const','let','var','function','return','if','else','for','while','class','extends','new','import','export','from','default','async','await','try','catch','finally','throw','switch','case','break','continue','typeof','instanceof','this','super','yield','static','get','set','null','undefined','true','false'],
+        json: ['true','false','null'],
+        html: [],
+        python: ['def','return','if','elif','else','for','while','import','from','as','class','try','except','finally','raise','with','lambda','pass','break','continue','and','or','not','in','is','None','True','False','async','await','global','yield'],
+        plain: []
+    };
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // 通用 tokenizer：按优先级匹配（评论/字符串/标签/数字/关键字），逐段输出转义后的 HTML
+    function highlight(code, lang, colors) {
+        if (lang === 'plain') return esc(code);
+        let regexSource = '';
+        const kinds = [];
+        function add(src, kind) { regexSource += (regexSource ? '|' : '') + '(' + src + ')'; kinds.push(kind); }
+        if (lang === 'javascript') add('\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/', 'comment');
+        if (lang === 'python') add('#[^\\n]*|"""[\\s\\S]*?"""|\'\'\'[\\s\\S]*?\'\'\'', 'comment');
+        if (lang === 'html') add('<!--[\\s\\S]*?-->', 'comment');
+        if (lang !== 'html') add('"(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\'|`(?:[^`\\\\]|\\\\.)*`', 'string');
+        if (lang === 'json') add('"(?:[^"\\\\]|\\\\.)*"', 'string');
+        if (lang === 'html') add('</?[a-zA-Z][^>]*>', 'tag');
+        add('\\b\\d+(?:\\.\\d+)?\\b', 'number');
+        const kws = KEYWORDS[lang] || [];
+        if (kws.length) add('\\b(?:' + kws.join('|') + ')\\b', 'keyword');
+        const re = new RegExp(regexSource, 'g');
+        let out = '', last = 0, m;
+        while ((m = re.exec(code)) !== null) {
+            out += esc(code.slice(last, m.index));
+            const kind = kinds[m.slice(1).findIndex(function (g) { return g !== undefined; })];
+            out += '<span style="color:' + (colors[kind] || colors.fg) + '">' + esc(m[0]) + '</span>';
+            last = m.index + m[0].length;
+            if (m[0].length === 0) re.lastIndex++;
+        }
+        out += esc(code.slice(last));
+        return out;
+    }
+
+    // ---------- 构建卡片 HTML（内联样式，供 foreignObject 渲染） ----------
+    function buildCardHtml(code, lang, theme, padding, radius, withDots, title) {
+        const t = THEMES[theme];
+        const colors = t.colors;
+        const dotColors = ['#FF5F57', '#FEBC2E', '#28C840'];
+        let bar = '';
+        if (withDots || title) {
+            bar = '<div class="shot-titlebar" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">'
+                + (withDots
+                    ? '<span class="shot-dots" style="display:flex;gap:8px;">'
+                        + dotColors.map(function (c) {
+                            return '<span class="shot-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + c + ';"></span>';
+                        }).join('')
+                        + '</span>'
+                    : '')
+                + (title
+                    ? '<span style="color:' + t.title + ';font-size:13px;font-family:\'JetBrains Mono\',ui-monospace,Menlo,Consolas,monospace;">' + esc(title) + '</span>'
+                    : '')
+                + '</div>';
+        }
+        const html = '<div style="background:' + t.bg + ';color:' + t.fg + ';padding:' + padding + 'px;border-radius:' + radius
+            + 'px;border:1px solid ' + t.border + ';font-family:\'JetBrains Mono\',ui-monospace,Menlo,Consolas,\'Courier New\',monospace;font-size:14px;line-height:1.6;box-sizing:content-box;">'
+            + bar
+            + '<div style="white-space:pre;margin:0;">' + (highlight(code, lang, colors) || '&nbsp;') + '</div>'
+            + '</div>';
+        return { html: html, innerPadding: padding };
+    }
+
+    // 用 canvas measureText 量化最长行，确定卡片宽度（等宽字体）
+    function measureCardWidth(code, padding) {
+        const c = document.createElement('canvas').getContext('2d');
+        c.font = '14px "JetBrains Mono", ui-monospace, Menlo, Consolas, "Courier New", monospace';
+        let maxW = 0;
+        const lines = code.split('\n');
+        for (const line of lines) {
+            const w = c.measureText(line).width;
+            if (w > maxW) maxW = w;
+        }
+        return Math.ceil(Math.max(360, Math.min(maxW + padding * 2 + 2, 1200)));
+    }
+
+    // ---------- foreignObject 导出 ----------
+    function exportPng(cardHtml, cardWidth, cardHeight, scale) {
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + cardWidth * scale + '" height="' + cardHeight * scale + '">'
+            + '<foreignObject width="100%" height="100%">'
+            + '<div xmlns="http://www.w3.org/1999/xhtml" style="width:' + cardWidth * scale + 'px;">'
+            + '<div style="transform:scale(' + scale + ');transform-origin:top left;width:' + cardWidth + 'px;">'
+            + cardHtml
+            + '</div></div></foreignObject></svg>';
+        return new Promise(function (resolve, reject) {
+            const img = new Image();
+            img.onload = function () {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = cardWidth * scale;
+                    canvas.height = cardHeight * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (e) { reject(e); }
+            };
+            img.onerror = function () { reject(new Error('SVG 渲染失败')); };
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        });
+    }
+
+    // 测量卡片实际高度：离屏渲染同款 DOM 后读取
+    function measureCardHeight(cardHtml, cardWidth) {
+        const holder = document.createElement('div');
+        holder.style.cssText = 'position:fixed;left:-9999px;top:0;width:' + cardWidth + 'px;visibility:hidden;';
+        holder.innerHTML = cardHtml;
+        document.body.appendChild(holder);
+        const h = Math.ceil(holder.firstChild.getBoundingClientRect().height);
+        document.body.removeChild(holder);
+        return h;
+    }
+
+    generateBtn.addEventListener('click', function () {
+        clearError();
+        shotResult.style.display = 'none';
+        const code = codeInput.value;
+        if (!code.trim()) {
+            showError('请先输入代码内容。');
+            return;
+        }
+        try {
+            const padding = Math.max(16, Math.min(64, parseInt(paddingRange.value, 10) || 32));
+            const radius = Math.max(0, Math.min(24, parseInt(radiusRange.value, 10) || 0));
+            const card = buildCardHtml(code, langSelect.value, themeSelect.value, padding, radius, showDots.checked, titleInput.value.trim());
+            const cardWidth = measureCardWidth(code, padding);
+            const cardHeight = measureCardHeight(card.html, cardWidth);
+            exportPng(card.html, cardWidth, cardHeight, 2).then(function (dataUrl) {
+                shotPreview.src = dataUrl;
+                downloadLink.href = dataUrl;
+                shotResult.style.display = 'block';
+            }).catch(function (e) {
+                showError('导出失败: ' + e.message);
+            });
+        } catch (e) {
+            showError('生成失败: ' + e.message);
+        }
+    });
+});
+</script>
+</body>
+</html>

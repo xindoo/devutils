@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片裁剪/旋转</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .crop-canvas-wrapper {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            background:
+                repeating-conic-gradient(var(--surface-hover) 0% 25%, var(--surface) 0% 50%) 50% / 20px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            max-width: 100%;
+            overflow: auto;
+        }
+        #cropCanvas {
+            max-width: 100%;
+            cursor: crosshair;
+            touch-action: none;
+            display: block;
+        }
+        .crop-preview {
+            max-width: 100%;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            margin-top: 6px;
+        }
+        .crop-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .crop-toolbar .tool-button {
+            padding: 8px 14px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>图片裁剪/旋转</h1>
+            <p>Image Crop &amp; Rotate — 裁剪、旋转、翻转并导出图片</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="imageInput" class="tool-label">选择图片:</label>
+            <input type="file" id="imageInput" class="tool-input" accept="image/*">
+        </div>
+
+        <div id="editorArea" style="display: none;">
+            <div class="tool-section">
+                <label class="tool-label">旋转/翻转（会清除当前选区）:</label>
+                <div class="crop-toolbar">
+                    <button class="tool-button" id="rotateLeftBtn" title="逆时针旋转90°">↺ 左转90°</button>
+                    <button class="tool-button" id="rotateRightBtn" title="顺时针旋转90°">↻ 右转90°</button>
+                    <button class="tool-button" id="flipHBtn" title="水平翻转">⇋ 水平翻转</button>
+                    <button class="tool-button" id="flipVBtn" title="垂直翻转">⇅ 垂直翻转</button>
+                    <button class="tool-button" id="clearSelBtn" title="清除选区">✕ 清除选区</button>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <label for="ratioSelect" class="tool-label">裁剪比例:</label>
+                <div class="tool-inline-controls">
+                    <select id="ratioSelect" class="tool-select">
+                        <option value="free" selected>自由</option>
+                        <option value="1">1 : 1</option>
+                        <option value="1.3333">4 : 3</option>
+                        <option value="1.7778">16 : 9</option>
+                        <option value="0.8">4 : 5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="crop-canvas-wrapper">
+                <canvas id="cropCanvas"></canvas>
+            </div>
+            <div id="selInfo" class="tool-result" style="min-height: 1.5em;">在图上拖拽鼠标框选裁剪区域</div>
+
+            <div class="tool-section">
+                <label for="formatSelect" class="tool-label">导出格式:</label>
+                <div class="tool-inline-controls">
+                    <select id="formatSelect" class="tool-select">
+                        <option value="png" selected>PNG</option>
+                        <option value="jpeg">JPEG</option>
+                    </select>
+                    <span id="qualityWrap" style="display: none; align-items: center; gap: 6px;">
+                        <label for="qualityRange" class="tool-label" style="margin: 0;">质量:</label>
+                        <input type="range" id="qualityRange" min="10" max="100" value="90">
+                        <span id="qualityValue">90</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="tool-controls">
+                <button class="tool-button" id="cropBtn" disabled>裁剪并预览</button>
+            </div>
+
+            <div id="cropResult" style="display: none;">
+                <div class="tool-section">
+                    <label class="tool-label">裁剪结果:</label>
+                    <img id="cropPreview" class="crop-preview" alt="裁剪预览">
+                </div>
+                <div class="tool-controls">
+                    <a id="downloadLink" class="tool-button" style="text-decoration: none; display: inline-block;" download>下载图片</a>
+                </div>
+            </div>
+            <div id="cropError" class="tool-error" style="display: none;"></div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const imageInput = document.getElementById('imageInput');
+    const editorArea = document.getElementById('editorArea');
+    const canvas = document.getElementById('cropCanvas');
+    const ctx = canvas.getContext('2d');
+    const selInfo = document.getElementById('selInfo');
+    const cropBtn = document.getElementById('cropBtn');
+    const cropResult = document.getElementById('cropResult');
+    const cropPreview = document.getElementById('cropPreview');
+    const downloadLink = document.getElementById('downloadLink');
+    const cropError = document.getElementById('cropError');
+    const formatSelect = document.getElementById('formatSelect');
+    const qualityWrap = document.getElementById('qualityWrap');
+    const qualityRange = document.getElementById('qualityRange');
+    const qualityValue = document.getElementById('qualityValue');
+    const ratioSelect = document.getElementById('ratioSelect');
+
+    const MAX_DISPLAY_WIDTH = 720;
+    const MAX_DISPLAY_HEIGHT = 480;
+
+    let sourceImage = null;        // 原始 Image
+    let objectUrl = null;          // 跟踪 objectURL，便于释放
+    let workingCanvas = null;      // 旋转/翻转后的全分辨率画布
+    let rotation = 0;              // 0/90/180/270
+    let flipH = false, flipV = false;
+    let displayScale = 1;          // 显示缩放比（显示坐标 -> 工作画布坐标 = /displayScale）
+    let sel = null;                // 显示坐标下的选区 {x, y, w, h}
+    let dragging = false, dragStart = null;
+    let currentObjectUrl = null;   // 当前预览/下载链接
+
+    // ---------- 工具函数 ----------
+    function showError(msg) {
+        cropError.textContent = msg;
+        cropError.style.display = 'block';
+    }
+    function clearError() {
+        cropError.textContent = '';
+        cropError.style.display = 'none';
+    }
+    function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+    // ---------- 构建"工作画布"（应用旋转/翻转后的全分辨率图像） ----------
+    function rebuildWorkingCanvas() {
+        const sw = sourceImage.naturalWidth, sh = sourceImage.naturalHeight;
+        const rotated = (rotation === 90 || rotation === 270);
+        const w = rotated ? sh : sw;
+        const h = rotated ? sw : sh;
+        workingCanvas = document.createElement('canvas');
+        workingCanvas.width = w;
+        workingCanvas.height = h;
+        const c = workingCanvas.getContext('2d');
+        c.save();
+        c.translate(w / 2, h / 2);
+        c.rotate(rotation * Math.PI / 180);
+        c.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+        c.drawImage(sourceImage, -sw / 2, -sh / 2);
+        c.restore();
+    }
+
+    // ---------- 重绘显示画布 ----------
+    function redraw() {
+        if (!workingCanvas) return;
+        const w = workingCanvas.width, h = workingCanvas.height;
+        displayScale = Math.min(MAX_DISPLAY_WIDTH / w, MAX_DISPLAY_HEIGHT / h, 1);
+        const dw = Math.max(1, Math.round(w * displayScale));
+        const dh = Math.max(1, Math.round(h * displayScale));
+        canvas.width = dw;
+        canvas.height = dh;
+        ctx.imageSmoothingEnabled = true;
+        ctx.clearRect(0, 0, dw, dh);
+        ctx.drawImage(workingCanvas, 0, 0, dw, dh);
+
+        if (sel && sel.w > 0 && sel.h > 0) {
+            // 选区外半透明遮罩
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.fillRect(0, 0, dw, sel.y);                                  // 上
+            ctx.fillRect(0, sel.y + sel.h, dw, dh - sel.y - sel.h);         // 下
+            ctx.fillRect(0, sel.y, sel.x, sel.h);                           // 左
+            ctx.fillRect(sel.x + sel.w, sel.y, dw - sel.x - sel.w, sel.h);  // 右
+            // 选区边框
+            ctx.strokeStyle = 'var(--primary)'; // canvas 不识别 CSS 变量，下面用具体色值
+            ctx.strokeStyle = '#3B82F6';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(sel.x + 0.5, sel.y + 0.5, sel.w, sel.h);
+            // 三分线
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 2; i++) {
+                ctx.beginPath();
+                ctx.moveTo(sel.x + sel.w * i / 3, sel.y); ctx.lineTo(sel.x + sel.w * i / 3, sel.y + sel.h);
+                ctx.moveTo(sel.x, sel.y + sel.h * i / 3); ctx.lineTo(sel.x + sel.w, sel.y + sel.h * i / 3);
+                ctx.stroke();
+            }
+            selInfo.textContent = '选区: ' + Math.round(sel.w / displayScale) + ' × ' + Math.round(sel.h / displayScale) + ' px';
+            cropBtn.disabled = false;
+        } else {
+            selInfo.textContent = '在图上拖拽鼠标框选裁剪区域';
+            cropBtn.disabled = true;
+        }
+    }
+
+    // ---------- 选区交互（Pointer Events） ----------
+    function canvasPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        // canvas.width 可能与 CSS 显示宽度不同（max-width 缩放），按比例换算
+        const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+        return {
+            x: clamp((e.clientX - rect.left) * sx, 0, canvas.width),
+            y: clamp((e.clientY - rect.top) * sy, 0, canvas.height)
+        };
+    }
+
+    function normalizeRect(p1, p2) {
+        let x = Math.min(p1.x, p2.x), y = Math.min(p1.y, p2.y);
+        let w = Math.abs(p2.x - p1.x), h = Math.abs(p2.y - p1.y);
+        const ratio = parseFloat(ratioSelect.value);
+        if (!isNaN(ratio)) {
+            // 锁定比例：以宽度为基准推算高度，超出画布则反向以高度为准
+            h = w / ratio;
+            if (p2.y >= p1.y ? y + h > canvas.height : y - h < 0) {
+                h = p2.y >= p1.y ? canvas.height - y : y;
+                w = h * ratio;
+            }
+            // 依据拖拽方向还原 x/y
+            x = p2.x >= p1.x ? x : x - (w - Math.abs(p2.x - p1.x));
+            y = p2.y >= p1.y ? y : y - (h - Math.abs(p2.y - p1.y));
+            x = clamp(x, 0, canvas.width - w);
+            y = clamp(y, 0, canvas.height - h);
+        }
+        return { x, y, w, h };
+    }
+
+    canvas.addEventListener('pointerdown', function (e) {
+        if (!workingCanvas) return;
+        e.preventDefault();
+        canvas.setPointerCapture(e.pointerId);
+        dragging = true;
+        dragStart = canvasPos(e);
+        sel = { x: dragStart.x, y: dragStart.y, w: 0, h: 0 };
+        redraw();
+    });
+    canvas.addEventListener('pointermove', function (e) {
+        if (!dragging || !workingCanvas) return;
+        sel = normalizeRect(dragStart, canvasPos(e));
+        redraw();
+    });
+    canvas.addEventListener('pointerup', function (e) {
+        if (!dragging) return;
+        dragging = false;
+        sel = normalizeRect(dragStart, canvasPos(e));
+        if (sel.w < 4 || sel.h < 4) sel = null; // 过小视为误触
+        redraw();
+    });
+
+    // ---------- 变换按钮 ----------
+    function withImage(fn) {
+        if (!sourceImage) return;
+        fn();
+        sel = null;
+        rebuildWorkingCanvas();
+        redraw();
+    }
+    document.getElementById('rotateRightBtn').addEventListener('click', function () {
+        withImage(function () { rotation = (rotation + 90) % 360; });
+    });
+    document.getElementById('rotateLeftBtn').addEventListener('click', function () {
+        withImage(function () { rotation = (rotation + 270) % 360; });
+    });
+    document.getElementById('flipHBtn').addEventListener('click', function () {
+        withImage(function () { flipH = !flipH; });
+    });
+    document.getElementById('flipVBtn').addEventListener('click', function () {
+        withImage(function () { flipV = !flipV; });
+    });
+    document.getElementById('clearSelBtn').addEventListener('click', function () {
+        sel = null; redraw();
+    });
+    ratioSelect.addEventListener('change', function () {
+        if (sel) { sel = null; redraw(); } // 比例切换后旧选区不再匹配，清除
+    });
+
+    // ---------- 文件选择 ----------
+    imageInput.addEventListener('change', function () {
+        const file = imageInput.files && imageInput.files[0];
+        if (!file) return;
+        clearError();
+        cropResult.style.display = 'none';
+        if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+        if (objectUrl) { URL.revokeObjectURL(objectUrl); }
+        objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+            sourceImage = img;
+            currentObjectUrl = objectUrl;
+            rotation = 0; flipH = false; flipV = false; sel = null;
+            editorArea.style.display = 'block';
+            rebuildWorkingCanvas();
+            redraw();
+        };
+        img.onerror = function () {
+            URL.revokeObjectURL(objectUrl);
+            showError('无法加载图片文件，请选择有效的图片。');
+        };
+        img.src = objectUrl;
+    });
+
+    // ---------- 导出 ----------
+    formatSelect.addEventListener('change', function () {
+        qualityWrap.style.display = formatSelect.value === 'jpeg' ? 'inline-flex' : 'none';
+    });
+    qualityRange.addEventListener('input', function () {
+        qualityValue.textContent = qualityRange.value;
+    });
+
+    cropBtn.addEventListener('click', function () {
+        if (!sel || !workingCanvas || displayScale <= 0) return;
+        clearError();
+        try {
+            const sx = clamp(sel.x / displayScale, 0, workingCanvas.width);
+            const sy = clamp(sel.y / displayScale, 0, workingCanvas.height);
+            const sw = clamp(sel.w / displayScale, 1, workingCanvas.width - sx);
+            const sh = clamp(sel.h / displayScale, 1, workingCanvas.height - sy);
+            const out = document.createElement('canvas');
+            out.width = Math.round(sw);
+            out.height = Math.round(sh);
+            const oc = out.getContext('2d');
+            const format = formatSelect.value;
+            if (format === 'jpeg') {
+                oc.fillStyle = '#ffffff'; // JPEG 无透明通道，白底填充
+                oc.fillRect(0, 0, out.width, out.height);
+            }
+            oc.drawImage(workingCanvas, sx, sy, sw, sh, 0, 0, out.width, out.height);
+            const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+            const quality = format === 'jpeg' ? clamp(parseInt(qualityRange.value, 10) / 100 || 0.9, 0.1, 1) : undefined;
+            const dataUrl = out.toDataURL(mime, quality);
+            cropPreview.src = dataUrl;
+            const baseName = 'cropped_' + Date.now();
+            downloadLink.href = dataUrl;
+            downloadLink.download = baseName + (format === 'jpeg' ? '.jpg' : '.png');
+            cropResult.style.display = 'block';
+        } catch (err) {
+            showError('裁剪失败: ' + err.message);
+        }
+    });
+});
+</script>
+</body>
+</html>

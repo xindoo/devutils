@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV 预览器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .csv-table-wrap {
+            overflow: auto;
+            max-height: 60vh;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            margin-top: 12px;
+        }
+        .csv-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.92em;
+        }
+        .csv-table th, .csv-table td {
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            text-align: left;
+            white-space: nowrap;
+            max-width: 360px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .csv-table td {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .csv-table th {
+            background: var(--surface-hover);
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+        }
+        .csv-table th:hover {
+            background: var(--border);
+        }
+        .sort-arrow {
+            color: var(--primary);
+            margin-left: 4px;
+        }
+        .row-count {
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>CSV 预览器</h1>
+            <p>CSV Viewer — 支持引号内逗号/换行/转义引号，自定义分隔符，点击表头排序</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="fileInput" class="tool-label">选择 CSV 文件:</label>
+            <input type="file" id="fileInput" class="tool-input" accept=".csv,.txt,text/csv,text/plain">
+        </div>
+
+        <div class="tool-section">
+            <label for="csvInput" class="tool-label">或直接粘贴 CSV 内容:</label>
+            <textarea id="csvInput" class="tool-textarea" rows="6" placeholder="name,age,city&#10;Alice,30,Beijing&#10;&quot;Zhang, San&quot;,25,Shanghai"></textarea>
+        </div>
+
+        <div class="tool-section tool-inline-controls">
+            <div>
+                <label for="delimiter" class="tool-label">分隔符:</label>
+                <select id="delimiter" class="tool-select">
+                    <option value=",">逗号 ,</option>
+                    <option value=";">分号 ;</option>
+                    <option value="\t">Tab</option>
+                    <option value="|">竖线 |</option>
+                </select>
+            </div>
+            <div>
+                <label class="tool-label-inline">首行为表头</label>
+                <input type="checkbox" id="hasHeader" checked>
+            </div>
+            <button onclick="renderCsv()" class="tool-button">解析预览</button>
+        </div>
+
+        <div id="errorBox" class="tool-error"></div>
+        <div id="tableWrap" class="csv-table-wrap" style="display: none;"></div>
+        <div id="rowCount" class="row-count"></div>
+    </div>
+
+<script>
+    const RENDER_ROW_LIMIT = 500; // 限制渲染行数防冻结
+
+    let state = {
+        headers: [],
+        rows: [],       // 已去除表头的数据行
+        hasHeader: true,
+        sortCol: -1,
+        sortAsc: true
+    };
+
+    // ---------- 自实现 CSV 解析器 (状态机) ----------
+    // 正确处理: 引号字段内的分隔符/换行、"" 转义引号、\r\n 与 \n
+    function parseCsv(text, delimiter) {
+        const rows = [];
+        let row = [];
+        let field = '';
+        let inQuotes = false;
+        let i = 0;
+
+        // 依赖 String.charAt 按 UTF-16 码元遍历, 分隔符均为单码元字符
+        while (i < text.length) {
+            const ch = text.charAt(i);
+
+            if (inQuotes) {
+                if (ch === '"') {
+                    if (text.charAt(i + 1) === '"') {
+                        field += '"';
+                        i += 2;
+                        continue;
+                    }
+                    inQuotes = false;
+                    i++;
+                    continue;
+                }
+                field += ch;
+                i++;
+                continue;
+            }
+
+            if (ch === '"' && field === '') {
+                inQuotes = true;
+                i++;
+                continue;
+            }
+            if (ch === delimiter) {
+                row.push(field);
+                field = '';
+                i++;
+                continue;
+            }
+            if (ch === '\r' || ch === '\n') {
+                if (ch === '\r' && text.charAt(i + 1) === '\n') i++;
+                i++;
+                row.push(field);
+                field = '';
+                // 跳过完全空行 (整行所有字段为空)
+                if (row.length > 1 || row[0] !== '') rows.push(row);
+                row = [];
+                continue;
+            }
+            field += ch;
+            i++;
+        }
+        // 收尾: 最后一个字段 (若非空行)
+        if (field !== '' || row.length > 0) {
+            row.push(field);
+            if (row.length > 1 || row[0] !== '') rows.push(row);
+        }
+        return rows;
+    }
+
+    function isNumericColumn(values) {
+        return values.every(v => v.trim() !== '' && isFinite(Number(v)));
+    }
+
+    function renderTable() {
+        const wrap = document.getElementById('tableWrap');
+        const rowCount = document.getElementById('rowCount');
+        wrap.textContent = '';
+
+        const { headers, rows, sortCol, sortAsc } = state;
+        if (!headers.length && !rows.length) {
+            wrap.style.display = 'none';
+            rowCount.textContent = '';
+            return;
+        }
+
+        // 排序 (不修改原数组)
+        let displayRows = rows;
+        if (sortCol >= 0) {
+            const col = sortCol;
+            const colValues = rows.map(r => r[col] || '');
+            const numeric = isNumericColumn(colValues);
+            displayRows = rows.slice().sort((a, b) => {
+                const va = a[col] || '';
+                const vb = b[col] || '';
+                let cmp;
+                if (numeric) {
+                    cmp = Number(va) - Number(vb);
+                } else {
+                    cmp = va.localeCompare(vb, 'zh-Hans-CN');
+                }
+                return sortAsc ? cmp : -cmp;
+            });
+        }
+
+        const table = document.createElement('table');
+        table.className = 'csv-table';
+
+        // 表头
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        headers.forEach((h, idx) => {
+            const th = document.createElement('th');
+            th.textContent = (h || '(空)') + (sortCol === idx ? (sortAsc ? ' ▲' : ' ▼') : '');
+            th.title = '点击按此列排序';
+            th.addEventListener('click', () => {
+                if (state.sortCol === idx) {
+                    state.sortAsc = !state.sortAsc;
+                } else {
+                    state.sortCol = idx;
+                    state.sortAsc = true;
+                }
+                renderTable();
+            });
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        // 数据行 (限制渲染数量)
+        const tbody = document.createElement('tbody');
+        const shown = Math.min(displayRows.length, RENDER_ROW_LIMIT);
+        for (let r = 0; r < shown; r++) {
+            const tr = document.createElement('tr');
+            const cells = displayRows[r];
+            for (let c = 0; c < headers.length; c++) {
+                const td = document.createElement('td');
+                td.textContent = cells[c] || '';
+                td.title = cells[c] || '';
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        wrap.style.display = 'block';
+
+        rowCount.textContent = '共 ' + rows.length.toLocaleString('en-US') + ' 行数据'
+            + (rows.length > shown ? ', 当前显示前 ' + shown + ' 行' : '')
+            + (sortCol >= 0 ? ', 已按第 ' + (sortCol + 1) + ' 列' + (sortAsc ? '升序' : '降序') + '排序' : '');
+    }
+
+    function renderCsv() {
+        const errorBox = document.getElementById('errorBox');
+        errorBox.textContent = '';
+
+        const delimRaw = document.getElementById('delimiter').value;
+        const delimiter = delimRaw === '\\t' ? '\t' : delimRaw;
+        const hasHeader = document.getElementById('hasHeader').checked;
+        const text = document.getElementById('csvInput').value;
+
+        if (!text.trim()) {
+            errorBox.textContent = '请选择 CSV 文件或粘贴内容。';
+            document.getElementById('tableWrap').style.display = 'none';
+            document.getElementById('rowCount').textContent = '';
+            return;
+        }
+
+        let allRows;
+        try {
+            allRows = parseCsv(text, delimiter);
+        } catch (e) {
+            errorBox.textContent = '解析失败: ' + e.message;
+            return;
+        }
+
+        if (!allRows.length) {
+            errorBox.textContent = '未解析到有效数据行。';
+            return;
+        }
+
+        state = { headers: [], rows: [], hasHeader, sortCol: -1, sortAsc: true };
+        if (hasHeader) {
+            state.headers = allRows[0];
+            state.rows = allRows.slice(1);
+        } else {
+            const width = allRows[0].length;
+            state.headers = Array.from({ length: width }, (_, i) => '列 ' + (i + 1));
+            state.rows = allRows;
+        }
+
+        renderTable();
+    }
+
+    document.getElementById('fileInput').addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        // 大小防护: 超大文件提示而非卡死
+        if (file.size > 20 * 1024 * 1024) {
+            document.getElementById('errorBox').textContent = '文件超过 20 MB, 请拆分后再预览。';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => {
+            document.getElementById('errorBox').textContent = '文件读取失败。';
+        };
+        reader.onload = ev => {
+            document.getElementById('csvInput').value = ev.target.result;
+            renderCsv();
+        };
+        reader.readAsText(file);
+    });
+</script>
+</body>
+</html>

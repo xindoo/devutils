@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本批量处理</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .batch-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 8px;
+            background: var(--surface);
+            flex-wrap: wrap;
+        }
+        .batch-step label {
+            cursor: pointer;
+            color: var(--text-primary);
+            min-width: 110px;
+        }
+        .batch-step .step-config {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+        .batch-step .step-config input[type="text"],
+        .batch-step .step-config select {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 0.9em;
+        }
+        .batch-step .step-config input[type="text"] {
+            width: 140px;
+        }
+        .batch-stat {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            min-width: 110px;
+            text-align: right;
+        }
+        .batch-order {
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.85em;
+            width: 28px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>文本批量处理</h1>
+            <p>按管线顺序对多行文本批量应用处理步骤 (Text Batch Processor)</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="batch-input" class="tool-label">输入文本:</label>
+            <textarea id="batch-input" class="tool-textarea" rows="8" placeholder="粘贴多行文本，每行一条"></textarea>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">处理管线（自上而下依次应用，勾选启用）:</label>
+            <div id="steps"></div>
+        </div>
+
+        <div class="tool-controls">
+            <button onclick="runPipeline()" class="tool-button">应用处理 ↓</button>
+            <button onclick="resetSteps()" class="tool-button">重置选项</button>
+        </div>
+        <div id="batch-error" class="tool-error"></div>
+
+        <div class="tool-section">
+            <label class="tool-label">输出结果:</label>
+            <div class="tool-inline-controls">
+                <button onclick="copyOutput()" class="tool-button" id="copy-btn">复制结果</button>
+            </div>
+            <textarea id="batch-output" class="tool-textarea" rows="8" readonly></textarea>
+        </div>
+    </div>
+
+<script>
+    const MAX_LINES = 100000; // 超过该行数仅提示（字符串处理本身可承受），避免误认为卡死
+
+    // ============ 步骤定义 ============
+    // 每个步骤: { key, label, buildConfig(容器), apply(lines, config) -> { lines, changed } }
+    const STEP_DEFS = [
+        {
+            key: 'trim',
+            label: 'Trim 每行',
+            buildConfig: () => ({}),
+            apply: (lines) => {
+                const out = lines.map(l => l.trim());
+                return { lines: out, changed: out.filter((l, i) => l !== lines[i]).length };
+            }
+        },
+        {
+            key: 'remove-empty',
+            label: '删除空行',
+            buildConfig: () => ({}),
+            apply: (lines) => {
+                const out = lines.filter(l => l.length > 0);
+                return { lines: out, changed: lines.length - out.length };
+            }
+        },
+        {
+            key: 'dedupe',
+            label: '去重',
+            buildConfig: (container) => {
+                const sel = document.createElement('select');
+                [{ v: 'first', t: '保留首次出现' }, { v: 'sorted', t: '排序后去重' }].forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.v; opt.textContent = o.t;
+                    sel.appendChild(opt);
+                });
+                container.appendChild(sel);
+                return { mode: sel };
+            },
+            apply: (lines, cfg) => {
+                if (cfg.mode.value === 'sorted') {
+                    const sorted = [...lines].sort();
+                    const out = [...new Set(sorted)];
+                    return { lines: out, changed: lines.length - out.length };
+                }
+                const seen = new Set();
+                const out = [];
+                for (const l of lines) {
+                    if (!seen.has(l)) { seen.add(l); out.push(l); }
+                }
+                return { lines: out, changed: lines.length - out.length };
+            }
+        },
+        {
+            key: 'sort',
+            label: '排序',
+            buildConfig: (container) => {
+                const sel = document.createElement('select');
+                [{ v: 'asc', t: '升序' }, { v: 'desc', t: '降序' }, { v: 'length', t: '按长度' }].forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.v; opt.textContent = o.t;
+                    sel.appendChild(opt);
+                });
+                container.appendChild(sel);
+                return { mode: sel };
+            },
+            apply: (lines, cfg) => {
+                const before = lines.join('\n');
+                let out;
+                if (cfg.mode.value === 'asc') out = [...lines].sort();
+                else if (cfg.mode.value === 'desc') out = [...lines].sort().reverse();
+                else out = [...lines].sort((a, b) => a.length - b.length);
+                return { lines: out, changed: before === out.join('\n') ? 0 : lines.length };
+            }
+        },
+        {
+            key: 'case',
+            label: '大小写',
+            buildConfig: (container) => {
+                const sel = document.createElement('select');
+                [{ v: 'none', t: '不处理' }, { v: 'upper', t: '全大写' }, { v: 'lower', t: '全小写' }, { v: 'capitalize', t: '首字母大写' }].forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.v; opt.textContent = o.t;
+                    sel.appendChild(opt);
+                });
+                container.appendChild(sel);
+                return { mode: sel };
+            },
+            apply: (lines, cfg) => {
+                if (cfg.mode.value === 'none') return { lines, changed: 0 };
+                const out = lines.map(l => {
+                    if (cfg.mode.value === 'upper') return l.toUpperCase();
+                    if (cfg.mode.value === 'lower') return l.toLowerCase();
+                    return l.charAt(0).toUpperCase() + l.slice(1).toLowerCase();
+                });
+                return { lines: out, changed: out.filter((l, i) => l !== lines[i]).length };
+            }
+        },
+        {
+            key: 'replace',
+            label: '查找替换',
+            buildConfig: (container) => {
+                const find = document.createElement('input');
+                find.type = 'text'; find.placeholder = '查找内容';
+                const replace = document.createElement('input');
+                replace.type = 'text'; replace.placeholder = '替换为';
+                const isRegex = document.createElement('label');
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                isRegex.appendChild(chk);
+                isRegex.appendChild(document.createTextNode('正则'));
+                container.appendChild(find);
+                container.appendChild(replace);
+                container.appendChild(isRegex);
+                return { find, replace, chk };
+            },
+            apply: (lines, cfg) => {
+                const findText = cfg.find.value;
+                if (!findText) return { lines, changed: 0 };
+                let matcher, replacement = cfg.replace.value;
+                if (cfg.chk.checked) {
+                    try {
+                        matcher = new RegExp(findText, 'g'); // g 标志: 行内全部替换
+                    } catch (e) {
+                        throw new Error('无效的正则表达式: ' + e.message);
+                    }
+                } else {
+                    // 普通文本: 转义后构建正则
+                    matcher = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                }
+                let changed = 0;
+                const out = lines.map(l => {
+                    const m = l.replace(matcher, replacement);
+                    if (m !== l) changed++;
+                    return m;
+                });
+                return { lines: out, changed };
+            }
+        },
+        {
+            key: 'affix',
+            label: '行首/行尾添加',
+            buildConfig: (container) => {
+                const pre = document.createElement('input');
+                pre.type = 'text'; pre.placeholder = '行首添加';
+                const suf = document.createElement('input');
+                suf.type = 'text'; suf.placeholder = '行尾添加';
+                container.appendChild(pre);
+                container.appendChild(suf);
+                return { pre, suf };
+            },
+            apply: (lines, cfg) => {
+                const p = cfg.pre.value, s = cfg.suf.value;
+                if (!p && !s) return { lines, changed: 0 };
+                return { lines: lines.map(l => p + l + s), changed: lines.length };
+            }
+        },
+        {
+            key: 'numbering',
+            label: '添加行号',
+            buildConfig: (container) => {
+                const sel = document.createElement('select');
+                [{ v: 'none', t: '不添加' }, { v: '.', t: '1. 格式' }, { v: ')', t: '1) 格式' }, { v: ':', t: '1: 格式' }].forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.v; opt.textContent = o.t;
+                    sel.appendChild(opt);
+                });
+                container.appendChild(sel);
+                return { mode: sel };
+            },
+            apply: (lines, cfg) => {
+                if (cfg.mode.value === 'none') return { lines, changed: 0 };
+                const width = String(lines.length).length;
+                return {
+                    lines: lines.map((l, i) => String(i + 1).padStart(width, ' ') + cfg.mode.value + ' ' + l),
+                    changed: lines.length
+                };
+            }
+        },
+        {
+            key: 'join',
+            label: '合并为一行',
+            buildConfig: (container) => {
+                const sep = document.createElement('input');
+                sep.type = 'text'; sep.placeholder = '分隔符（默认空格）';
+                sep.style.width = '110px';
+                container.appendChild(sep);
+                return { sep };
+            },
+            apply: (lines, cfg) => {
+                if (lines.length <= 1) return { lines, changed: 0 };
+                return { lines: [lines.join(cfg.sep.value || ' ')], changed: lines.length - 1 };
+            }
+        }
+    ];
+
+    const stepConfigs = {};
+
+    // ============ 构建 UI ============
+    function buildSteps() {
+        const wrap = document.getElementById('steps');
+        wrap.textContent = '';
+        STEP_DEFS.forEach((def, idx) => {
+            const row = document.createElement('div');
+            row.className = 'batch-step';
+
+            const order = document.createElement('span');
+            order.className = 'batch-order';
+            order.textContent = String(idx + 1).padStart(2, '0');
+
+            const label = document.createElement('label');
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.dataset.key = def.key;
+            label.appendChild(chk);
+            label.appendChild(document.createTextNode(' ' + def.label));
+
+            const configWrap = document.createElement('div');
+            configWrap.className = 'step-config';
+            stepConfigs[def.key] = def.buildConfig(configWrap);
+
+            const stat = document.createElement('span');
+            stat.className = 'batch-stat';
+            stat.dataset.statFor = def.key;
+            stat.textContent = '未启用';
+
+            row.appendChild(order);
+            row.appendChild(label);
+            row.appendChild(configWrap);
+            row.appendChild(stat);
+            wrap.appendChild(row);
+        });
+    }
+
+    function resetSteps() {
+        document.querySelectorAll('#steps input[type="checkbox"]').forEach(c => { c.checked = false; });
+        document.querySelectorAll('.batch-stat').forEach(s => { s.textContent = '未启用'; });
+        document.getElementById('batch-output').value = '';
+        document.getElementById('batch-error').textContent = '';
+    }
+
+    // ============ 管线执行 ============
+    function runPipeline() {
+        const errorDiv = document.getElementById('batch-error');
+        errorDiv.textContent = '';
+
+        const raw = document.getElementById('batch-input').value;
+        const inputLines = raw.split('\n');
+        if (inputLines.length > MAX_LINES) {
+            errorDiv.textContent = '输入超过 ' + MAX_LINES + ' 行（当前 ' + inputLines.length + ' 行），请先精简后再处理。';
+            return;
+        }
+
+        let lines = [...inputLines];
+        let ok = true;
+
+        for (const def of STEP_DEFS) {
+            const chk = document.querySelector('#steps input[type="checkbox"][data-key="' + def.key + '"]');
+            const stat = document.querySelector('.batch-stat[data-statFor="' + def.key + '"]');
+            if (!chk.checked) {
+                stat.textContent = '未启用';
+                continue;
+            }
+            try {
+                const res = def.apply(lines, stepConfigs[def.key]);
+                lines = res.lines;
+                stat.textContent = '影响 ' + res.changed + ' 行';
+            } catch (e) {
+                stat.textContent = '出错';
+                errorDiv.textContent = '步骤「' + def.label + '」执行失败: ' + e.message;
+                ok = false;
+                break; // 管线中断，保留之前步骤的输出供检查
+            }
+        }
+
+        document.getElementById('batch-output').value = lines.join('\n');
+        if (ok) {
+            errorDiv.textContent = ''; // 无错误时清空
+        }
+    }
+
+    // ============ 复制（带定时器竞态防护） ============
+    let copyTimer = null;
+    function copyOutput() {
+        const btn = document.getElementById('copy-btn');
+        const text = document.getElementById('batch-output').value;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const original = btn.textContent;
+            if (copyTimer) clearTimeout(copyTimer);
+            btn.textContent = '已复制 ✓';
+            copyTimer = setTimeout(() => { btn.textContent = original; }, 1500);
+        }).catch(err => {
+            alert('无法复制到剪贴板: ' + err);
+        });
+    }
+
+    buildSteps();
+</script>
+</body>
+</html>

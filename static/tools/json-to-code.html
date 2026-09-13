@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON转代码</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .codegen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 720px) {
+            .codegen-grid { grid-template-columns: 1fr; }
+        }
+        .codegen-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .codegen-actions label { color: var(--text-secondary); font-size: 0.9em; }
+        .copy-btn {
+            padding: 6px 14px;
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 0.88em;
+            transition: all var(--transition-fast);
+        }
+        .copy-btn:hover { background: var(--surface-hover); }
+        #codeOutput { min-height: 220px; }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>JSON转代码</h1>
+            <p>把 JSON 生成 TypeScript interface 与 Go struct 定义。</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="jsonInput" class="tool-label">JSON 输入:</label>
+            <textarea id="jsonInput" class="tool-textarea" placeholder='例如: {"id":1,"name":"dev","tags":["a"],"meta":{"active":true}}'></textarea>
+        </div>
+
+        <div class="tool-inline-controls">
+            <label for="rootTypeName" class="tool-label">根类型名:</label>
+            <input type="text" id="rootTypeName" class="tool-input" value="Root" style="max-width: 160px;">
+            <select id="langSelect" class="tool-select">
+                <option value="ts" selected>TypeScript</option>
+                <option value="go">Go struct</option>
+            </select>
+            <select id="namingSelect" class="tool-select">
+                <option value="keep" selected>保留字段名</option>
+                <option value="camel">camelCase</option>
+            </select>
+        </div>
+
+        <div class="tool-controls">
+            <button id="generateBtn" class="tool-button">生成代码</button>
+        </div>
+        <div id="genError" class="tool-error"></div>
+
+        <div class="tool-section">
+            <div class="codegen-actions">
+                <label class="tool-label">生成结果:</label>
+                <button id="copyBtn" class="copy-btn">复制</button>
+            </div>
+            <pre id="codeOutput" class="tool-result">// 粘贴 JSON 后点击"生成代码"</pre>
+        </div>
+    </div>
+
+<script>
+    const jsonInput = document.getElementById('jsonInput');
+    const rootTypeName = document.getElementById('rootTypeName');
+    const langSelect = document.getElementById('langSelect');
+    const namingSelect = document.getElementById('namingSelect');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const codeOutput = document.getElementById('codeOutput');
+    const genError = document.getElementById('genError');
+
+    const MAX_DEPTH = 100;
+
+    function clearError() {
+        genError.style.display = 'none';
+        genError.textContent = '';
+    }
+
+    function showError(msg) {
+        genError.textContent = msg;
+        genError.style.display = 'block';
+    }
+
+    function safeTypeName(name) {
+        // 只保留合法标识符字符
+        const clean = String(name).replace(/[^A-Za-z0-9_]/g, '');
+        const capped = (clean || 'Root').slice(0, 60);
+        return /^[0-9]/.test(capped) ? 'T' + capped : capped;
+    }
+
+    function pascalCase(name) {
+        const parts = String(name).split(/[^A-Za-z0-9]+/).filter(Boolean);
+        if (parts.length === 0) return 'Field';
+        return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+    }
+
+    function toCamelCase(name) {
+        const pascal = pascalCase(name);
+        return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+    }
+
+    // 从数组中合并出一个元素类型（多元素时做类型联合）
+    function mergeArrayElementType(arr, typeName, depth) {
+        const types = [];
+        const seen = new Set();
+        for (let i = 0; i < Math.min(arr.length, 20); i++) {
+            const t = tsTypeOf(arr[i], typeName + 'Item', depth + 1);
+            if (!seen.has(t)) {
+                seen.add(t);
+                types.push(t);
+            }
+        }
+        if (types.length === 0) return 'unknown[]';
+        return types.length === 1 ? types[0] + '[]' : '(' + types.join(' | ') + ')[]';
+    }
+
+    function tsTypeOf(value, hint, depth) {
+        if (value === null) return 'null';
+        if (Array.isArray(value)) {
+            return mergeArrayElementType(value, hint, depth);
+        }
+        switch (typeof value) {
+            case 'string': return 'string';
+            case 'number': return Number.isInteger(value) ? 'number' : 'number';
+            case 'boolean': return 'boolean';
+            case 'object': {
+                if (depth > MAX_DEPTH) return 'unknown';
+                return generateTsInterface(value, hint, depth, false);
+            }
+            default: return 'unknown';
+        }
+    }
+
+    // 生成 TS interface，返回类型名；emit=false 时只注册不输出（供数组元素推断复用）
+    const tsInterfaces = [];
+    function generateTsInterface(obj, hint, depth, emit = true) {
+        const name = safeTypeName(hint);
+        if (depth > MAX_DEPTH) return name;
+
+        const props = Object.keys(obj);
+        const lines = props.map(key => {
+            const optional = obj[key] === null ? '?' : '';
+            const fieldType = obj[key] === null
+                ? 'null'
+                : tsTypeOf(obj[key], pascalCase(key), depth + 1);
+            const outKey = namingSelect.value === 'camel' ? toCamelCase(key) : /[^A-Za-z0-9_$]/.test(key) ? JSON.stringify(key) : key;
+            return '  ' + outKey + optional + ': ' + fieldType + ';';
+        });
+
+        tsInterfaces.push({ name: name, body: lines.join('\n') });
+        return name;
+    }
+
+    function generateTs(root, rootName) {
+        tsInterfaces.length = 0;
+        const name = safeTypeName(rootName);
+        if (Array.isArray(root)) {
+            const elemType = mergeArrayElementType(root, name + 'Item', 0);
+            generateTsInterface(root[0] !== undefined ? root[0] : {}, name, 0);
+            return 'type ' + name + ' = ' + elemType + ';\n\n' + tsInterfaces.map(i => ifaceText(i)).join('\n\n');
+        }
+        if (root === null || typeof root !== 'object') {
+            return '// 根节点是原始值: ' + JSON.stringify(root) + '\nexport type ' + name + ' = ' + tsTypeOf(root, name, 0) + ';';
+        }
+        generateTsInterface(root, name, 0);
+        return tsInterfaces.map(i => ifaceText(i)).join('\n\n') + '\n';
+    }
+
+    function ifaceText(i) {
+        return 'export interface ' + i.name + ' {\n' + i.body + '\n}';
+    }
+
+    // ---------- Go ----------
+    function goTypeOf(value, hint, depth) {
+        if (value === null) return 'interface{}';
+        if (Array.isArray(value)) {
+            if (value.length === 0) return '[]interface{}';
+            return '[]' + goTypeOf(value[0], pascalCase(hint) + 'Item', depth + 1);
+        }
+        switch (typeof value) {
+            case 'string': return 'string';
+            case 'number': return Number.isInteger(value) ? 'int' : 'float64';
+            case 'boolean': return 'bool';
+            case 'object':
+                if (depth > MAX_DEPTH) return 'interface{}';
+                return generateGoStruct(value, hint, depth);
+            default: return 'interface{}';
+        }
+    }
+
+    const goStructs = [];
+    const goStructNames = new Set();
+    function uniqueStructName(base) {
+        let name = safeTypeName(base);
+        let n = 2;
+        while (goStructNames.has(name)) {
+            name = safeTypeName(base) + n;
+            n++;
+        }
+        goStructNames.add(name);
+        return name;
+    }
+
+    function generateGoStruct(obj, hint, depth) {
+        const name = uniqueStructName(hint);
+        if (depth > MAX_DEPTH) return name;
+
+        const lines = Object.keys(obj).map(key => {
+            const field = pascalCase(key);
+            const ft = obj[key] === null ? 'interface{}' : goTypeOf(obj[key], pascalCase(key), depth + 1);
+            return '\t' + field + ' ' + ft + ' `json:"' + key + '"`';
+        });
+        goStructs.push({ name: name, body: lines.join('\n') });
+        return name;
+    }
+
+    function generateGo(root, rootName) {
+        goStructs.length = 0;
+        goStructNames.clear();
+        if (Array.isArray(root)) {
+            if (root.length === 0) {
+                return 'type ' + safeTypeName(rootName) + ' []interface{}';
+            }
+            const elemName = generateGoStruct(root[0], pascalCase(rootName) + 'Item', 0);
+            return goStructs.map(s => structText(s)).join('\n\n') + '\n\ntype ' + safeTypeName(rootName) + ' []' + elemName + '\n';
+        }
+        if (root === null || typeof root !== 'object') {
+            return '// 根节点是原始值，Go 侧请直接使用基础类型';
+        }
+        generateGoStruct(root, rootName, 0);
+        return goStructs.map(s => structText(s)).join('\n\n') + '\n';
+    }
+
+    function structText(s) {
+        return 'type ' + s.name + ' struct {\n' + s.body + '\n}';
+    }
+
+    function runGenerate() {
+        clearError();
+        try {
+            const root = JSON.parse(jsonInput.value.trim());
+            const rootName = rootTypeName.value.trim() || 'Root';
+            let code;
+            if (langSelect.value === 'go') {
+                code = generateGo(root, rootName);
+            } else {
+                code = generateTs(root, rootName);
+            }
+            codeOutput.textContent = code;
+        } catch (e) {
+            codeOutput.textContent = '';
+            showError('JSON 解析失败: ' + e.message);
+        }
+    }
+
+    let copyTimer = null;
+    async function copyResult() {
+        const text = codeOutput.textContent;
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            // 剪贴板 API 不可用时的回退方案
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e2) { /* 忽略 */ }
+            document.body.removeChild(ta);
+        }
+        copyBtn.textContent = '已复制 ✓';
+        if (copyTimer) clearTimeout(copyTimer);
+        copyTimer = setTimeout(() => { copyBtn.textContent = '复制'; }, 2000);
+    }
+
+    generateBtn.addEventListener('click', runGenerate);
+    copyBtn.addEventListener('click', copyResult);
+    jsonInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runGenerate();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 实时预览沙箱</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-palenight.min.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .sandbox-layout {
+            display: flex;
+            gap: 12px;
+            flex-grow: 1;
+            min-height: 520px;
+        }
+        .sandbox-editor-pane {
+            flex: 1 1 50%;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .sandbox-preview-pane {
+            flex: 1 1 50%;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .sandbox-pane-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .CodeMirror {
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            flex-grow: 1;
+            height: auto;
+            min-height: 460px;
+            background: var(--surface);
+        }
+        .CodeMirror-gutters {
+            background: var(--surface-hover);
+            border-right: 1px solid var(--border);
+        }
+        #sandboxFrame {
+            flex-grow: 1;
+            width: 100%;
+            min-height: 460px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            background: #FFFFFF;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container" style="display: flex; flex-direction: column;">
+        <div class="tool-header">
+            <h1>HTML 实时预览沙箱</h1>
+            <p>左侧编写 HTML/CSS/JS，右侧实时预览（HTML Sandbox）。代码仅在本地 iframe 中运行。</p>
+        </div>
+
+        <div class="tool-controls">
+            <button id="runBtn" class="tool-button">▶ 运行</button>
+            <label style="display: flex; align-items: center; gap: 6px; color: var(--text-primary);">
+                <input type="checkbox" id="autoRefresh" checked> 自动刷新 (500ms 防抖)
+            </label>
+            <span id="charCount" class="tool-help" style="margin-left: auto;">0 字符</span>
+        </div>
+
+        <div class="sandbox-layout">
+            <div class="sandbox-editor-pane">
+                <div class="sandbox-pane-label">HTML 源码（支持内联 &lt;style&gt; 与 &lt;script&gt;）</div>
+                <textarea id="htmlSource"></textarea>
+            </div>
+            <div class="sandbox-preview-pane">
+                <div class="sandbox-pane-label">预览（sandbox="allow-scripts"，无同源权限）</div>
+                <iframe id="sandboxFrame" sandbox="allow-scripts" title="HTML 预览"></iframe>
+            </div>
+        </div>
+
+        <div id="sandboxError" class="tool-error"></div>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
+<script>
+(function () {
+    var runBtn = document.getElementById('runBtn');
+    var autoRefresh = document.getElementById('autoRefresh');
+    var charCount = document.getElementById('charCount');
+    var htmlSource = document.getElementById('htmlSource');
+    var sandboxFrame = document.getElementById('sandboxFrame');
+    var sandboxError = document.getElementById('sandboxError');
+
+    var DEFAULT_CODE = [
+        '<!DOCTYPE html>',
+        '<html>',
+        '<head>',
+        '  <style>',
+        '    body { font-family: sans-serif; padding: 16px; }',
+        '    .box {',
+        '      padding: 12px 20px;',
+        '      background: #3B82F6;',
+        '      color: #fff;',
+        '      border-radius: 8px;',
+        '      cursor: pointer;',
+        '      display: inline-block;',
+        '    }',
+        '  </style>',
+        '</head>',
+        '<body>',
+        '  <h2>Hello Sandbox!</h2>',
+        '  <div class="box" onclick="this.textContent = \'点击时间: \' + new Date().toLocaleTimeString()">点我试试</div>',
+        '  <script>',
+        '    console.log("sandbox ready");',
+        '  <\/script>',
+        '</body>',
+        '</html>'
+    ].join('\n');
+
+    var editor = null;
+    var debounceTimer = null;
+
+    function showError(msg) {
+        sandboxError.textContent = msg;
+    }
+
+    function refreshCount() {
+        var len = editor ? editor.getValue().length : 0;
+        charCount.textContent = len + ' 字符';
+    }
+
+    function renderPreview() {
+        try {
+            // srcdoc 方式更新预览；sandbox 属性已在 HTML 中静态声明，脚本可运行但无同源权限
+            sandboxFrame.srcdoc = editor.getValue();
+            refreshCount();
+        } catch (e) {
+            showError('预览更新失败: ' + e.message);
+        }
+    }
+
+    function scheduleRender() {
+        if (!autoRefresh.checked) return;
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(renderPreview, 500);
+    }
+
+    if (typeof CodeMirror === 'undefined') {
+        // CDN 加载失败时回退为纯 textarea 编辑
+        showError('CodeMirror 加载失败，已回退为纯文本编辑模式。');
+        editor = {
+            getValue: function () { return htmlSource.value; },
+            setValue: function (v) { htmlSource.value = v; },
+            on: function () {}
+        };
+        htmlSource.style.display = 'block';
+        htmlSource.style.minHeight = '460px';
+        htmlSource.value = DEFAULT_CODE;
+    } else {
+        editor = CodeMirror.fromTextArea(htmlSource, {
+            mode: 'htmlmixed',
+            theme: 'material-palenight',
+            lineNumbers: true,
+            lineWrapping: true,
+            autofocus: false
+        });
+        editor.setValue(DEFAULT_CODE);
+        editor.on('change', scheduleRender);
+    }
+
+    runBtn.addEventListener('click', function () {
+        // 手动运行时忽略自动刷新开关，立即渲染
+        renderPreview();
+    });
+
+    // 首次渲染
+    renderPreview();
+})();
+</script>
+</body>
+</html>

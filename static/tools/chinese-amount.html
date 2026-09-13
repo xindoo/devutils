@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字转中文大写金额</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .amount-uppercase {
+            font-size: 1.15em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            word-break: break-all;
+        }
+        .amount-lowercase {
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        .sample-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>数字转中文大写金额</h1>
+            <p>Amount to Chinese Uppercase — 用于财务票据的人民币大写金额转换</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="amountInput" class="tool-label">金额 (最多两位小数，上限万万亿):</label>
+            <input type="text" id="amountInput" class="tool-input" placeholder="例如: 1234.56" autocomplete="off">
+        </div>
+
+        <div class="tool-controls">
+            <button onclick="convertAmount()" class="tool-button">转换为大写</button>
+        </div>
+
+        <div class="tool-section sample-buttons">
+            <span class="tool-label-inline">边界用例:</span>
+            <button class="tool-button-sm sample-btn" data-v="0">0</button>
+            <button class="tool-button-sm sample-btn" data-v="0.5">0.5</button>
+            <button class="tool-button-sm sample-btn" data-v="0.05">0.05</button>
+            <button class="tool-button-sm sample-btn" data-v="10">10</button>
+            <button class="tool-button-sm sample-btn" data-v="100">100</button>
+            <button class="tool-button-sm sample-btn" data-v="1005">1005</button>
+            <button class="tool-button-sm sample-btn" data-v="10050">10050</button>
+            <button class="tool-button-sm sample-btn" data-v="100000000">100000000</button>
+            <button class="tool-button-sm sample-btn" data-v="100050000">100050000</button>
+            <button class="tool-button-sm sample-btn" data-v="1000000000000">1万亿</button>
+            <button class="tool-button-sm sample-btn" data-v="-123.45">-123.45</button>
+            <button class="tool-button-sm sample-btn" data-v="12345678901234.56">12345678901234.56</button>
+        </div>
+
+        <div id="resultBox" class="tool-result" style="display: none;">
+            <div class="amount-uppercase" id="uppercaseResult"></div>
+            <div class="amount-lowercase" id="lowercaseResult"></div>
+        </div>
+        <div id="errorBox" class="tool-error"></div>
+    </div>
+
+<script>
+    const amountInput = document.getElementById('amountInput');
+    const resultBox = document.getElementById('resultBox');
+    const uppercaseResult = document.getElementById('uppercaseResult');
+    const lowercaseResult = document.getElementById('lowercaseResult');
+    const errorBox = document.getElementById('errorBox');
+
+    const DIGITS = '零壹贰叁肆伍陆柒捌玖';
+    const SMALL_UNITS = ['', '拾', '佰', '仟'];
+    const GROUP_UNITS = ['', '万', '亿', '万亿'];
+    const MAX_INTEGER_DIGITS = 16; // 上限: 万万(10^16)级
+
+    // 4 位数字组转大写, 如 '1005' -> '壹仟零伍', '0000' -> ''
+    function fourDigitToCn(four) {
+        let out = '';
+        let zeroFlag = false;
+        const n = four.length;
+        for (let i = 0; i < n; i++) {
+            const digit = Number(four[i]);
+            if (digit === 0) {
+                if (out !== '') zeroFlag = true;
+            } else {
+                if (zeroFlag) {
+                    out += '零';
+                    zeroFlag = false;
+                }
+                out += DIGITS[digit] + SMALL_UNITS[n - 1 - i];
+            }
+        }
+        return out;
+    }
+
+    // 整数部分转大写, 如 '100050000' -> '壹亿零伍万'
+    function integerToCn(numStr) {
+        if (/^0+$/.test(numStr)) return '零';
+        const groups = [];
+        for (let i = numStr.length; i > 0; i -= 4) {
+            groups.unshift(numStr.slice(Math.max(0, i - 4), i));
+        }
+        let out = '';
+        let pendingZero = false;
+        for (let g = 0; g < groups.length; g++) {
+            const chunk = groups[g];
+            const cn = fourDigitToCn(chunk);
+            if (cn === '') {
+                if (out !== '') pendingZero = true;
+                continue;
+            }
+            if (out !== '' && (pendingZero || chunk[0] === '0')) {
+                out += '零';
+            }
+            out += cn + GROUP_UNITS[groups.length - 1 - g];
+            pendingZero = false;
+        }
+        return out;
+    }
+
+    // 完整金额转大写; parts 为已校验的 {negative, int, jiao, fen}
+    function amountToCn(parts) {
+        let result = parts.negative ? '负' : '';
+        const hasJiao = parts.jiao > 0;
+        const hasFen = parts.fen > 0;
+
+        if (parts.intNum === 0 && !hasJiao && !hasFen) {
+            return result + '零元整';
+        }
+
+        if (parts.intNum > 0) {
+            result += integerToCn(String(parts.intNum)) + '元';
+        }
+
+        if (hasJiao) {
+            result += DIGITS[parts.jiao] + '角';
+            if (hasFen) result += DIGITS[parts.fen] + '分';
+        } else if (hasFen) {
+            // 角为零而分非零: 元后补零
+            if (parts.intNum > 0) result += '零';
+            result += DIGITS[parts.fen] + '分';
+        } else {
+            result += '整';
+        }
+        return result;
+    }
+
+    function convertAmount() {
+        errorBox.textContent = '';
+        resultBox.style.display = 'none';
+
+        // 允许千分位逗号与首尾空白
+        const raw = amountInput.value.trim().replace(/,/g, '');
+        if (raw === '') {
+            errorBox.textContent = '请输入金额。';
+            return;
+        }
+
+        const m = raw.match(/^(-)?(\d{1,16})(?:\.(\d{1,2}))?$/);
+        if (!m) {
+            errorBox.textContent = '金额格式无效。要求: 最多 16 位整数 + 最多 2 位小数的非负数额 (可带负号与千分位逗号)。';
+            return;
+        }
+
+        const negative = m[1] === '-';
+        const intStr = m[2].replace(/^0+(?=\d)/, ''); // 去前导零
+        const intNum = Number(intStr);
+        const frac = m[3] || '';
+        const jiao = frac.length >= 1 ? Number(frac[0]) : 0;
+        const fen = frac.length >= 2 ? Number(frac[1]) : 0;
+
+        const uppercase = amountToCn({ negative, intNum, jiao, fen });
+
+        uppercaseResult.textContent = '人民币 ' + uppercase;
+        lowercaseResult.textContent = '小写: ¥ ' + intNum.toLocaleString('en-US') + (frac ? '.' + frac : '') + (negative ? ' (负数)' : '');
+        resultBox.style.display = 'block';
+    }
+
+    // 边界用例预填按钮
+    document.querySelectorAll('.sample-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            amountInput.value = btn.dataset.v;
+            convertAmount();
+        });
+    });
+
+    amountInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') convertAmount();
+    });
+</script>
+</body>
+</html>

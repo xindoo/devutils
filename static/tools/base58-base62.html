@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base58/Base62 编解码</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>Base58/Base62 编解码</h1>
+            <p>Base58 (Bitcoin 字母表，无易混淆字符) 与 Base62 编解码工具 (Encode/Decode)</p>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">字母表:</label>
+            <div class="tool-inline-controls">
+                <select id="alphabet-select" class="tool-select">
+                    <option value="base58" selected>Base58 (Bitcoin: 无 0/O/I/l)</option>
+                    <option value="base62">Base62 (0-9A-Za-z)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">输入模式:</label>
+            <div class="tool-inline-controls">
+                <select id="input-mode" class="tool-select">
+                    <option value="text" selected>文本 (UTF-8)</option>
+                    <option value="hex">Hex (十六进制字节)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tool-section">
+            <label for="encode-input" class="tool-label">输入 (待编码):</label>
+            <textarea id="encode-input" class="tool-textarea" rows="4" placeholder="输入文本或 hex 字符串（如 48656c6c6f）"></textarea>
+            <div class="tool-controls">
+                <button onclick="encode()" class="tool-button">编码 ↓</button>
+            </div>
+            <div id="encode-result" class="tool-result"></div>
+            <div id="encode-error" class="tool-error"></div>
+        </div>
+
+        <div class="tool-section">
+            <label for="decode-input" class="tool-label">输入 (待解码):</label>
+            <textarea id="decode-input" class="tool-textarea" rows="4" placeholder="输入 Base58/Base62 字符串"></textarea>
+            <div class="tool-controls">
+                <button onclick="decode()" class="tool-button">解码 ↓</button>
+            </div>
+            <div id="decode-result" class="tool-result"></div>
+            <div id="decode-error" class="tool-error"></div>
+        </div>
+
+        <div class="tool-section">
+            <label class="tool-label">自测:</label>
+            <div class="tool-controls">
+                <button onclick="runSelfTest()" class="tool-button">编码→解码往返自测</button>
+            </div>
+            <div id="test-result" class="tool-result"></div>
+        </div>
+    </div>
+
+<script>
+    const ALPHABETS = {
+        base58: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz', // 58 字符，Bitcoin 字母表
+        base62: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'  // 62 字符
+    };
+
+    const ALPHABET_SIZES = { base58: 58n, base62: 62n };
+
+    // Base58 约定：前导零字节 (0x00) 编码为 '1'
+    // Base62 约定：前导零字节 (0x00) 编码为 '0'（常见实现的处理方式）
+    const LEADING_ZERO_CHAR = { base58: '1', base62: '0' };
+
+    // 解码结果统一为字节数组，输出时按输入模式转换
+    function getIndexMap(alphabet) {
+        const map = new Map();
+        for (let i = 0; i < alphabet.length; i++) {
+            if (map.has(alphabet[i])) {
+                throw new Error('字母表中存在重复字符: ' + alphabet[i]);
+            }
+            map.set(alphabet[i], BigInt(i));
+        }
+        return map;
+    }
+
+    // 字节序列 → base 字符串（大整数进制转换，BigInt 避免精度丢失）
+    function bytesToBase(bytes, alphabetKey) {
+        const alphabet = ALPHABETS[alphabetKey];
+        const base = ALPHABET_SIZES[alphabetKey];
+        const zeroChar = LEADING_ZERO_CHAR[alphabetKey];
+
+        // 统计前导零字节
+        let leadingZeros = 0;
+        while (leadingZeros < bytes.length && bytes[leadingZeros] === 0) leadingZeros++;
+
+        if (bytes.length === leadingZeros) {
+            return zeroChar.repeat(leadingZeros);
+        }
+
+        // 去掉前导零后整体视为大整数
+        let num = 0n;
+        for (let i = leadingZeros; i < bytes.length; i++) {
+            num = (num << 8n) | BigInt(bytes[i]);
+        }
+
+        const digits = [];
+        while (num > 0n) {
+            digits.push(alphabet[Number(num % base)]);
+            num /= base;
+        }
+        // 大整数高位在后，反转后拼上前导零字符
+        return zeroChar.repeat(leadingZeros) + digits.reverse().join('');
+    }
+
+    // base 字符串 → 字节序列
+    function baseToBytes(str, alphabetKey) {
+        const alphabet = ALPHABETS[alphabetKey];
+        const base = ALPHABET_SIZES[alphabetKey];
+        const zeroChar = LEADING_ZERO_CHAR[alphabetKey];
+        const indexMap = getIndexMap(alphabet);
+
+        // 统计前导零字符（必须连续出现在开头）
+        let leadingZeros = 0;
+        while (leadingZeros < str.length && str[leadingZeros] === zeroChar) leadingZeros++;
+
+        if (str.length === leadingZeros) {
+            return new Uint8Array(leadingZeros); // 全为零字符
+        }
+
+        let num = 0n;
+        for (let i = leadingZeros; i < str.length; i++) {
+            const ch = str[i];
+            if (!indexMap.has(ch)) {
+                throw new Error('无效字符: "' + ch + '" (不属于 ' + (alphabetKey === 'base58' ? 'Base58' : 'Base62') + ' 字母表)');
+            }
+            num = num * base + indexMap.get(ch);
+        }
+
+        // 大整数转字节（从低位开始）
+        const byteList = [];
+        while (num > 0n) {
+            byteList.push(Number(num & 0xFFn));
+            num >>= 8n;
+        }
+        byteList.reverse();
+
+        const result = new Uint8Array(leadingZeros + byteList.length);
+        result.set(new Uint8Array(byteList), leadingZeros);
+        return result;
+    }
+
+    function parseInputBytes(raw, mode) {
+        if (mode === 'text') {
+            return new TextEncoder().encode(raw);
+        }
+        // hex 模式：允许空格分隔，长度必须为偶数
+        const hex = raw.replace(/\s+/g, '');
+        if (hex.length === 0) return new Uint8Array(0);
+        if (hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) {
+            throw new Error('无效的 Hex 输入: 长度必须为偶数且仅含 0-9a-fA-F');
+        }
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < bytes.length; i++) {
+            bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        }
+        return bytes;
+    }
+
+    function bytesToOutput(bytes, mode) {
+        if (mode === 'text') {
+            return new TextDecoder().decode(bytes);
+        }
+        return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function encode() {
+        const resultDiv = document.getElementById('encode-result');
+        const errorDiv = document.getElementById('encode-error');
+        errorDiv.textContent = '';
+        resultDiv.textContent = '';
+        try {
+            const raw = document.getElementById('encode-input').value;
+            if (!raw) {
+                errorDiv.textContent = '请输入待编码内容。';
+                return;
+            }
+            const key = document.getElementById('alphabet-select').value;
+            const mode = document.getElementById('input-mode').value;
+            const bytes = parseInputBytes(raw, mode);
+            resultDiv.textContent = bytesToBase(bytes, key);
+        } catch (e) {
+            errorDiv.textContent = '编码错误: ' + e.message;
+        }
+    }
+
+    function decode() {
+        const resultDiv = document.getElementById('decode-result');
+        const errorDiv = document.getElementById('decode-error');
+        errorDiv.textContent = '';
+        resultDiv.textContent = '';
+        try {
+            const raw = document.getElementById('decode-input').value.trim();
+            if (!raw) {
+                errorDiv.textContent = '请输入待解码内容。';
+                return;
+            }
+            const key = document.getElementById('alphabet-select').value;
+            const mode = document.getElementById('input-mode').value;
+            const bytes = baseToBytes(raw, key);
+            const output = bytesToOutput(bytes, mode);
+            resultDiv.textContent = output === '' ? '(空)' : output;
+        } catch (e) {
+            errorDiv.textContent = '解码错误: ' + e.message;
+        }
+    }
+
+    function runSelfTest() {
+        const resultDiv = document.getElementById('test-result');
+        const cases = [
+            'hello world',
+            'Hello, DevUtils! 中文测试 🚀 emoji',
+            'a',
+            'The quick brown fox jumps over the lazy dog 0123456789',
+            '\u0000\u0000 leading zero bytes',
+            'x'.repeat(200) // 较长输入
+        ];
+        const keys = ['base58', 'base62'];
+        const modes = ['text', 'hex'];
+        let pass = 0, total = 0;
+        const failures = [];
+        try {
+            for (const key of keys) {
+                for (const mode of modes) {
+                    for (const text of cases) {
+                        total++;
+                        if (mode === 'hex') {
+                            // hex 模式下走字节层面往返：text→bytes→base→bytes→hex→bytes→base→bytes 比对
+                            const bytes = new TextEncoder().encode(text);
+                            const hexIn = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+                            const encoded = bytesToBase(parseInputBytes(hexIn, 'hex'), key);
+                            const decodedBytes = baseToBytes(encoded, key);
+                            const hexOut = bytesToOutput(decodedBytes, 'hex');
+                            const reEncoded = bytesToBase(parseInputBytes(hexOut, 'hex'), key);
+                            if (encoded === reEncoded) { pass++; } else { failures.push(key + '/' + mode + ': ' + text.slice(0, 12)); }
+                        } else {
+                            const encoded = bytesToBase(parseInputBytes(text, 'text'), key);
+                            const decoded = bytesToOutput(baseToBytes(encoded, key), 'text');
+                            if (decoded === text) { pass++; } else { failures.push(key + '/' + mode + ': ' + text.slice(0, 12)); }
+                        }
+                    }
+                }
+            }
+            resultDiv.textContent = '往返测试: ' + pass + ' / ' + total + ' 通过'
+                + (failures.length ? '\n失败用例:\n' + failures.join('\n') : '\n全部通过 ✓');
+        } catch (e) {
+            resultDiv.textContent = '自测执行出错: ' + e.message;
+        }
+    }
+</script>
+</body>
+</html>

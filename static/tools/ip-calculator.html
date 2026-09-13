@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP/子网计算器</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .kv-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 16px;
+            margin-top: 8px;
+        }
+        .kv-key {
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .kv-value {
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+        .subnet-list {
+            font-family: 'JetBrains Mono', monospace;
+            max-height: 320px;
+            overflow-y: auto;
+            margin-top: 8px;
+            line-height: 1.7;
+        }
+        .badge-private {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>IP/子网计算器</h1>
+            <p>IPv4 / CIDR Subnet Calculator — 输入如 192.168.1.10/24 (无前缀按 /32 处理)</p>
+        </div>
+
+        <div class="tool-section">
+            <label for="cidrInput" class="tool-label">IPv4 地址或 CIDR:</label>
+            <input type="text" id="cidrInput" class="tool-input" placeholder="例如: 192.168.1.10/24" autocomplete="off">
+        </div>
+
+        <div class="tool-controls">
+            <button onclick="calcSubnet()" class="tool-button">计算</button>
+        </div>
+
+        <div id="errorBox" class="tool-error"></div>
+        <div id="resultBox" class="tool-result" style="display: none;">
+            <div class="kv-grid" id="kvGrid"></div>
+        </div>
+
+        <div class="tool-section" style="margin-top: 24px;">
+            <label class="tool-label">子网划分 — 从主网络划分出更小的子网:</label>
+            <div class="tool-inline-controls">
+                <input type="text" id="subnetCidr" class="tool-input" placeholder="主网络, 如 192.168.0.0/22" autocomplete="off" style="flex:1;">
+                <input type="number" id="targetPrefix" class="tool-input" placeholder="目标前缀 (25~32)" min="1" max="32" style="max-width: 160px;">
+                <button onclick="divideSubnet()" class="tool-button-sm">划分</button>
+            </div>
+        </div>
+        <div id="divideError" class="tool-error"></div>
+        <div id="subnetResult" class="tool-result" style="display: none;">
+            <div class="subnet-list" id="subnetList"></div>
+        </div>
+    </div>
+
+<script>
+    // ---------- IPv4 基础函数 (自实现, 全程无符号右移保证 >>>0) ----------
+
+    function ipToNumber(ipStr) {
+        const parts = ipStr.split('.');
+        if (parts.length !== 4) return -1;
+        let num = 0;
+        for (const p of parts) {
+            // 禁止空段、前导零、非纯数字、超范围
+            if (!/^\d{1,3}$/.test(p)) return -1;
+            if (p.length > 1 && p[0] === '0') return -1;
+            const v = Number(p);
+            if (v > 255) return -1;
+            num = num * 256 + v;
+        }
+        return num;
+    }
+
+    function numberToIp(num) {
+        return [(num >>> 24) & 255, (num >>> 16) & 255, (num >>> 8) & 255, num & 255].join('.');
+    }
+
+    function numberToHex(num) {
+        return '0x' + (num >>> 0).toString(16).toUpperCase().padStart(8, '0').replace(/(..)(..)(..)(..)/, '$1.$2.$3.$4');
+    }
+
+    function numberToBinary(num) {
+        const bits = (num >>> 0).toString(2).padStart(32, '0');
+        return bits.match(/.{8}/g).join('.');
+    }
+
+    function prefixToMask(prefix) {
+        return prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+    }
+
+    // ---------- 子网信息计算 ----------
+
+    function networkInfo(ipNum, prefix) {
+        const mask = prefixToMask(prefix);
+        const network = (ipNum & mask) >>> 0;
+        const broadcast = (network | (~mask >>> 0)) >>> 0;
+        let usableCount, rangeStr;
+        if (prefix <= 30) {
+            usableCount = (broadcast - network - 1) >>> 0;
+            rangeStr = numberToIp(network + 1) + ' ~ ' + numberToIp(broadcast - 1);
+        } else if (prefix === 31) {
+            usableCount = 2; // RFC 3021 点对点链路
+            rangeStr = numberToIp(network) + ' ~ ' + numberToIp(broadcast);
+        } else {
+            usableCount = 1;
+            rangeStr = numberToIp(network);
+        }
+        return { mask, network, broadcast, usableCount, rangeStr };
+    }
+
+    function networkClass(firstOctet) {
+        if (firstOctet < 128) return 'A 类';
+        if (firstOctet < 192) return 'B 类';
+        if (firstOctet < 224) return 'C 类';
+        if (firstOctet < 240) return 'D 类 (组播)';
+        return 'E 类 (保留)';
+    }
+
+    function specialNetwork(ipNum) {
+        const a = (ipNum >>> 24) & 255;
+        const b = (ipNum >>> 16) & 255;
+        if (a === 127) return '环回地址 (127.0.0.0/8)';
+        if (a === 10) return '私有地址 (10.0.0.0/8)';
+        if (a === 172 && b >= 16 && b <= 31) return '私有地址 (172.16.0.0/12)';
+        if (a === 192 && b === 168) return '私有地址 (192.168.0.0/16)';
+        if (a === 169 && b === 254) return '链路本地 (169.254.0.0/16)';
+        if (a === 0) return '保留地址 (0.0.0.0/8)';
+        if (a >= 224 && a < 240) return '组播地址 (224.0.0.0/4)';
+        return '';
+    }
+
+    // ---------- 渲染 ----------
+
+    function renderKv(pairs) {
+        const grid = document.getElementById('kvGrid');
+        grid.textContent = '';
+        pairs.forEach(([key, value, extraClass]) => {
+            const k = document.createElement('div');
+            k.className = 'kv-key';
+            k.textContent = key;
+            const v = document.createElement('div');
+            v.className = 'kv-value' + (extraClass ? ' ' + extraClass : '');
+            v.textContent = value;
+            grid.appendChild(k);
+            grid.appendChild(v);
+        });
+    }
+
+    function calcSubnet() {
+        const errorBox = document.getElementById('errorBox');
+        const resultBox = document.getElementById('resultBox');
+        errorBox.textContent = '';
+        resultBox.style.display = 'none';
+
+        const raw = document.getElementById('cidrInput').value.trim();
+        if (!raw) {
+            errorBox.textContent = '请输入 IPv4 地址或 CIDR。';
+            return;
+        }
+
+        const slashIdx = raw.indexOf('/');
+        const ipStr = slashIdx === -1 ? raw : raw.slice(0, slashIdx);
+        const prefixStr = slashIdx === -1 ? '32' : raw.slice(slashIdx + 1);
+
+        const ipNum = ipToNumber(ipStr);
+        if (ipNum < 0) {
+            errorBox.textContent = '无效的 IPv4 地址: ' + ipStr;
+            return;
+        }
+        if (!/^\d{1,2}$/.test(prefixStr)) {
+            errorBox.textContent = '无效的前缀长度: ' + prefixStr;
+            return;
+        }
+        const prefix = Number(prefixStr);
+        if (prefix > 32) {
+            errorBox.textContent = '前缀长度必须在 0~32 之间。';
+            return;
+        }
+
+        const info = networkInfo(ipNum, prefix);
+        const firstOctet = (ipNum >>> 24) & 255;
+        const special = specialNetwork(network);
+
+        renderKv([
+            ['输入', ipStr + '/' + prefix],
+            ['网络地址', numberToIp(info.network) + '/' + prefix],
+            ['广播地址', numberToIp(info.broadcast)],
+            ['子网掩码', numberToIp(info.mask)],
+            ['通配符掩码', numberToIp((~info.mask) >>> 0)],
+            ['可用主机数', info.usableCount.toLocaleString('en-US')],
+            ['可用范围', info.rangeStr],
+            ['地址类别', networkClass(firstOctet) + (special ? ' — ' + special : '')],
+            ['IP 十六进制', numberToHex(ipNum)],
+            ['IP 二进制', numberToBinary(ipNum)],
+            ['IP 十进制', (ipNum >>> 0).toLocaleString('en-US')]
+        ]);
+        resultBox.style.display = 'block';
+    }
+
+    function divideSubnet() {
+        const divideError = document.getElementById('divideError');
+        const subnetResult = document.getElementById('subnetResult');
+        const subnetList = document.getElementById('subnetList');
+        divideError.textContent = '';
+        subnetResult.style.display = 'none';
+        subnetList.textContent = '';
+
+        const cidr = document.getElementById('subnetCidr').value.trim();
+        const targetPrefix = Math.floor(Number(document.getElementById('targetPrefix').value));
+
+        const slashIdx = cidr.indexOf('/');
+        if (slashIdx === -1) {
+            divideError.textContent = '主网络必须带前缀, 如 192.168.0.0/22。';
+            return;
+        }
+        const baseNum = ipToNumber(cidr.slice(0, slashIdx));
+        const basePrefix = Number(cidr.slice(slashIdx + 1));
+        if (baseNum < 0 || !isFinite(basePrefix) || basePrefix < 0 || basePrefix > 32) {
+            divideError.textContent = '无效的主网络 CIDR。';
+            return;
+        }
+        if (!isFinite(targetPrefix) || targetPrefix <= basePrefix || targetPrefix > 32) {
+            divideError.textContent = '目标前缀必须大于主网络前缀 (' + basePrefix + ') 且不超过 32。';
+            return;
+        }
+
+        // 校验主网络地址是否落在网络边界上
+        const baseMask = prefixToMask(basePrefix);
+        const baseNetwork = (baseNum & baseMask) >>> 0;
+        if (baseNetwork !== (baseNum >>> 0)) {
+            divideError.textContent = '主网络地址不在网络边界上, 应为 ' + numberToIp(baseNetwork) + '/' + basePrefix;
+            return;
+        }
+
+        const total = Math.pow(2, targetPrefix - basePrefix);
+        const SHOW_LIMIT = 64;
+        const showCount = Math.min(total, SHOW_LIMIT);
+        const step = Math.pow(2, 32 - targetPrefix) >>> 0;
+
+        for (let i = 0; i < showCount; i++) {
+            const net = (baseNetwork + i * step) >>> 0;
+            const line = document.createElement('div');
+            line.textContent = numberToIp(net) + '/' + targetPrefix + '  (' + numberToIp(net) + ' ~ ' + numberToIp((net + step - 1) >>> 0) + ')';
+            subnetList.appendChild(line);
+        }
+        if (total > SHOW_LIMIT) {
+            const note = document.createElement('div');
+            note.style.color = 'var(--text-secondary)';
+            note.textContent = '共 ' + total.toLocaleString('en-US') + ' 个子网, 仅显示前 ' + SHOW_LIMIT + ' 个。';
+            subnetList.appendChild(note);
+        }
+        subnetResult.style.display = 'block';
+    }
+
+    document.getElementById('cidrInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') calcSubnet();
+    });
+    document.getElementById('subnetCidr').addEventListener('keydown', e => {
+        if (e.key === 'Enter') divideSubnet();
+    });
+</script>
+</body>
+</html>

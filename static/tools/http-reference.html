@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP 速查</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        .ref-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .ref-tab {
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        .ref-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92em;
+        }
+        .ref-table th, .ref-table td {
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        .ref-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: var(--surface-hover);
+            position: sticky;
+            top: 0;
+        }
+        .ref-table td.code {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .ref-count {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin: 6px 0;
+        }
+        .ref-scroll {
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <h1>HTTP 速查</h1>
+            <p>HTTP 状态码与常用请求/响应头参考 (HTTP Reference)</p>
+        </div>
+
+        <div class="ref-tabs">
+            <button id="tab-status" class="ref-tab active" type="button">状态码</button>
+            <button id="tab-headers" class="ref-tab" type="button">常用 Header</button>
+        </div>
+
+        <div class="tool-section">
+            <label for="ref-search" class="tool-label">搜索:</label>
+            <input type="text" id="ref-search" class="tool-input" placeholder="输入编号、名称或关键词过滤，例如 404 / json / cache">
+        </div>
+        <div class="tool-inline-controls" id="category-filters"></div>
+        <div class="ref-count" id="ref-count"></div>
+
+        <!-- 状态码表 -->
+        <div id="panel-status">
+            <div class="ref-scroll">
+                <table class="ref-table">
+                    <thead>
+                        <tr><th style="width:70px">状态码</th><th style="width:170px">名称</th><th>说明</th><th style="width:32%">典型场景</th></tr>
+                    </thead>
+                    <tbody id="status-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Header 表 -->
+        <div id="panel-headers" style="display:none">
+            <div class="ref-scroll">
+                <table class="ref-table">
+                    <thead>
+                        <tr><th style="width:190px">Header</th><th style="width:80px">方向</th><th>说明</th><th style="width:30%">示例</th></tr>
+                    </thead>
+                    <tbody id="headers-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // ============ 静态数据 ============
+    const STATUS_CATEGORIES = [
+        { key: '1xx', name: '1xx 信息' },
+        { key: '2xx', name: '2xx 成功' },
+        { key: '3xx', name: '3xx 重定向' },
+        { key: '4xx', name: '4xx 客户端错误' },
+        { key: '5xx', name: '5xx 服务器错误' }
+    ];
+
+    const STATUS_CODES = [
+        { code: 100, name: 'Continue', desc: '服务器已收到请求头，客户端应继续发送请求体。', scene: '客户端发送大请求体前的探测（Expect: 100-continue）' },
+        { code: 101, name: 'Switching Protocols', desc: '服务器同意切换到客户端请求的协议。', scene: 'WebSocket 握手（Upgrade: websocket）' },
+        { code: 200, name: 'OK', desc: '请求成功，响应体包含所请求的资源。', scene: '绝大多数成功请求' },
+        { code: 201, name: 'Created', desc: '请求成功且新资源已创建。', scene: 'RESTful POST 创建资源成功' },
+        { code: 202, name: 'Accepted', desc: '请求已接受，但尚未处理完成（异步）。', scene: '任务队列、异步处理接口' },
+        { code: 204, name: 'No Content', desc: '请求成功，响应体为空。', scene: 'DELETE 成功、保存成功但不需返回数据' },
+        { code: 206, name: 'Partial Content', desc: '成功返回资源的部分内容。', scene: 'Range 断点续传、视频拖动播放' },
+        { code: 301, name: 'Moved Permanently', desc: '资源已永久迁移到新 URL。', scene: '域名迁移、http→https 永久跳转' },
+        { code: 302, name: 'Found', desc: '资源临时位于其他 URL，后续仍用原 URL。', scene: '登录后临时跳转、临时重定向' },
+        { code: 304, name: 'Not Modified', desc: '资源未变化，客户端使用本地缓存。', scene: '配合 ETag / If-None-Match 的协商缓存' },
+        { code: 307, name: 'Temporary Redirect', desc: '临时重定向，且不改变请求方法。', scene: 'POST 接口临时迁移（302 可能丢失方法语义）' },
+        { code: 308, name: 'Permanent Redirect', desc: '永久重定向，且不改变请求方法。', scene: '需要保留 POST 语义的永久迁移' },
+        { code: 400, name: 'Bad Request', desc: '请求语法错误，服务器无法理解。', scene: '参数格式错误、JSON 解析失败' },
+        { code: 401, name: 'Unauthorized', desc: '未认证或认证失败，需提供有效凭据。', scene: 'Token 过期/缺失' },
+        { code: 403, name: 'Forbidden', desc: '服务器理解请求但拒绝执行（权限不足）。', scene: '无资源访问权限、IP 被封禁' },
+        { code: 404, name: 'Not Found', desc: '请求的资源不存在。', scene: 'URL 错误、资源已删除' },
+        { code: 405, name: 'Method Not Allowed', desc: '请求方法不被该资源支持。', scene: '对只读接口发送 DELETE' },
+        { code: 408, name: 'Request Timeout', desc: '客户端在服务器等待期限内未发送完请求。', scene: '弱网环境上传超时' },
+        { code: 409, name: 'Conflict', desc: '请求与资源当前状态冲突。', scene: '并发修改、唯一键重复' },
+        { code: 410, name: 'Gone', desc: '资源已永久删除，且不会再可用。', scene: 'API 版本下线' },
+        { code: 413, name: 'Payload Too Large', desc: '请求体超过服务器允许的大小。', scene: '上传超大文件' },
+        { code: 415, name: 'Unsupported Media Type', desc: '请求的媒体类型不被支持。', scene: 'Content-Type 错误' },
+        { code: 422, name: 'Unprocessable Entity', desc: '请求格式正确但语义错误，无法处理。', scene: '表单/JSON 校验失败（WebDAV、Rails 风格）' },
+        { code: 429, name: 'Too Many Requests', desc: '请求频率超过限制。', scene: '触发限流（Rate Limit），常配合 Retry-After' },
+        { code: 451, name: 'Unavailable For Legal Reasons', desc: '因法律要求资源不可访问。', scene: '地区合规下架' },
+        { code: 500, name: 'Internal Server Error', desc: '服务器内部错误。', scene: '未捕获异常、代码 bug' },
+        { code: 501, name: 'Not Implemented', desc: '服务器不支持实现请求所需的功能。', scene: '使用了服务器不支持的方法' },
+        { code: 502, name: 'Bad Gateway', desc: '网关/代理从上游收到无效响应。', scene: 'Nginx 后端服务挂掉' },
+        { code: 503, name: 'Service Unavailable', desc: '服务暂时不可用（过载或维护）。', scene: '限流保护、发布重启窗口' },
+        { code: 504, name: 'Gateway Timeout', desc: '网关/代理等待上游响应超时。', scene: '后端接口超时' }
+    ];
+
+    const HEADERS = [
+        { name: 'Content-Type', dir: '请求/响应', desc: '资源的媒体类型。', example: 'application/json; charset=utf-8' },
+        { name: 'Content-Length', dir: '请求/响应', desc: '请求/响应体的字节长度。', example: '1024' },
+        { name: 'Accept', dir: '请求', desc: '客户端能接受的媒体类型。', example: 'application/json, text/html;q=0.9' },
+        { name: 'Authorization', dir: '请求', desc: '认证凭据。', example: 'Bearer eyJhbGciOiJIUzI1NiIs...' },
+        { name: 'Cookie', dir: '请求', desc: '携带的 HTTP Cookie。', example: 'session=abc123; theme=dark' },
+        { name: 'Set-Cookie', dir: '响应', desc: '服务器下发 Cookie，可带属性。', example: 'session=abc123; HttpOnly; Secure; Max-Age=3600' },
+        { name: 'User-Agent', dir: '请求', desc: '发起请求的客户端标识。', example: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...' },
+        { name: 'Host', dir: '请求', desc: '目标主机与端口（HTTP/1.1 必需）。', example: 'example.com:8080' },
+        { name: 'Origin', dir: '请求', desc: '发起跨域请求的来源。', example: 'https://example.com' },
+        { name: 'Referer', dir: '请求', desc: '请求来源页面的绝对或相对地址。', example: 'https://example.com/page' },
+        { name: 'Cache-Control', dir: '请求/响应', desc: '缓存指令。', example: 'max-age=3600, public / no-store' },
+        { name: 'ETag', dir: '响应', desc: '资源版本标识，用于协商缓存。', example: '"33a64df551425fcc"' },
+        { name: 'If-None-Match', dir: '请求', desc: '携带上次的 ETag，命中则返回 304。', example: '"33a64df551425fcc"' },
+        { name: 'Last-Modified', dir: '响应', desc: '资源最后修改时间。', example: 'Wed, 21 Oct 2015 07:28:00 GMT' },
+        { name: 'Location', dir: '响应', desc: '重定向目标地址或新建资源位置。', example: 'https://example.com/new-resource' },
+        { name: 'Access-Control-Allow-Origin', dir: '响应', desc: 'CORS 允许的来源。', example: '* 或 https://example.com' },
+        { name: 'Access-Control-Allow-Methods', dir: '响应', desc: 'CORS 允许的 HTTP 方法。', example: 'GET, POST, PUT, DELETE' },
+        { name: 'Access-Control-Allow-Headers', dir: '响应', desc: 'CORS 允许的自定义请求头。', example: 'Content-Type, Authorization' },
+        { name: 'X-Request-Id', dir: '请求/响应', desc: '链路追踪请求 ID（常见约定，非标准）。', example: 'f4b1a2c3-9d8e-4f0a-b1c2-3d4e5f6a7b8c' },
+        { name: 'Retry-After', dir: '响应', desc: '客户端应等待多久再重试。', example: '120 或具体日期' },
+        { name: 'Accept-Encoding', dir: '请求', desc: '客户端支持的压缩算法。', example: 'gzip, deflate, br' },
+        { name: 'Content-Encoding', dir: '响应', desc: '响应体使用的压缩算法。', example: 'gzip' },
+        { name: 'X-Content-Type-Options', dir: '响应', desc: '禁止浏览器 MIME 嗅探。', example: 'nosniff' },
+        { name: 'Strict-Transport-Security', dir: '响应', desc: '强制 HTTPS（HSTS）。', example: 'max-age=31536000; includeSubDomains' },
+        { name: 'X-Frame-Options', dir: '响应', desc: '控制页面是否可被 iframe 嵌入。', example: 'DENY / SAMEORIGIN' },
+        { name: 'Transfer-Encoding', dir: '响应', desc: '报文传输编码（分块发送）。', example: 'chunked' }
+    ];
+
+    // ============ 工具函数 ============
+    // 所有动态内容均通过 textContent 写入，用户搜索词不参与 HTML 拼接
+    function makeCell(tagName, text, className) {
+        const td = document.createElement(tagName);
+        if (className) td.className = className;
+        td.textContent = text;
+        return td;
+    }
+
+    function makeRow(cells) {
+        const tr = document.createElement('tr');
+        cells.forEach(c => tr.appendChild(c));
+        return tr;
+    }
+
+    // ============ 状态码面板 ============
+    let activeCategory = 'all';
+    let activeTab = 'status';
+
+    function statusMatches(item, term, category) {
+        if (category !== 'all' && String(item.code)[0] + 'xx' !== category) return false;
+        if (!term) return true;
+        return String(item.code).includes(term)
+            || item.name.toLowerCase().includes(term)
+            || item.desc.toLowerCase().includes(term)
+            || item.scene.toLowerCase().includes(term);
+    }
+
+    function renderStatus() {
+        const term = searchInput.value.trim().toLowerCase();
+        const tbody = document.getElementById('status-tbody');
+        tbody.textContent = '';
+        let count = 0;
+        STATUS_CODES.forEach(item => {
+            if (!statusMatches(item, term, activeCategory)) return;
+            count++;
+            tbody.appendChild(makeRow([
+                makeCell('td', String(item.code), 'code'),
+                makeCell('td', item.name),
+                makeCell('td', item.desc),
+                makeCell('td', item.scene)
+            ]));
+        });
+        document.getElementById('ref-count').textContent = '匹配 ' + count + ' / ' + STATUS_CODES.length + ' 条';
+    }
+
+    function renderCategoryFilters() {
+        const wrap = document.getElementById('category-filters');
+        wrap.textContent = '';
+        const mk = (key, label) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ref-tab' + (key === activeCategory ? ' active' : '');
+            btn.textContent = label;
+            btn.addEventListener('click', () => {
+                activeCategory = key;
+                renderCategoryFilters();
+                renderStatus();
+            });
+            wrap.appendChild(btn);
+        };
+        mk('all', '全部');
+        STATUS_CATEGORIES.forEach(c => mk(c.key, c.name));
+    }
+
+    // ============ Header 面板 ============
+    function headerMatches(item, term) {
+        if (!term) return true;
+        return item.name.toLowerCase().includes(term)
+            || item.dir.toLowerCase().includes(term)
+            || item.desc.toLowerCase().includes(term)
+            || item.example.toLowerCase().includes(term);
+    }
+
+    function renderHeaders() {
+        const term = searchInput.value.trim().toLowerCase();
+        const tbody = document.getElementById('headers-tbody');
+        tbody.textContent = '';
+        let count = 0;
+        HEADERS.forEach(item => {
+            if (!headerMatches(item, term)) return;
+            count++;
+            tbody.appendChild(makeRow([
+                makeCell('td', item.name, 'code'),
+                makeCell('td', item.dir),
+                makeCell('td', item.desc),
+                makeCell('td', item.example)
+            ]));
+        });
+        document.getElementById('ref-count').textContent = '匹配 ' + count + ' / ' + HEADERS.length + ' 条';
+    }
+
+    // ============ 页签切换 ============
+    function switchTab(tab) {
+        activeTab = tab;
+        document.getElementById('tab-status').classList.toggle('active', tab === 'status');
+        document.getElementById('tab-headers').classList.toggle('active', tab === 'headers');
+        document.getElementById('panel-status').style.display = tab === 'status' ? 'block' : 'none';
+        document.getElementById('panel-headers').style.display = tab === 'headers' ? 'block' : 'none';
+        document.getElementById('category-filters').style.display = tab === 'status' ? 'flex' : 'none';
+        renderCurrent();
+    }
+
+    function renderCurrent() {
+        if (activeTab === 'status') renderStatus();
+        else renderHeaders();
+    }
+
+    const searchInput = document.getElementById('ref-search');
+    document.getElementById('tab-status').addEventListener('click', () => switchTab('status'));
+    document.getElementById('tab-headers').addEventListener('click', () => switchTab('headers'));
+    searchInput.addEventListener('input', renderCurrent);
+
+    // 初始渲染（脚本位于 body 底部，DOM 已就绪）
+    renderCategoryFilters();
+    renderStatus();
+</script>
+</body>
+</html>
