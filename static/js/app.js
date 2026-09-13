@@ -23,11 +23,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            categories.forEach(category => {
+            // Per-category hue: visual wayfinding so 56 tools read as 11 colored regions.
+            // Hand-picked, stable values — not derived from order, so reordering tools.json won't shift them.
+            const categoryHues = {
+                '编解码': 215,    // cobalt
+                '格式化': 165,    // teal
+                'JSON工具': 262,  // violet
+                '图片工具': 24,    // orange
+                '数据生成': 348,  // rose
+                '文本工具': 190,  // cyan
+                '音视频工具': 285, // purple
+                '转换器': 150,    // green
+                '安全工具': 5,    // red
+                '网络工具': 205,  // sky
+                '其他工具': 45    // gold
+            };
+            const hueFor = (name) => categoryHues[name] !== undefined ? categoryHues[name] : (name.charCodeAt(0) * 7) % 360;
+            let totalTools = 0;
+
+            categories.forEach((category) => {
+                const toolCount = Array.isArray(category.tools) ? category.tools.length : 0;
+                totalTools += toolCount;
+                const hue = hueFor(category.categoryName);
+
                 // Create category header for sidebar
                 const categoryHeader = document.createElement('li');
                 categoryHeader.classList.add('category-header', 'expanded');
-                categoryHeader.textContent = category.categoryName;
+                categoryHeader.style.setProperty('--hue', hue);
+
+                const headerName = document.createElement('span');
+                headerName.className = 'cat-name';
+                headerName.textContent = category.categoryName;
+
+                const headerDot = document.createElement('span');
+                headerDot.className = 'cat-dot';
+
+                const headerCount = document.createElement('span');
+                headerCount.className = 'cat-count';
+                headerCount.textContent = toolCount;
+
+                categoryHeader.appendChild(headerDot);
+                categoryHeader.appendChild(headerName);
+                categoryHeader.appendChild(headerCount);
                 toolList.appendChild(categoryHeader);
 
                 // Create nested list for tools in this category
@@ -45,10 +82,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Create category section for cards
                 const categorySection = document.createElement('div');
                 categorySection.classList.add('tool-category-section');
+                categorySection.style.setProperty('--hue', hue);
                 
                 const categoryTitle = document.createElement('h3');
                 categoryTitle.classList.add('tool-category-title');
-                categoryTitle.textContent = category.categoryName;
+
+                const titleDot = document.createElement('span');
+                titleDot.className = 'cat-dot';
+                const titleName = document.createElement('span');
+                titleName.textContent = category.categoryName;
+                const titleCount = document.createElement('span');
+                titleCount.className = 'cat-count';
+                titleCount.textContent = toolCount + ' 个工具';
+
+                categoryTitle.appendChild(titleDot);
+                categoryTitle.appendChild(titleName);
+                categoryTitle.appendChild(titleCount);
                 categorySection.appendChild(categoryTitle);
 
                 const categoryCardGrid = document.createElement('div');
@@ -85,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <h4>${tool.name_zh}</h4>
                             <p>${tool.name_en}</p>
                         `;
-
                         card.addEventListener('click', () => {
                             window.location.hash = tool.path;
                         });
@@ -94,6 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             });
+
+            // Hero stats: real numbers, mono type
+            const heroStats = document.getElementById('hero-stats');
+            if (heroStats) {
+                heroStats.innerHTML = `
+                    <span><strong>${totalTools}</strong>个工具</span>
+                    <span><strong>${categories.length}</strong>个分类</span>
+                    <span>数据不出浏览器</span>
+                `;
+            }
 
             // Initial load based on hash
             handleHashChange();
@@ -105,6 +163,19 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching or processing tools.json:', error);
             toolList.innerHTML = '<li>Error loading tools. Check console for details.</li>';
         });
+
+    // Mobile sidebar toggle
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const container = document.querySelector('.container');
+    if (sidebarToggle && container) {
+        sidebarToggle.addEventListener('click', () => {
+            container.classList.toggle('sidebar-open');
+        });
+        // Close the sidebar after picking a tool on mobile
+        toolList.addEventListener('click', (e) => {
+            if (e.target.closest('a')) container.classList.remove('sidebar-open');
+        });
+    }
 
     searchBox.addEventListener('input', () => {
         const searchTerm = searchBox.value.toLowerCase();
@@ -170,12 +241,28 @@ document.addEventListener('DOMContentLoaded', () => {
             loadTool(toolLink.dataset.filePath, toolLink, queryString);
             toolCards.style.display = 'none';
             toolFrame.style.display = 'block';
+            hideHomeChrome();
         } else {
             // Show tool cards grid by default
             toolCards.style.display = 'block';
             toolFrame.style.display = 'none';
             sidebarLinks.forEach(link => link.classList.remove('active'));
+            showHomeChrome();
         }
+    }
+
+    function hideHomeChrome() {
+        const hero = document.getElementById('home-hero');
+        const divider = document.getElementById('hero-divider');
+        if (hero) hero.style.display = 'none';
+        if (divider) divider.style.display = 'none';
+    }
+
+    function showHomeChrome() {
+        const hero = document.getElementById('home-hero');
+        const divider = document.getElementById('hero-divider');
+        if (hero) hero.style.display = '';
+        if (divider) divider.style.display = '';
     }
 
     function loadTool(filePath, clickedLink, queryString) {

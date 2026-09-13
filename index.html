@@ -10,7 +10,16 @@
     <div class="container">
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>DevUtils</h2>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="打开工具目录" title="打开工具目录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <h2>DevUtils<span class="brand-cursor">_</span></h2>
+                </div>
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <button class="theme-switcher" id="theme-toggle" aria-label="切换主题" title="切换明暗模式">
                         <!-- Sun Icon (Light Mode) -->
@@ -43,6 +52,14 @@
             </ul>
         </nav>
         <main class="content" id="main-content">
+            <div id="home-hero" class="home-hero">
+                <h1>DevUtils<span class="brand-cursor">_</span></h1>
+                <p class="hero-sub">开发者的本地工具箱：编解码、格式化、生成、转换、音视频、网络调试，打开即用。</p>
+                <div class="hero-stats" id="hero-stats">
+                    <!-- 统计由 app.js 注入 -->
+                </div>
+            </div>
+            <hr class="hero-divider" id="hero-divider">
             <div id="tool-cards" class="tool-cards-grid">
                 <!-- Tool cards will be loaded here -->
             </div>

@@ -1,27 +1,38 @@
-/* Import Google Fonts - JetBrains Mono + Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Import Google Fonts - JetBrains Mono (brand/category/code voice) + Inter (body) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-    /* Minimalist Color Palette - Light Theme */
-    --primary: #3B82F6;
-    --primary-dark: #2563EB;
-    --primary-light: #60A5FA;
-    --secondary: #64748B;
+    /* Workbench palette - Light theme: cool paper, ink text, cobalt signal */
+    --primary: #1E5EFF;
+    --primary-dark: #1747C2;
+    --primary-light: #6E93FF;
+    --secondary: #5C6B7A;
 
-    --background: #F8FAFC;
+    --background: #F7F9FB;
     --surface: #FFFFFF;
-    --surface-hover: #F1F5F9;
-    --text-primary: #1E293B;
-    --text-secondary: #64748B;
-    --text-muted: #94A3B8;
-    --border: #E2E8F0;
-    --shadow-color: rgba(0, 0, 0, 0.08);
+    --surface-hover: #EFF3F7;
+    --text-primary: #16232F;
+    --text-secondary: #5C6B7A;
+    --text-muted: #8A98A6;
+    --border: #E3E8ED;
+    --border-strong: #D0D8E0;
+    --shadow-color: rgba(22, 35, 47, 0.06);
+
+    /* Per-category accent, resolved from --hue set per section/card.
+       Lightness flips between themes so hues stay readable. */
+    --cat-s: 62%;
+    --cat-l: 40%;
+    --cat-soft: 14%; /* tint strength for backgrounds */
 
     /* Layout */
     --sidebar-width: 280px;
-    --link-padding: 12px 24px;
+    --link-padding: 10px 22px;
     --border-radius: 8px;
     --border-radius-sm: 6px;
+
+    /* Type */
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
     /* Transitions */
     --transition-fast: 150ms ease;
@@ -30,27 +41,31 @@
 
 /* Dark Theme */
 [data-theme="dark"] {
-    /* Minimalist Color Palette - Dark Theme */
-    --primary: #60A5FA;
-    --primary-dark: #3B82F6;
-    --primary-light: #93C5FD;
+    --primary: #6E93FF;
+    --primary-dark: #4D7FFF;
+    --primary-light: #9DB4FF;
     --secondary: #94A3B8;
 
-    --background: #0F172A;
-    --surface: #1E293B;
-    --surface-hover: #334155;
-    --text-primary: #F1F5F9;
-    --text-secondary: #CBD5E1;
+    --background: #0D1420;
+    --surface: #131C2B;
+    --surface-hover: #1B2739;
+    --text-primary: #E8EEF4;
+    --text-secondary: #A9B7C6;
     --text-muted: #64748B;
-    --border: #334155;
+    --border: #233042;
+    --border-strong: #33415A;
     --shadow-color: rgba(0, 0, 0, 0.3);
+
+    --cat-s: 70%;
+    --cat-l: 64%;
+    --cat-soft: 18%;
 }
 
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
     overflow: hidden;
     background-color: var(--background);
     color: var(--text-primary);
@@ -65,23 +80,21 @@ body::before {
     display: flex;
     height: 100vh;
     position: relative;
-    padding: 16px;
-    gap: 16px;
+    padding: 0;
+    gap: 0;
     box-sizing: border-box;
 }
 
 .sidebar {
     width: var(--sidebar-width);
     background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
+    border-right: 1px solid var(--border);
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 32px);
+    height: 100vh;
     box-sizing: border-box;
     flex-shrink: 0;
     transition: width var(--transition-normal);
-    box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 /* Custom scrollbar for sidebar */
@@ -105,9 +118,9 @@ body::before {
 .sidebar h2 {
     margin-top: 0;
     margin-bottom: 24px;
-    font-size: 1.4em;
+    font-size: 1.25em;
     font-weight: 700;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-mono);
     padding: 0 24px;
     color: var(--text-primary);
     letter-spacing: -0.5px;
@@ -123,10 +136,15 @@ body::before {
 
 .sidebar-header h2 {
     margin: 0;
-    font-size: 1.4em;
+    font-size: 1.25em;
     font-weight: 700;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-mono);
     color: var(--text-primary);
+}
+
+.sidebar-header h2 .brand-cursor {
+    color: var(--primary);
+    font-weight: 700;
 }
 
 .sidebar-header a {
@@ -145,13 +163,13 @@ body::before {
     width: calc(100% - 48px);
     padding: 10px 14px;
     margin: 0 24px 20px;
-    background: var(--surface);
+    background: var(--background);
     border: 1px solid var(--border);
     border-radius: var(--border-radius-sm);
     box-sizing: border-box;
     font-size: 0.9em;
     color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
     transition: all var(--transition-fast);
 }
 
@@ -205,15 +223,12 @@ body::before {
 
 .content {
     flex-grow: 1;
-    height: calc(100vh - 32px);
+    height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 0;
     box-sizing: border-box;
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius);
-    box-shadow: 0 1px 3px var(--shadow-color);
+    background-color: var(--background);
 }
 
 /* Custom scrollbar for content */
@@ -245,19 +260,39 @@ body::before {
 
 /* Styles for categorized tool list */
 .sidebar ul li.category-header {
-    font-weight: 700;
+    font-weight: 600;
     margin-top: 16px;
     margin-bottom: 6px;
     padding: 10px 24px;
     color: var(--text-primary);
-    font-size: 0.75em;
+    font-size: 0.78em;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     cursor: pointer;
     position: relative;
     user-select: none;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-mono);
     transition: color var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Category hue dot - information, not decoration: locates the color of the section */
+.sidebar ul li.category-header .cat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    background: hsl(var(--hue) var(--cat-s) var(--cat-l));
+}
+
+.sidebar ul li.category-header .cat-count {
+    margin-left: auto;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0;
 }
 
 .sidebar ul li.category-header:hover {
@@ -271,11 +306,12 @@ body::before {
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 5px 0 5px 8px;
-    border-color: transparent transparent transparent var(--text-primary);
-    margin-right: 10px;
+    border-width: 4px 0 4px 7px;
+    border-color: transparent transparent transparent var(--text-muted);
+    margin-right: 4px;
     transition: transform var(--transition-fast), border-color var(--transition-fast);
     transform-origin: 3px center;
+    flex-shrink: 0;
 }
 
 .sidebar ul li.category-header:hover::before {
@@ -315,6 +351,33 @@ body::before {
 }
 
 /* --- Common Tool Styles --- */
+
+/* Mobile-only sidebar toggle (hidden on desktop via media query below) */
+.sidebar-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-sm);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.sidebar-toggle svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 768px) {
+    .sidebar-header {
+        justify-content: flex-start;
+    }
+}
 
 /* General container for tool UI elements */
 .tool-container {
@@ -560,72 +623,139 @@ body::before {
     text-align: center;
 }
 
+/* --- Home hero (only visible on the tool-cards view) --- */
+.home-hero {
+    padding: 48px 36px 8px;
+}
+
+.home-hero h1 {
+    margin: 0 0 10px;
+    font-family: var(--font-mono);
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+}
+
+.home-hero h1 .brand-cursor {
+    color: var(--primary);
+}
+
+.home-hero .hero-sub {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95em;
+    line-height: 1.6;
+    max-width: 60ch;
+}
+
+.home-hero .hero-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+.home-hero .hero-stats strong {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-right: 4px;
+}
+
+.hero-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 36px 0;
+}
+
 /* Tool Cards Grid */
 .tool-cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
-    padding: 28px;
+    gap: 14px;
+    padding: 20px 36px 48px;
 }
 
 .tool-card {
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--border-radius);
-    padding: 24px 20px;
-    text-align: center;
+    padding: 16px 18px 14px;
+    text-align: left;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
     position: relative;
-    box-shadow: 0 1px 2px var(--shadow-color);
+    border-top: 2px solid hsl(var(--hue) var(--cat-s) var(--cat-l));
 }
 
 .tool-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--shadow-color);
+    border-color: hsl(var(--hue) var(--cat-s) var(--cat-l));
 }
 
 .tool-card h4 {
-    margin: 0 0 10px;
-    font-size: 1.05em;
+    margin: 0 0 6px;
+    font-size: 1em;
     font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
     color: var(--text-primary);
 }
 
 .tool-card p {
     margin: 0;
-    font-size: 0.85em;
-    color: var(--text-secondary);
+    font-size: 0.75em;
+    color: var(--text-muted);
     line-height: 1.5;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Tool Category Section */
 .tool-category-section {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
 }
 
 .tool-category-title {
-    font-size: 1.3em;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 1.02em;
     font-weight: 700;
-    font-family: 'Inter', sans-serif;
     color: var(--text-primary);
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     padding-bottom: 8px;
-    border-bottom: 2px solid var(--primary);
-    position: relative;
-    display: inline-block;
+    border-bottom: 1px solid var(--border);
 }
 
-.tool-category-title::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 40px;
-    height: 2px;
-    background-color: var(--secondary);
+.tool-category-title .cat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: hsl(var(--hue) var(--cat-s) var(--cat-l));
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.tool-category-title .cat-count {
+    font-weight: 400;
+    font-size: 0.82em;
+    color: var(--text-muted);
+}
+
+.tool-category-title .cat-name-en {
+    font-weight: 400;
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- Socket.IO Tester Styles --- */
@@ -830,11 +960,6 @@ body::before {
         --border-radius-sm: 4px;
     }
 
-    .container {
-        padding: 12px;
-        gap: 12px;
-    }
-
     .tool-container {
         padding: 20px;
         margin: 16px auto;
@@ -844,35 +969,45 @@ body::before {
         font-size: 1.6em;
     }
 
+    .home-hero {
+        padding: 32px 24px 4px;
+    }
+
+    .hero-divider {
+        margin: 20px 24px 0;
+    }
+
     .tool-cards-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 16px;
-        padding: 20px;
+        gap: 12px;
+        padding: 16px 24px 32px;
     }
 }
 
-/* Mobile */
+/* Mobile: sidebar collapses behind the menu button */
 @media (max-width: 768px) {
-    :root {
-        --sidebar-width: 100%;
-    }
-
-    .container {
-        flex-direction: column;
-        padding: 10px;
-        gap: 10px;
-    }
-
     .sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 45vh;
-        margin-bottom: 10px;
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: min(84vw, 320px);
+        height: 100vh;
+        z-index: 20;
+        box-shadow: 12px 0 32px rgba(0, 0, 0, 0.18);
+    }
+
+    .container.sidebar-open .sidebar {
+        display: block;
+    }
+
+    .sidebar-toggle {
+        display: inline-flex;
     }
 
     .content {
-        height: auto;
-        flex-grow: 1;
+        height: 100vh;
     }
 
     .tool-container {
@@ -884,10 +1019,27 @@ body::before {
         font-size: 1.4em;
     }
 
+    .home-hero {
+        padding: 24px 16px 4px;
+    }
+
+    .home-hero h1 {
+        font-size: 1.5em;
+    }
+
+    .home-hero .hero-stats {
+        flex-wrap: wrap;
+        gap: 12px 20px;
+    }
+
+    .hero-divider {
+        margin: 16px 16px 0;
+    }
+
     .tool-cards-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 12px;
+        gap: 10px;
+        padding: 12px 16px 32px;
     }
 
     .tool-button {
@@ -916,6 +1068,10 @@ body::before {
 
     .sidebar-header h2 {
         font-size: 1.1em;
+    }
+
+    .home-hero h1 {
+        font-size: 1.3em;
     }
 }
 
