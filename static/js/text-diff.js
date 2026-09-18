@@ -280,13 +280,50 @@ document.addEventListener('DOMContentLoaded', () => {
     text1Div.addEventListener('input', handleInput);
     text2Div.addEventListener('input', handleInput);
 
-    // Add scroll synchronization between text areas and line numbers
-    function syncScroll(textDiv, lineNumbersDiv) {
-        lineNumbersDiv.scrollTop = textDiv.scrollTop;
+    // Scroll synchronization: when either side scrolls, the other side (and both
+    // line-number gutters) follow proportionally, so the line numbers on the two
+    // sides stay aligned as much as possible even when line counts differ.
+    let scrollLock = false;
+
+    function syncEditors(source, sourceGutter, target, targetGutter) {
+        if (scrollLock) return;
+        scrollLock = true;
+        try {
+            const sourceMax = source.scrollHeight - source.clientHeight;
+            const targetMax = target.scrollHeight - target.clientHeight;
+            // Proportional mapping: same relative position in both editors. When
+            // either side cannot scroll, align both to the top.
+            const top = (sourceMax > 0 && targetMax > 0)
+                ? (source.scrollTop / sourceMax) * targetMax
+                : 0;
+            if (Math.abs(target.scrollTop - top) > 0.5) {
+                target.scrollTop = top;
+            }
+            if (Math.abs(targetGutter.scrollTop - top) > 0.5) {
+                targetGutter.scrollTop = top;
+            }
+            if (Math.abs(sourceGutter.scrollTop - source.scrollTop) > 0.5) {
+                sourceGutter.scrollTop = source.scrollTop;
+            }
+        } finally {
+            scrollLock = false;
+        }
     }
 
-    text1Div.addEventListener('scroll', () => syncScroll(text1Div, lineNumbers1));
-    text2Div.addEventListener('scroll', () => syncScroll(text2Div, lineNumbers2));
+    function bindScrollSync(editor, gutter, otherEditor, otherGutter) {
+        editor.addEventListener('scroll', () => {
+            syncEditors(editor, gutter, otherEditor, otherGutter);
+        });
+        // Scrolling the gutter itself also keeps everything in sync.
+        gutter.addEventListener('scroll', () => {
+            if (scrollLock) return;
+            editor.scrollTop = gutter.scrollTop;
+            syncEditors(editor, gutter, otherEditor, otherGutter);
+        });
+    }
+
+    bindScrollSync(text1Div, lineNumbers1, text2Div, lineNumbers2);
+    bindScrollSync(text2Div, lineNumbers2, text1Div, lineNumbers1);
 
     // Initialize line numbers on load
     updateLineNumbers('', lineNumbers1);
