@@ -6,14 +6,44 @@
     <title>Text Counter</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
+        /* Full-height layout: the textarea takes the remaining space and scrolls
+           internally, so the stats bar always stays visible on screen. */
+        body {
+            overflow: auto;
+        }
+        .tool-container {
+            height: calc(100vh - 48px);
+            min-height: 360px;
+        }
+        .tool-header {
+            flex-shrink: 0;
+        }
+        .input-section {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        .input-section .tool-textarea {
+            flex: 1 1 auto;
+            height: auto;
+            min-height: 120px;
+            resize: none;
+            overflow-y: auto;
+        }
+        .stats-section {
+            flex-shrink: 0;
+            margin-top: 0;
+            white-space: normal;
+        }
         .stats-bar {
             display: flex;
-            gap: 24px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .stat-chip {
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            flex: 1 1 170px;
             gap: 8px;
             padding: 8px 16px;
             background: var(--surface-hover);
@@ -22,13 +52,32 @@
             font-size: 0.9em;
         }
         .stat-chip-label {
+            white-space: nowrap;
             color: var(--text-secondary);
             font-weight: 500;
         }
         .stat-chip-value {
+            flex-shrink: 0;
             color: var(--primary);
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
+        }
+        /* Very short viewports: let the page scroll instead of squeezing the box. */
+        @media (max-height: 560px) {
+            .tool-container {
+                height: auto;
+                min-height: 0;
+            }
+            .tool-header {
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+            }
+            .tool-header h1 {
+                font-size: 1.4em;
+            }
+            .input-section .tool-textarea {
+                min-height: 90px;
+            }
         }
     </style>
     <script src="../js/tool-theme-helper.js"></script>
@@ -39,11 +88,11 @@
             <h1>字符/单词/行数统计</h1>
             <p>实时统计文本的字符数、单词数和行数。</p>
         </div>
-        <div class="tool-section">
+        <div class="tool-section input-section">
             <label class="tool-label" for="text-input">输入文本:</label>
-            <textarea id="text-input" class="tool-textarea" placeholder="在此输入文本..." style="min-height: 200px;"></textarea>
+            <textarea id="text-input" class="tool-textarea" placeholder="在此输入文本..."></textarea>
         </div>
-        <div class="tool-result">
+        <div class="tool-result stats-section">
             <div class="stats-bar">
                 <div class="stat-chip">
                     <span class="stat-chip-label">字符 / Characters</span>
