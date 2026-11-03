@@ -37,6 +37,7 @@
         .tool-section {
             padding: 0 !important;
             display: flex;
+            flex-direction: row !important;
             align-items: center;
             gap: 8px;
         }
@@ -48,6 +49,18 @@
             background: var(--surface);
             color: var(--text-primary);
             cursor: pointer;
+        }
+        #urlInput {
+            flex: 1 1 auto;
+            min-width: 160px;
+            max-width: 360px;
+            width: auto;
+            font-size: 12px !important;
+            padding: 4px 8px;
+        }
+        #loadUrlButton {
+            font-size: 12px !important;
+            padding: 4px 12px;
         }
         #panorama {
             flex: 1 !important;
@@ -62,6 +75,8 @@
         <div class="tool-header">
             <h1>全景图片查看器</h1>
             <div class="tool-section">
+                <input type="text" id="urlInput" class="tool-input" placeholder="输入全景图片 URL (2:1 等距柱状投影)">
+                <button id="loadUrlButton" class="tool-button">加载</button>
                 <input type="file" id="fileInput" accept="image/*">
             </div>
         </div>
@@ -71,13 +86,23 @@
 
 <script>
     const fileInput = document.getElementById('fileInput');
+    const urlInput = document.getElementById('urlInput');
+    const loadUrlButton = document.getElementById('loadUrlButton');
     let viewer = null;
 
-    function initializeViewer(config) {
+    function initializeViewer(config, silent) {
         if (viewer) {
             viewer.destroy();
         }
         viewer = pannellum.viewer('panorama', config);
+        viewer.on('error', function(message) {
+            lastLoadedUrl = null;
+            if (silent) {
+                console.warn('全景图片自动加载失败:', message);
+                return;
+            }
+            alert('全景图片加载失败：' + message + '\n请检查 URL 是否正确，以及图片是否允许跨域访问（CORS）。');
+        });
     }
 
     const baseConfig = {
@@ -106,6 +131,49 @@
             reader.readAsDataURL(file);
         }
     });
+
+    let lastLoadedUrl = null;
+
+    function loadFromUrl(silent) {
+        const url = urlInput.value.trim();
+        if (!url) {
+            alert('请输入图片 URL。');
+            return;
+        }
+        if (url === lastLoadedUrl) {
+            return;
+        }
+        lastLoadedUrl = url;
+        const newConfig = { ...baseConfig, panorama: url, autoLoad: true };
+        initializeViewer(newConfig, silent);
+    }
+
+    loadUrlButton.addEventListener('click', () => loadFromUrl(false));
+
+    urlInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loadFromUrl(false);
+        }
+    });
+
+    // 输入后自动尝试加载：粘贴立即触发，手动输入防抖 800ms
+    let urlAutoTimer = null;
+    urlInput.addEventListener('input', function(e) {
+        clearTimeout(urlAutoTimer);
+        const url = urlInput.value.trim();
+        if (!url || !(/^(https?:\/\/|data:|blob:)/i.test(url) || /^\S+\.\S+/.test(url))) {
+            return;
+        }
+        const delay = e.inputType === 'insertFromPaste' ? 0 : 800;
+        urlAutoTimer = setTimeout(() => loadFromUrl(true), delay);
+    });
+
+    // 支持 ?imageUrl= 参数直接加载
+    const queryImageUrl = new URLSearchParams(window.location.search).get('imageUrl');
+    if (queryImageUrl) {
+        urlInput.value = queryImageUrl;
+        loadFromUrl();
+    }
 </script>
 
 </body>
