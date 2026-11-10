@@ -49,6 +49,7 @@ DevUtils 是一个基于 Web 的开发者工具集，旨在简化常见的开发
 - **JSON/YAML互转**: 在 JSON 和 YAML 格式之间转换数据。
 - **JSON转CSV**: 在 JSON 和 CSV 格式之间转换数据。
 - **进制转换**: 在不同的数字系统（例如二进制、十六进制、十进制）之间转换数字。
+- **条形码生成**: 生成 CODE128、CODE39、EAN/UPC、ITF、MSI、Codabar 等一维条码，自动提示校验位，支持导出 PNG / SVG。
 
 ### 网络工具
 - **WebSocket测试**: 测试 WebSocket 连接。

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>条形码生成</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/tool-theme-helper.js"></script>
+    <style>
+        /* style.css 给 html/body 设了 height:100% + overflow:hidden，
+           窄高视口下表单会被裁掉；本页单独放开滚动，不影响其他工具 */
+        html, body {
+            height: auto;
+            overflow: auto;
+        }
+
+        .bc-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.72em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .bc-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .bc-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 0;
+            padding: 18px 20px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            background: var(--background);
+            box-sizing: border-box;
+        }
+
+        .bc-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 0.92em;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+        }
+
+        .bc-index {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 24px;
+            height: 22px;
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            font-size: 0.72em;
+            color: var(--primary);
+        }
+
+        .bc-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .bc-field .tool-label {
+            margin-bottom: 0;
+        }
+
+        .bc-label-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .bc-textbtn {
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.78em;
+            color: var(--primary);
+        }
+
+        .bc-textbtn:hover {
+            text-decoration: underline;
+        }
+
+        .bc-hint {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 0.8em;
+            line-height: 1.65;
+            color: var(--text-muted);
+        }
+
+        .bc-checkline {
+            margin: 0;
+            padding: 6px 10px;
+            border-left: 2px solid var(--primary);
+            border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+            background: rgba(30, 94, 255, 0.07);
+            font-family: var(--font-mono);
+            font-size: 0.82em;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .bc-checks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+        }
+
+        .bc-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.9em;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* .bc-check 的 display: inline-flex 会覆盖 [hidden]，这里显式恢复 */
+        .bc-check[hidden] {
+            display: none;
+        }
+
+        .bc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 12px;
+        }
+
+        .bc-full {
+            width: 100%;
+        }
+
+        .bc-color-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bc-color {
+            flex: 0 0 auto;
+            width: 46px;
+            height: 40px;
+            padding: 3px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface);
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .bc-color-code {
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: var(--surface);
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        /* 预览区固定白底，避免深色主题影响扫码对比度 */
+        .bc-preview {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            justify-content: safe center; /* 超宽时改左对齐，否则左侧会被裁掉 */
+            min-height: 260px;
+            padding: 24px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius-sm);
+            background: #fff;
+            overflow-x: auto;
+            box-sizing: border-box;
+        }
+
+        /* 保持 1:1 原始条宽（缩放过窄的条不可扫），超宽时预览区横向滚动 */
+        #bcSvg {
+            display: block;
+            flex: 0 0 auto;
+            height: auto;
+        }
+
+        .bc-empty {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            padding: 0 16px;
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            color: #8A98A6;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .bc-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+            font-family: var(--font-mono);
+            font-size: 0.82em;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .bc-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-top: 0;
+        }
+
+        .bc-scale {
+            flex: 0 0 auto;
+            width: auto;
+            min-width: 0;
+            padding: 10px 30px 10px 12px;
+        }
+
+        .bc-ghost {
+            border: 1px solid var(--border-strong);
+            background: var(--surface);
+            color: var(--text-primary);
+            box-shadow: none;
+        }
+
+        .bc-ghost:hover {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            box-shadow: none;
+        }
+
+        .bc-note {
+            margin: 0;
+            font-size: 0.78em;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 960px) {
+            .bc-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .bc-preview-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .bc-actions .tool-button {
+                width: auto;
+                flex: 1 1 auto;
+            }
+
+            .bc-scale {
+                flex: 0 0 auto;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .bc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <div class="bc-eyebrow">BARCODE · 一维条码生成器</div>
+            <h1>条形码生成</h1>
+            <p>覆盖 CODE128、CODE39、EAN/UPC、ITF、MSI、Codabar 等常见一维码，实时校验与预览，支持导出 PNG / SVG。</p>
+        </div>
+
+        <div class="bc-layout">
+            <!-- 参数 -->
+            <section class="bc-panel">
+                <h2 class="bc-panel-title"><span class="bc-index">01</span>编码设置</h2>
+
+                <div class="bc-field">
+                    <label class="tool-label" for="bcFormat">码制 / Symbology</label>
+                    <select id="bcFormat" class="tool-select bc-full"></select>
+                    <p class="bc-hint" id="bcFormatHint"></p>
+                </div>
+
+                <div class="bc-field">
+                    <div class="bc-label-row">
+                        <label class="tool-label" for="bcValue">内容 / Data</label>
+                        <button type="button" class="bc-textbtn" id="bcSampleBtn">填入示例</button>
+                    </div>
+                    <input type="text" id="bcValue" class="tool-input" autocomplete="off" spellcheck="false">
+                    <p class="bc-checkline" id="bcCheckLine" hidden></p>
+                </div>
+
+                <div class="bc-field">
+                    <span class="tool-label">显示选项</span>
+                    <div class="bc-checks">
+                        <label class="bc-check"><input type="checkbox" id="bcDisplayValue" checked> 显示内容文本</label>
+                        <label class="bc-check"><input type="checkbox" id="bcTransparent"> 透明背景</label>
+                        <label class="bc-check" id="bcMod43Row" hidden><input type="checkbox" id="bcMod43"> CODE39 mod 43 校验</label>
+                    </div>
+                </div>
+
+                <h2 class="bc-panel-title"><span class="bc-index">02</span>尺寸与外观</h2>
+
+                <div class="bc-grid">
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcWidth">条宽 / Bar width (px)</label>
+                        <input type="number" id="bcWidth" class="tool-input" min="1" max="6" step="1" value="2">
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcHeight">条高 / Height (px)</label>
+                        <input type="number" id="bcHeight" class="tool-input" min="24" max="200" step="2" value="100">
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcFontSize">字号 / Font size</label>
+                        <input type="number" id="bcFontSize" class="tool-input" min="8" max="40" step="1" value="18">
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcTextMargin">文本间距 / Text margin</label>
+                        <input type="number" id="bcTextMargin" class="tool-input" min="0" max="20" step="1" value="2">
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcMargin">外边距 / Margin</label>
+                        <input type="number" id="bcMargin" class="tool-input" min="0" max="60" step="2" value="10">
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcTextPosition">文本位置 / Position</label>
+                        <select id="bcTextPosition" class="tool-select bc-full">
+                            <option value="bottom" selected>下方 / Bottom</option>
+                            <option value="top">上方 / Top</option>
+                        </select>
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcLineColor">条色 / Bar color</label>
+                        <div class="bc-color-row">
+                            <input type="color" id="bcLineColor" class="bc-color" value="#000000">
+                            <span class="bc-color-code" id="bcLineColorCode">#000000</span>
+                        </div>
+                    </div>
+                    <div class="bc-field">
+                        <label class="tool-label" for="bcBgColor">底色 / Background</label>
+                        <div class="bc-color-row">
+                            <input type="color" id="bcBgColor" class="bc-color" value="#ffffff">
+                            <span class="bc-color-code" id="bcBgColorCode">#ffffff</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 预览 -->
+            <section class="bc-panel bc-preview-panel">
+                <h2 class="bc-panel-title"><span class="bc-index">03</span>预览 / Preview</h2>
+
+                <div class="bc-preview" id="bcPreview">
+                    <svg id="bcSvg" role="img" aria-label="条形码预览"></svg>
+                    <div class="bc-empty" id="bcEmpty">输入内容后自动生成</div>
+                </div>
+
+                <div class="bc-meta" id="bcMeta">等待输入</div>
+
+                <div class="bc-actions">
+                    <select id="bcScale" class="tool-select bc-scale" title="导出 PNG 的放大倍数">
+                        <option value="1">1x</option>
+                        <option value="2" selected>2x</option>
+                        <option value="3">3x</option>
+                        <option value="4">4x</option>
+                    </select>
+                    <button type="button" class="tool-button" id="bcPngBtn" disabled>下载 PNG</button>
+                    <button type="button" class="tool-button bc-ghost" id="bcSvgBtn" disabled>下载 SVG</button>
+                    <button type="button" class="tool-button bc-ghost" id="bcCopyBtn" disabled>复制 SVG</button>
+                </div>
+
+                <div class="tool-error" id="bcError" hidden></div>
+
+                <p class="bc-note">提示：条宽 2px 适合屏幕阅读；打印或远距离扫描建议条宽 ≥ 3px，并导出 2x 以上 PNG 或直接使用 SVG。</p>
+            </section>
+        </div>
+    </div>
+
+    <script src="../js/vendor/jsbarcode.min.js"></script>
+    <script src="../js/barcode-generator.js"></script>
+</body>
+</html>

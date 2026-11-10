@@ -302,6 +302,12 @@
         "filePath": "static/tools/qr-code-tool.html"
       },
       {
+        "name_zh": "条形码生成",
+        "name_en": "Barcode Generator",
+        "path": "converter/barcode",
+        "filePath": "static/tools/barcode-generator.html"
+      },
+      {
         "name_zh": "数字转中文大写金额",
         "name_en": "Number to Chinese Amount",
         "path": "converter/chinese-amount",
