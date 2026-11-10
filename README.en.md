@@ -49,6 +49,7 @@ This project includes a variety of tools across different categories:
 - **JSON/YAML Converter**: Convert data between JSON and YAML formats.
 - **JSON to CSV Converter**: Convert data between JSON and CSV formats.
 - **Base Converter**: Convert numbers between different numeral systems (e.g., binary, hexadecimal, decimal).
+- **Barcode Generator**: Generate 1D barcodes (CODE128, CODE39, EAN/UPC, ITF, MSI, Codabar), with checksum hints and PNG / SVG export.
 
 ### Network Tools
 - **WebSocket Tester**: Test WebSocket connections.
